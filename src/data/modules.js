@@ -1,0 +1,72 @@
+export const MODULES_DATA = [
+  {
+    id: 'visitor-management',
+    title: 'Visitor Management',
+    description: 'Track visitors in real-time with digital logs & alerts.',
+    iconName: 'FaUsers',
+    iconBg: 'bg-purple-100 text-purple-600',
+  },
+  {
+    id: 'maintenance-billing',
+    title: 'Maintenance Billing',
+    description: 'Generate bills, collect payments & track dues.',
+    iconName: 'FaRupeeSign',
+    iconBg: 'bg-emerald-100 text-emerald-600',
+  },
+  {
+    id: 'complaint-management',
+    title: 'Complaint Management',
+    description: 'Raise, assign & resolve issues faster.',
+    iconName: 'FaWrench',
+    iconBg: 'bg-orange-100 text-orange-600',
+  },
+  {
+    id: 'notice-board',
+    title: 'Notice Board',
+    description: 'Share important updates instantly.',
+    iconName: 'FaBullhorn',
+    iconBg: 'bg-blue-100 text-blue-600',
+  },
+  {
+    id: 'facility-booking',
+    title: 'Facility Booking',
+    description: 'Book amenities & manage schedules.',
+    iconName: 'FaCalendarAlt',
+    iconBg: 'bg-pink-100 text-pink-600',
+  },
+  {
+    id: 'parking-management',
+    title: 'Parking Management',
+    description: 'Manage parking spots & allocations.',
+    iconName: 'FaCar',
+    iconBg: 'bg-sky-100 text-sky-600',
+  },
+  {
+    id: 'vendor-management',
+    title: 'Vendor Management',
+    description: 'Manage vendors & service providers.',
+    iconName: 'FaShoppingBag',
+    iconBg: 'bg-amber-100 text-amber-600',
+  },
+  {
+    id: 'accounts-reports',
+    title: 'Accounts & Reports',
+    description: 'Smart reports for better financial decisions.',
+    iconName: 'FaFileAlt',
+    iconBg: 'bg-emerald-100 text-emerald-600',
+  },
+  {
+    id: 'staff-management',
+    title: 'Staff Management',
+    description: 'Manage staff & track attendance.',
+    iconName: 'FaIdBadge',
+    iconBg: 'bg-indigo-100 text-indigo-600',
+  },
+  {
+    id: 'documents-manager',
+    title: 'Documents Manager',
+    description: 'Store & access important documents securely.',
+    iconName: 'FaFolderOpen',
+    iconBg: 'bg-orange-100 text-orange-600',
+  }
+];
