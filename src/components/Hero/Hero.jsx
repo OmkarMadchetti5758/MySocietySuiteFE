@@ -21,7 +21,7 @@ const SLIDES = [
     image: banner1,
     layout: 'split',
     // ── Customize Hero1.png (bannerIsoImg) independently ──
-    imageClassName: "absolute inset-0 w-200 h-full ml-210 object-cover object-center",
+    imageClassName: "absolute inset-0 w-full h-full object-cover object-top sm:object-center sm:w-200 sm:ml-210",
     imageStyle: { objectPosition: 'center center' },
   },
   {
@@ -49,7 +49,7 @@ const SLIDES = [
     hasAvatars: false,
     image: banner3,
     layout: 'split',
-    imageClassName: "absolute inset-0 w-full h-full ml-50 object-cover object-center",
+    imageClassName: "absolute inset-0 w-full h-full object-cover object-center sm:ml-50",
     imageStyle: {},
   }
 ];
