@@ -26,7 +26,7 @@ const Audience = () => {
           </div>
 
           {/* Right Bento Box Grid */}
-          <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-[140px]">
+          <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:auto-rows-[140px]">
             {AUDIENCE_DATA.map((item, index) => {
               const IconComponent = FaIcons[item.iconName] || FaIcons.FaUser;
               // Make the first item a large feature card
@@ -39,8 +39,8 @@ const Audience = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: index * 0.08 }}
-                  className={`bg-white border border-gray-100 rounded-2xl p-5 shadow-[0_2px_14px_rgba(0,0,0,0.04)] hover:shadow-lg hover:border-orange-200 transition-all group overflow-hidden relative flex flex-col justify-center ${isLarge
-                      ? 'sm:col-span-2 sm:row-span-2 items-start'
+                  className={`bg-white border border-gray-100 rounded-2xl p-6 sm:p-5 shadow-[0_2px_14px_rgba(0,0,0,0.04)] hover:shadow-lg hover:border-orange-200 transition-all group overflow-hidden relative flex flex-col justify-center ${isLarge
+                      ? 'sm:col-span-2 sm:row-span-2 sm:items-start items-center text-center'
                       : 'items-center text-center'
                     }`}
                 >
@@ -50,14 +50,14 @@ const Audience = () => {
                   )}
 
                   <div
-                    className={`rounded-xl bg-orange-50 text-[#FF6B00] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform ${isLarge ? 'w-16 h-16 text-3xl' : 'w-12 h-12 text-xl'
+                    className={`rounded-xl bg-orange-50 text-[#FF6B00] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform ${isLarge ? 'sm:w-16 sm:h-16 sm:text-3xl w-12 h-12 text-xl' : 'w-12 h-12 text-xl'
                       }`}
                   >
                     <IconComponent />
                   </div>
 
                   <h3
-                    className={`font-bold text-gray-900 mb-1 ${isLarge ? 'text-2xl mt-4' : 'text-base'
+                    className={`font-bold text-gray-900 mb-1 ${isLarge ? 'sm:text-2xl sm:mt-4 text-base' : 'text-base'
                       }`}
                   >
                     {item.title}
@@ -72,7 +72,7 @@ const Audience = () => {
 
                   {/* Additional visual for large card */}
                   {isLarge && (
-                    <div className="mt-6 flex items-center gap-2 text-base font-semibold text-[#FF6B00] opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="mt-6 hidden sm:flex items-center gap-2 text-base font-semibold text-[#FF6B00] opacity-0 group-hover:opacity-100 transition-opacity">
                       <span>Explore features</span>
                       <FaIcons.FaArrowRight className="text-xs" />
                     </div>
