@@ -102,7 +102,7 @@ const MobileApps = () => {
                   Meet MySociety{' '}
                   <span className="text-[#FF6B00]">AI</span>
                 </h3>
-                <p className="text-sm text-gray-400 leading-relaxed mt-1">
+                <p className="text-base text-gray-400 leading-relaxed mt-1">
                   Your smart assistant for instant answers and intelligent insights.
                 </p>
               </div>
@@ -114,7 +114,7 @@ const MobileApps = () => {
                   value={aiQuery}
                   onChange={(e) => setAiQuery(e.target.value)}
                   placeholder="Ask anything..."
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#FF6B00] transition-colors"
+                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-2.5 text-base text-white placeholder-gray-500 focus:outline-none focus:border-[#FF6B00] transition-colors"
                 />
                 <button
                   onClick={() => toast(`AI Query: ${aiQuery || 'Searching society records...'}`)}

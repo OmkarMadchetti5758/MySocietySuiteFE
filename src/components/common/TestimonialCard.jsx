@@ -15,12 +15,12 @@ const TestimonialCard = memo(({ testimonial }) => {
           <FaQuoteLeft className="text-3xl text-orange-200" />
         </div>
 
-        <p className="text-gray-700 italic text-sm sm:text-base leading-relaxed mb-6">
+        <p className="text-gray-700 italic text-base sm:text-base leading-relaxed mb-6">
           "{testimonial.quote}"
         </p>
 
         {testimonial.highlight && (
-          <div className="inline-block px-3 py-1 bg-orange-50 text-primary text-sm font-semibold rounded-lg mb-6 border border-orange-100">
+          <div className="inline-block px-3 py-1 bg-orange-50 text-primary text-base font-semibold rounded-lg mb-6 border border-orange-100">
             ✓ {testimonial.highlight}
           </div>
         )}
@@ -34,8 +34,8 @@ const TestimonialCard = memo(({ testimonial }) => {
           loading="lazy"
         />
         <div>
-          <h4 className="font-bold text-text-dark text-sm">{testimonial.name}</h4>
-          <p className="text-sm text-gray-500">{testimonial.role}</p>
+          <h4 className="font-bold text-text-dark text-base">{testimonial.name}</h4>
+          <p className="text-base text-gray-500">{testimonial.role}</p>
           <p className="text-[11px] text-primary font-medium">{testimonial.location}</p>
         </div>
       </div>

@@ -19,7 +19,7 @@ const ModuleCard = memo(({ module }) => {
           <IconComponent />
         </div>
 
-        <span className="text-sm font-bold uppercase tracking-wider text-primary mb-1 block">
+        <span className="text-base font-bold uppercase tracking-wider text-primary mb-1 block">
           {module.tagline}
         </span>
 
@@ -27,13 +27,13 @@ const ModuleCard = memo(({ module }) => {
           {module.title}
         </h3>
 
-        <p className="text-gray-600 text-sm leading-relaxed mb-6">
+        <p className="text-gray-600 text-base leading-relaxed mb-6">
           {module.description}
         </p>
 
         <div className="space-y-2 pt-4 border-t border-border-light">
           {module.features.map((feature, idx) => (
-            <FeatureItem key={idx} text={feature} className="text-sm" />
+            <FeatureItem key={idx} text={feature} className="text-base" />
           ))}
         </div>
       </div>

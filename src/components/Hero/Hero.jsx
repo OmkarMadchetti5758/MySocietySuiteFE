@@ -21,7 +21,7 @@ const SLIDES = [
     image: banner1,
     layout: 'split',
     // ── Customize Hero1.png (bannerIsoImg) independently ──
-    imageClassName: "absolute inset-0 w-full h-full object-cover object-top sm:object-center sm:w-200 sm:ml-210",
+    imageClassName: "absolute inset-0 w-full h-full object-cover object-top sm:object-center sm:w-200 sm:ml-280",
     imageStyle: { objectPosition: 'center center' },
   },
   {
@@ -103,7 +103,7 @@ const Hero = () => {
             className="space-y-5 max-w-full sm:max-w-[75%] lg:max-w-[55%]"
           >
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-[#FF6B00] text-sm font-bold uppercase tracking-wider backdrop-blur-sm">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-[#FF6B00] text-base font-bold uppercase tracking-wider backdrop-blur-sm">
               {slide.badge}
             </div>
 
@@ -113,13 +113,13 @@ const Hero = () => {
             </h1>
 
             {/* Subtitle */}
-            <p className="text-gray-200 text-sm sm:text-[15px] leading-relaxed max-w-sm drop-shadow">
+            <p className="text-gray-200 text-base sm:text-[15px] leading-relaxed max-w-sm drop-shadow">
               {slide.subtitle}
             </p>
 
             {/* Optional Bullets */}
             {slide.features && (
-              <div className="flex flex-wrap gap-3 text-sm font-semibold text-gray-200">
+              <div className="flex flex-wrap gap-3 text-base font-semibold text-gray-200">
                 {slide.features.map((feat, idx) => (
                   <div key={idx} className="flex items-center gap-2">
                     <FaCheckCircle className="text-orange-500" />
@@ -131,9 +131,9 @@ const Hero = () => {
 
             {/* Optional Feature Pills */}
             {slide.featurePills && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 max-w-sm">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 max-w-lg">
                 {slide.featurePills.map((pill, idx) => (
-                  <div key={idx} className="bg-white/10 backdrop-blur-md px-3 py-2 rounded-xl text-center text-sm font-bold text-white border border-white/10">
+                  <div key={idx} className="bg-white/10 backdrop-blur-md px-0 py-2 rounded-xl text-center text-base font-bold text-white border border-white/10">
                     {pill}
                   </div>
                 ))}
@@ -147,7 +147,7 @@ const Hero = () => {
                 size="lg"
                 icon={FaArrowRight}
                 iconPosition="right"
-                className="rounded-full shadow-orange-glow px-7 py-3 text-sm font-bold"
+                className="rounded-full shadow-orange-glow px-7 py-3 text-base font-bold"
                 onClick={() => {
                   const el = document.getElementById('pricing');
                   if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -157,7 +157,7 @@ const Hero = () => {
               </Button>
 
               <button
-                className="flex items-center gap-2 px-6 py-3 rounded-full border border-white/40 bg-black/30 backdrop-blur-sm text-white hover:bg-white/10 transition-all text-sm font-semibold"
+                className="flex items-center gap-2 px-6 py-3 rounded-full border border-white/40 bg-black/30 backdrop-blur-sm text-white hover:bg-white/10 transition-all text-base font-semibold"
                 onClick={() => {
                   const el = document.getElementById('how-it-works');
                   if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -185,7 +185,7 @@ const Hero = () => {
                     />
                   ))}
                 </div>
-                <p className="text-sm text-gray-300">
+                <p className="text-base text-gray-300">
                   Trusted by <strong className="text-white font-semibold">500+ Societies & 10,000+ Families</strong>
                 </p>
               </div>

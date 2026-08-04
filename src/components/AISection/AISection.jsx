@@ -105,10 +105,10 @@ const AISection = () => {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Ask AI anything about your society..."
-                  className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 focus:outline-none"
+                  className="flex-1 bg-transparent text-base text-gray-700 placeholder-gray-400 focus:outline-none"
                 />
                 <button
-                  onClick={() => {}}
+                  onClick={() => { }}
                   className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shrink-0 hover:bg-primary-hover transition-colors cursor-pointer"
                   style={{ boxShadow: '0 4px 14px rgba(255,107,0,0.35)' }}
                 >
@@ -120,22 +120,20 @@ const AISection = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setActiveTab('try')}
-                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold transition-all cursor-pointer ${
-                    activeTab === 'try'
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-base font-semibold transition-all cursor-pointer ${activeTab === 'try'
                       ? 'bg-purple-100 text-purple-700'
                       : 'text-gray-400 hover:text-gray-600'
-                  }`}
+                    }`}
                 >
                   <FaBolt className="text-[10px]" />
                   Try asking
                 </button>
                 <button
                   onClick={() => setActiveTab('suggestions')}
-                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold transition-all cursor-pointer ${
-                    activeTab === 'suggestions'
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-base font-semibold transition-all cursor-pointer ${activeTab === 'suggestions'
                       ? 'bg-purple-100 text-purple-700'
                       : 'text-gray-400 hover:text-gray-600'
-                  }`}
+                    }`}
                 >
                   <span className="text-amber-400 text-xs">✦</span>
                   Suggestions for you
@@ -157,7 +155,7 @@ const AISection = () => {
                     >
                       <card.icon className={`${card.iconColor} text-base`} />
                     </div>
-                    <span className="text-sm text-gray-700 font-medium leading-snug flex-1">
+                    <span className="text-base text-gray-700 font-medium leading-snug flex-1">
                       {card.text}
                     </span>
                     <FaChevronRight className="text-gray-300 text-[10px] group-hover:text-gray-500 transition-colors shrink-0" />
@@ -167,7 +165,7 @@ const AISection = () => {
 
               {/* Security Footer */}
               <div className="flex items-center justify-center gap-2 pt-1 pb-0.5">
-                <FaShieldAlt className="text-gray-300 text-sm" />
+                <FaShieldAlt className="text-gray-300 text-base" />
                 <span className="text-xs text-gray-400 font-medium">
                   Your data is secure and private
                 </span>

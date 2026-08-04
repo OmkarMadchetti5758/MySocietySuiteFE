@@ -15,25 +15,23 @@ const Navbar = () => {
 
   return (
     <header
-      className={`sticky top-0 z-50 flex flex-col items-center transition-all duration-500 ${
-        scrolled ? 'py-3 bg-transparent' : 'py-4 bg-[#0B0B0B]'
-      }`}
+      className={`sticky top-0 z-50 flex flex-col items-center transition-all duration-500 ${scrolled ? 'py-3 bg-transparent' : 'py-4 bg-[#0B0B0B]'
+        }`}
     >
       {/* Floating pill-shaped navbar */}
       <div
-        className={`relative flex items-center justify-between gap-4 px-2 py-1.5 rounded-full transition-all duration-500 w-[92%] max-w-4xl ${
-          scrolled
-            ? 'bg-[#111]/95 shadow-[0_8px_40px_rgba(0,0,0,0.45)] border border-white/[0.08] backdrop-blur-xl'
-            : 'bg-[#111]/90 border border-white/[0.08] backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.3)]'
-        }`}
+        className={`relative flex items-center justify-between gap-4 px-2 py-1.5 rounded-full transition-all duration-500 w-[92%] max-w-4xl ${scrolled
+          ? 'bg-[#111]/95 shadow-[0_8px_40px_rgba(0,0,0,0.45)] border border-white/[0.08] backdrop-blur-xl'
+          : 'bg-[#111]/90 border border-white/[0.08] backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.3)]'
+          }`}
       >
         {/* Logo Circle */}
         <a href="#" className="shrink-0 flex items-center justify-center">
-          <div className="w-11 h-11 rounded-full bg-black/70 border border-white/10 flex items-center justify-center overflow-hidden shadow-inner">
+          <div className="w-12 h-12 rounded-full bg-black/70 border border-white/10 flex items-center justify-center overflow-hidden shadow-inner">
             <img
               src={logoImg}
               alt="MySocietySuite Logo"
-              className="w-9 h-9 object-contain"
+              className="w-24 h-24 object-contain"
             />
           </div>
         </a>
@@ -44,7 +42,7 @@ const Navbar = () => {
             <div key={link.id} className="relative group">
               <a
                 href={link.href}
-                className="flex items-center gap-1.5 text-sm font-medium text-gray-300 hover:text-white transition-colors duration-200 px-4 py-2 rounded-full hover:bg-white/5"
+                className="flex items-center gap-1.5 text-base font-medium text-gray-300 hover:text-white transition-colors duration-200 px-4 py-2 rounded-full hover:bg-white/5"
               >
                 <span>{link.label}</span>
                 {link.hasDropdown && (
@@ -59,7 +57,7 @@ const Navbar = () => {
                     <a
                       key={idx}
                       href={item.href}
-                      className="block px-4 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+                      className="block px-4 py-2.5 text-base text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
                     >
                       {item.label}
                     </a>
@@ -74,7 +72,7 @@ const Navbar = () => {
         <div className="hidden lg:flex items-center gap-2 shrink-0">
           <a
             href="#pricing"
-            className="text-sm font-medium text-gray-400 hover:text-white transition-colors px-4 py-2 rounded-full hover:bg-white/5"
+            className="text-base font-medium text-gray-400 hover:text-white transition-colors px-4 py-2 rounded-full hover:bg-white/5"
           >
             Login
           </a>
@@ -84,7 +82,7 @@ const Navbar = () => {
               e.preventDefault();
               document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="bg-white text-gray-900 text-sm font-semibold px-5 py-2 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-all duration-200 shadow-sm cursor-pointer"
+            className="bg-white text-gray-900 text-base font-semibold px-5 py-2 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-all duration-200 shadow-sm cursor-pointer"
           >
             Start Free Trial
           </a>
@@ -108,7 +106,7 @@ const Navbar = () => {
               <a
                 href={link.href}
                 onClick={() => !link.hasDropdown && setMobileMenuOpen(false)}
-                className="flex items-center justify-between text-sm font-medium text-gray-300 hover:text-white px-4 py-2.5 rounded-xl hover:bg-white/5 transition-colors"
+                className="flex items-center justify-between text-base font-medium text-gray-300 hover:text-white px-4 py-2.5 rounded-xl hover:bg-white/5 transition-colors"
               >
                 <span>{link.label}</span>
                 {link.hasDropdown && <FaChevronDown className="text-[10px] text-gray-500" />}
@@ -120,7 +118,7 @@ const Navbar = () => {
                       key={idx}
                       href={item.href}
                       onClick={() => setMobileMenuOpen(false)}
-                      className="block text-sm text-gray-500 hover:text-gray-200 py-1.5 px-2 rounded-lg hover:bg-white/5 transition-colors"
+                      className="block text-base text-gray-500 hover:text-gray-200 py-1.5 px-2 rounded-lg hover:bg-white/5 transition-colors"
                     >
                       {item.label}
                     </a>
@@ -132,14 +130,14 @@ const Navbar = () => {
           <div className="pt-3 mt-2 border-t border-white/10 flex flex-col gap-2">
             <a
               href="#pricing"
-              className="text-center text-sm font-medium text-gray-400 py-2.5 rounded-full border border-white/10 hover:bg-white/5 transition-colors"
+              className="text-center text-base font-medium text-gray-400 py-2.5 rounded-full border border-white/10 hover:bg-white/5 transition-colors"
             >
               Login
             </a>
             <a
               href="#pricing"
               onClick={() => setMobileMenuOpen(false)}
-              className="text-center bg-white text-gray-900 text-sm font-semibold py-2.5 rounded-full hover:bg-gray-100 transition-colors"
+              className="text-center bg-white text-gray-900 text-base font-semibold py-2.5 rounded-full hover:bg-gray-100 transition-colors"
             >
               Start Free Trial
             </a>

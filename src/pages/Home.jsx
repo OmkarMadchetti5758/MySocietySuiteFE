@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import Navbar from '../components/Navbar/Navbar';
 import Hero from '../components/Hero/Hero';
+import TrustBadges from '../components/TrustBadges/TrustBadges';
 import Audience from '../components/Audience/Audience';
 import Timeline from '../components/Timeline/Timeline';
 import Modules from '../components/Modules/Modules';
@@ -8,6 +9,7 @@ import Statistics from '../components/Statistics/Statistics';
 import MobileApps from '../components/MobileApps/MobileApps';
 import AISection from '../components/AISection/AISection';
 import Testimonials from '../components/Testimonials/Testimonials';
+import FAQ from '../components/FAQ/FAQ';
 import PricingCTA from '../components/PricingCTA/PricingCTA';
 import Footer from '../components/Footer/Footer';
 
@@ -20,6 +22,9 @@ const Home = memo(() => {
       <main>
         {/* 2. Hero Section */}
         <Hero />
+
+        {/* Trust Badges */}
+        <TrustBadges />
 
         {/* 3. Why Choose / Audience Section */}
         <Audience />
@@ -41,6 +46,9 @@ const Home = memo(() => {
 
         {/* 9. Testimonials Section */}
         <Testimonials />
+
+        {/* FAQ Section */}
+        <FAQ />
 
         {/* 10. Pricing CTA Section */}
         <PricingCTA />

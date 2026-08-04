@@ -2,80 +2,99 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import Container from '../common/Container';
 import { TESTIMONIALS_DATA } from '../../data/testimonials';
-import { FaStar, FaArrowRight } from 'react-icons/fa';
+import { FaStar } from 'react-icons/fa';
+
+// Generate more duplicated items for a seamless marquee effect
+const MARQUEE_ITEMS = [...TESTIMONIALS_DATA, ...TESTIMONIALS_DATA, ...TESTIMONIALS_DATA];
+
+// Dummy logos for the logo wall
+const SOCIETY_LOGOS = [
+  'Green Valley',
+  'Sunrise Residency',
+  'Elite Heights',
+  'Palm Springs',
+  'Royal Enclave',
+  'Lakeview Apartments',
+];
 
 const Testimonials = () => {
   return (
-    <section id="testimonials" className="py-20 bg-white relative">
+    <section id="testimonials" className="py-20 bg-white relative overflow-hidden">
       <Container>
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        {/* Header */}
+        <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
+          <span className="text-base font-black tracking-widest text-[#FF6B00] uppercase flex items-center justify-center gap-1">
+            <span className="text-[10px]">■</span> SOCIAL PROOF
+          </span>
 
-          {/* LEFT 8 COLS: Testimonials */}
-          <div className="lg:col-span-8 space-y-6">
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-text-dark leading-tight">
-              Loved by Communities.<br />
-              Trusted by <span className="text-[#FF6B00]">Thousands.</span>
-            </h2>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 leading-tight">
+            Loved by Communities.<br />
+            Trusted by <span className="text-[#FF6B00]">Thousands.</span>
+          </h2>
 
-            {/* 3 Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-              {TESTIMONIALS_DATA.map((item, index) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
-                  className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex gap-1 text-amber-400 text-sm mb-3">
-                      {[...Array(item.rating)].map((_, i) => (
-                        <FaStar key={i} />
-                      ))}
-                    </div>
+          <p className="text-gray-500 text-base max-w-lg mx-auto">
+            See what committee members and residents have to say about their experience with MySocietySuite.
+          </p>
+        </div>
+      </Container>
 
-                    <p className="text-sm text-gray-600 leading-relaxed mb-6 italic">
-                      "{item.quote}"
-                    </p>
-                  </div>
+      {/* Marquee Container */}
+      <div className="relative w-full overflow-hidden py-4">
+        {/* Fade gradients on edges */}
+        <div className="absolute top-0 bottom-0 left-0 w-24 bg-gradient-to-r from-white to-transparent z-10" />
+        <div className="absolute top-0 bottom-0 right-0 w-24 bg-gradient-to-l from-white to-transparent z-10" />
 
-                  <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                    />
-                    <div>
-                      <h4 className="text-sm font-bold text-gray-900 leading-none">{item.name}</h4>
-                      <p className="text-[10px] text-gray-500 mt-0.5">{item.role}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          {/* RIGHT 4 COLS: Pricing CTA Block */}
-          <div className="lg:col-span-4 bg-orange-50/50 border border-orange-100 rounded-3xl p-8 space-y-6 text-left">
-            <h2 className="text-3xl font-extrabold text-text-dark leading-tight">
-              Simple Pricing.<br />
-              <span className="text-[#FF6B00]">Transparent Plans.</span>
-            </h2>
-
-            <p className="text-sm text-gray-600 leading-relaxed">
-              Flexible plans for every type of society.
-            </p>
-
-            <a
-              href="#pricing"
-              className="inline-flex items-center justify-center gap-2 w-full px-6 py-3.5 rounded-xl bg-[#FF6B00] text-white hover:bg-orange-600 transition-all font-bold text-sm shadow-orange-glow"
+        <motion.div
+          className="flex gap-6 w-max"
+          animate={{ x: ["0%", "-33.33%"] }}
+          transition={{ ease: "linear", duration: 25, repeat: Infinity }}
+        >
+          {MARQUEE_ITEMS.map((item, index) => (
+            <div
+              key={`${item.id}-${index}`}
+              className="w-[350px] sm:w-[450px] bg-white border border-gray-100 rounded-3xl p-8 shadow-sm hover:shadow-lg transition-shadow duration-300 flex flex-col justify-between shrink-0"
             >
-              <span>View Pricing Plans</span>
-              <FaArrowRight />
-            </a>
-          </div>
+              <div>
+                <div className="flex gap-1 text-amber-400 text-base mb-4">
+                  {[...Array(item.rating)].map((_, i) => (
+                    <FaStar key={i} />
+                  ))}
+                </div>
 
+                <p className="text-base sm:text-lg text-gray-700 leading-relaxed mb-8 italic">
+                  "{item.quote}"
+                </p>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="w-12 h-12 rounded-full object-cover border-2 border-gray-100"
+                />
+                <div>
+                  <h4 className="text-base font-bold text-gray-900 leading-none mb-1">{item.name}</h4>
+                  <p className="text-xs text-gray-500 font-medium">{item.role}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </motion.div>
+      </div>
+
+      <Container>
+        {/* Logo Wall */}
+        <div className="mt-20 pt-10 border-t border-gray-100 text-center">
+          <p className="text-base font-bold text-gray-400 uppercase tracking-widest mb-6">
+            EMPOWERING 500+ SOCIETIES ACROSS INDIA
+          </p>
+          <div className="flex flex-wrap justify-center items-center gap-6 sm:gap-12 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+            {SOCIETY_LOGOS.map((logo, idx) => (
+              <div key={idx} className="text-lg font-black text-gray-900 tracking-tight">
+                {logo}
+              </div>
+            ))}
+          </div>
         </div>
       </Container>
     </section>

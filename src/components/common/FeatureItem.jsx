@@ -3,7 +3,7 @@ import { FaCheckCircle } from 'react-icons/fa';
 
 const FeatureItem = memo(({ text, dark = false, icon: CustomIcon = null, className = '' }) => {
   return (
-    <div className={`flex items-start gap-3 text-sm sm:text-base font-medium ${className}`}>
+    <div className={`flex items-start gap-3 text-base sm:text-base font-medium ${className}`}>
       <span className="mt-0.5 shrink-0 text-primary">
         {CustomIcon ? <CustomIcon className="text-lg" /> : <FaCheckCircle className="text-base" />}
       </span>

@@ -10,7 +10,7 @@ const PhoneCard = memo(({ title, category, description, features, accentColor = 
       <div>
         <div className={`w-full h-3 rounded-full bg-gradient-to-r ${accentColor} mb-6`} />
 
-        <span className="text-sm font-bold uppercase tracking-wider text-primary mb-2 block">
+        <span className="text-base font-bold uppercase tracking-wider text-primary mb-2 block">
           {category}
         </span>
 
@@ -18,27 +18,27 @@ const PhoneCard = memo(({ title, category, description, features, accentColor = 
           {title}
         </h3>
 
-        <p className="text-gray-600 text-sm leading-relaxed mb-6">
+        <p className="text-gray-600 text-base leading-relaxed mb-6">
           {description}
         </p>
 
         {/* Feature List */}
         <div className="space-y-3 mb-8 bg-gray-50 p-4 rounded-xl border border-gray-100">
           {features.map((feat, idx) => (
-            <FeatureItem key={idx} text={feat} className="text-sm font-semibold" />
+            <FeatureItem key={idx} text={feat} className="text-base font-semibold" />
           ))}
         </div>
       </div>
 
       {/* Interactive Phone Screen Representation */}
       <div className="bg-secondary rounded-2xl p-4 text-white text-center">
-        <div className="flex items-center justify-between text-sm text-gray-400 mb-3 border-b border-gray-800 pb-2">
+        <div className="flex items-center justify-between text-base text-gray-400 mb-3 border-b border-gray-800 pb-2">
           <span className="font-semibold text-primary">● Live Mockup</span>
           <span>MySocietySuite OS</span>
         </div>
 
         <div className="bg-dark-card rounded-xl p-4 text-left border border-gray-800 space-y-2">
-          <div className="flex justify-between items-center text-sm">
+          <div className="flex justify-between items-center text-base">
             <span className="text-gray-300">Passcode Verified</span>
             <span className="text-emerald-400 font-bold text-[10px] bg-emerald-500/20 px-2 py-0.5 rounded">Active</span>
           </div>

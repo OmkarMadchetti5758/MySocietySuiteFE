@@ -10,8 +10,8 @@ const Badge = memo(({ children, variant = 'primary', className = '', icon: Icon 
   };
 
   return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1 text-sm font-semibold rounded-full tracking-wide uppercase ${variants[variant]} ${className}`}>
-      {Icon && <Icon className="text-sm" />}
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 text-base font-semibold rounded-full tracking-wide uppercase ${variants[variant]} ${className}`}>
+      {Icon && <Icon className="text-base" />}
       {children}
     </span>
   );

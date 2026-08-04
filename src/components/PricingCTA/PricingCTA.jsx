@@ -4,8 +4,7 @@ import toast from 'react-hot-toast';
 import Container from '../common/Container';
 import Button from '../common/Button';
 import Badge from '../common/Badge';
-import FeatureItem from '../common/FeatureItem';
-import { FaHeadset, FaRocket, FaCheck } from 'react-icons/fa';
+import { FaHeadset, FaRocket, FaCheck, FaCalendarCheck, FaUsers, FaLaptopCode } from 'react-icons/fa';
 
 const PRICING_PLANS = [
   {
@@ -57,6 +56,12 @@ const PRICING_PLANS = [
   },
 ];
 
+const ONBOARDING_STEPS = [
+  { day: 'Day 1', title: 'Account Setup', icon: FaLaptopCode },
+  { day: 'Day 3', title: 'Data Migration', icon: FaCalendarCheck },
+  { day: 'Day 7', title: 'Go Live', icon: FaUsers },
+];
+
 const PricingCTA = () => {
   return (
     <section
@@ -70,7 +75,7 @@ const PricingCTA = () => {
 
       <Container>
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+        <div className="text-center max-w-3xl mx-auto mb-12 space-y-4">
           <Badge variant="light" icon={FaRocket}>
             Simple &amp; Transparent Pricing
           </Badge>
@@ -81,9 +86,26 @@ const PricingCTA = () => {
           </h2>
 
           <p className="text-gray-500 text-base sm:text-lg">
-            No credit card required. Onboard your society in less than 24 hours
-            with our dedicated onboarding team.
+            No credit card required. Onboard your society seamlessly with our dedicated team.
           </p>
+        </div>
+
+        {/* 3-Step Onboarding Timeline graphic */}
+        <div className="max-w-2xl mx-auto mb-16">
+          <div className="flex flex-col sm:flex-row items-center justify-between relative">
+            {/* Connecting line */}
+            <div className="absolute left-1/2 top-0 bottom-0 w-0.5 sm:w-full sm:h-0.5 bg-orange-200/50 sm:top-1/2 sm:left-0 sm:-translate-y-1/2 -translate-x-1/2 sm:translate-x-0 -z-10" />
+
+            {ONBOARDING_STEPS.map((step, idx) => (
+              <div key={idx} className="flex flex-col items-center bg-transparent p-2 py-4 sm:py-2 z-10">
+                <div className="w-12 h-12 rounded-full bg-white border-2 border-orange-200 text-orange-500 flex items-center justify-center text-lg mb-2 shadow-sm">
+                  <step.icon />
+                </div>
+                <span className="text-xs font-bold text-orange-500 tracking-wider uppercase mb-0.5">{step.day}</span>
+                <span className="text-base font-semibold text-gray-700">{step.title}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Pricing Cards Grid */}
@@ -93,16 +115,10 @@ const PricingCTA = () => {
               key={plan.id}
               whileHover={{ y: -8, scale: 1.01 }}
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-              className={`rounded-3xl p-8 relative flex flex-col justify-between transition-all duration-300 ${
-                plan.popular
-                  ? 'bg-white/70 backdrop-blur-xl border-2 border-primary/40 shadow-[0_8px_40px_rgba(255,107,0,0.18)]'
-                  : 'bg-white/50 backdrop-blur-md border border-white/80 shadow-[0_4px_24px_rgba(0,0,0,0.07)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:border-white'
-              }`}
-              style={{
-                background: plan.popular
-                  ? 'rgba(255,255,255,0.75)'
-                  : 'rgba(255,255,255,0.55)',
-              }}
+              className={`rounded-3xl p-8 relative flex flex-col justify-between transition-all duration-300 ${plan.popular
+                ? 'bg-white/70 backdrop-blur-xl border-2 border-primary/40 shadow-[0_8px_40px_rgba(255,107,0,0.18)]'
+                : 'bg-white/50 backdrop-blur-md border border-white/80 shadow-[0_4px_24px_rgba(0,0,0,0.07)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:border-white'
+                }`}
             >
               {/* Popular badge */}
               {plan.popular && (
@@ -120,7 +136,7 @@ const PricingCTA = () => {
 
                 <div className="flex items-baseline gap-1 mb-6">
                   <span className="text-4xl font-extrabold text-gray-900">{plan.price}</span>
-                  <span className="text-sm text-gray-400 font-medium">{plan.period}</span>
+                  <span className="text-base text-gray-400 font-medium">{plan.period}</span>
                 </div>
 
                 <div className="space-y-3 pt-6 border-t border-gray-100 mb-8">
@@ -129,7 +145,7 @@ const PricingCTA = () => {
                       <span className="w-4 h-4 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                         <FaCheck className="text-primary text-[8px]" />
                       </span>
-                      <span className="text-sm text-gray-600">{feat}</span>
+                      <span className="text-base text-gray-600">{feat}</span>
                     </div>
                   ))}
                 </div>
@@ -137,13 +153,12 @@ const PricingCTA = () => {
 
               <button
                 onClick={() =>
-                  toast.success(`Starting 30-Day Free Trial for ${plan.name}`)
+                  toast.success(plan.price === 'Custom' ? 'Contacting Sales...' : `Starting 30-Day Free Trial for ${plan.name}`)
                 }
-                className={`w-full py-3 px-6 rounded-full text-sm font-semibold transition-all duration-200 cursor-pointer ${
-                  plan.popular
-                    ? 'bg-primary text-white shadow-orange-glow hover:bg-primary-hover hover:shadow-lg'
-                    : 'bg-gray-900 text-white hover:bg-black'
-                }`}
+                className={`w-full py-3 px-6 rounded-full text-base font-semibold transition-all duration-200 cursor-pointer ${plan.popular
+                  ? 'bg-primary text-white shadow-orange-glow hover:bg-primary-hover hover:shadow-lg'
+                  : 'bg-transparent border border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white'
+                  }`}
               >
                 {plan.price === 'Custom' ? 'Contact Sales' : 'Start 30-Day Free Trial'}
               </button>
@@ -170,15 +185,15 @@ const PricingCTA = () => {
               <h4 className="text-lg font-bold text-gray-900">
                 Need a Custom Demo for Your Management Committee?
               </h4>
-              <p className="text-sm text-gray-500">
+              <p className="text-base text-gray-500">
                 Our society expert will conduct a live presentation at your society office or via Zoom.
               </p>
             </div>
           </div>
 
           <Button
-            variant="primary"
-            className="mt-6 w-full max-w-sm sm:w-auto sm:mt-0 shrink-0"
+            variant="outline"
+            className="mt-6 w-full max-w-sm sm:w-auto sm:mt-0 shrink-0 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white"
             onClick={() =>
               toast.success(
                 'Demo Request Submitted! Our representative will call you shortly.'
