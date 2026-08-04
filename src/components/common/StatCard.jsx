@@ -57,13 +57,13 @@ const StatCard = memo(({ stat }) => {
     : count.toFixed(1);
 
   return (
-    <div ref={cardRef} className="flex items-center gap-4 p-4 rounded-xl bg-gray-900/40 border border-gray-800/60">
-      <div className="w-12 h-12 rounded-xl bg-orange-500/10 text-[#FF6B00] flex items-center justify-center text-2xl shrink-0">
+    <div ref={cardRef} className="flex items-center gap-4 p-4 rounded-xl">
+      <div className="w-10 h-10 rounded-xl bg-orange-500/10 text-[#FF6B00] flex items-center justify-center text-lg shrink-0">
         <IconComponent />
       </div>
 
       <div>
-        <div className="text-2xl sm:text-3xl font-extrabold text-[#FF6B00] tracking-tight">
+        <div className="text-xl sm:text-xl font-extrabold text-[#FF6B00] tracking-tight">
           {formattedCount}{stat.suffix}
         </div>
         <div className="text-base font-semibold text-gray-200">{stat.label}</div>
