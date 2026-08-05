@@ -40,6 +40,7 @@ const Timeline = () => {
               {/* Steps */}
               {TIMELINE_STEPS.map((step, index) => {
                 const IconComponent = FaIcons[step.iconName] || FaIcons.FaUser;
+                const isGreenHover = step.iconName === 'FaCheckCircle';
 
                 return (
                   <motion.div
@@ -51,7 +52,15 @@ const Timeline = () => {
                     className="flex flex-row sm:flex-col items-center sm:text-center relative z-10 group mb-6 sm:mb-0 flex-1 px-2"
                   >
                     {/* Circle Icon Wrapper */}
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white border-2 border-orange-100 shadow-sm flex items-center justify-center text-gray-400 text-lg sm:mb-4 relative group-hover:border-[#FF6B00] group-hover:text-[#FF6B00] transition-colors shrink-0">
+                    {/* <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white border-2 border-orange-100 shadow-sm flex items-center justify-center text-gray-400 text-lg sm:mb-4 relative group-hover:border-[#FF6B00] group-hover:text-[#FF6B00] transition-colors shrink-0">
+                      <IconComponent />
+                    </div> */}
+                    <div
+                      className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white border-2 border-orange-100 shadow-sm flex items-center justify-center text-gray-400 text-lg sm:mb-4 relative transition-colors shrink-0 ${isGreenHover
+                        ? 'group-hover:border-green-500 group-hover:text-green-500'
+                        : 'group-hover:border-[#FF6B00] group-hover:text-[#FF6B00]'
+                        }`}
+                    >
                       <IconComponent />
                     </div>
 

@@ -21,7 +21,7 @@ const SLIDES = [
     image: banner1,
     layout: 'split',
     // ── Customize Hero1.png (bannerIsoImg) independently ──
-    imageClassName: "absolute inset-0 w-full h-full object-cover object-top sm:object-center sm:w-200 sm:ml-170",
+    imageClassName: "absolute inset-0 w-full h-full object-cover object-top sm:object-center sm:w-200 sm:ml-150",
     imageStyle: { objectPosition: 'center center' },
   },
   {
@@ -103,7 +103,7 @@ const Hero = () => {
             className="space-y-5 max-w-full sm:max-w-[75%] lg:max-w-[55%]"
           >
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-[#FF6B00] text-base font-bold uppercase tracking-wider backdrop-blur-sm">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-[#FF6B00] text-sm font-bold uppercase tracking-wider backdrop-blur-sm">
               {slide.badge}
             </div>
 
