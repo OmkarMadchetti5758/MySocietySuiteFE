@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { NAV_LINKS } from '../../data/navigation';
 import { FaChevronDown, FaBars, FaTimes } from 'react-icons/fa';
 import logoImg from '../../assets/images/webp/MySocietySuite_FinalLogo.webp';
+import LoginModal from '../Auth/LoginModal';
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -70,12 +72,12 @@ const Navbar = () => {
 
         {/* Right Actions */}
         <div className="hidden lg:flex items-center gap-2 shrink-0">
-          <a
-            href="#pricing"
+          <button
+            onClick={() => setIsLoginModalOpen(true)}
             className="text-base font-medium text-gray-400 hover:text-white transition-colors px-4 py-2 rounded-full hover:bg-white/5"
           >
             Login
-          </a>
+          </button>
           <a
             href="#pricing"
             onClick={(e) => {
@@ -128,12 +130,15 @@ const Navbar = () => {
             </div>
           ))}
           <div className="pt-3 mt-2 border-t border-white/10 flex flex-col gap-2">
-            <a
-              href="#pricing"
-              className="text-center text-base font-medium text-gray-400 py-2.5 rounded-full border border-white/10 hover:bg-white/5 transition-colors"
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setIsLoginModalOpen(true);
+              }}
+              className="text-center text-base font-medium text-gray-400 py-2.5 rounded-full border border-white/10 hover:bg-white/5 transition-colors w-full"
             >
-              Login
-            </a>
+              Login / Register
+            </button>
             <a
               href="#pricing"
               onClick={() => setMobileMenuOpen(false)}
@@ -144,6 +149,12 @@ const Navbar = () => {
           </div>
         </div>
       )}
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+      />
     </header>
   );
 };
