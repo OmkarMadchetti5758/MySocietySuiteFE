@@ -1,32 +1,21 @@
 export const NAV_LINKS = [
-  { id: 'features', label: 'Features', href: '#features' },
-  {
-    id: 'modules',
-    label: 'Modules',
-    href: '#modules',
-    hasDropdown: true,
-    dropdownItems: [
-      { label: 'Visitor Management', href: '#modules' },
-      { label: 'Maintenance Billing', href: '#modules' },
-      { label: 'Complaint Management', href: '#modules' },
-      { label: 'Facility Booking', href: '#modules' },
-      { label: 'Accounts & Staff', href: '#modules' }
-    ]
-  },
-  { id: 'pricing', label: 'Pricing', href: '#pricing' },
+  { id: 'home', label: 'Home', href: '#home' },
+  { id: 'who-we-serve', label: 'Who we serve', href: '#who-we-serve' },
+  { id: 'products', label: 'Products', href: '#products' },
   {
     id: 'resources',
     label: 'Resources',
-    href: '#how-it-works',
+    href: '#resources',
     hasDropdown: true,
     dropdownItems: [
-      { label: 'How it Works', href: '#how-it-works' },
+      { label: 'Guides & Insights', href: '#resources' },
+      { label: 'FAQs', href: '#faq' },
       { label: 'Case Studies', href: '#testimonials' },
-      { label: 'Mobile Apps', href: '#mobile-apps' },
-      { label: 'AI Assistant', href: '#ai-assistant' }
     ]
   },
-  { id: 'about', label: 'About Us', href: '#footer' },
+  { id: 'blog', label: 'Blog', href: '#blog' },
+  { id: 'about', label: 'About Us', href: '#about-us' },
+  { id: 'contact', label: 'Contact', href: '#contact' },
 ];
 
 export const TRUSTED_AVATARS = [

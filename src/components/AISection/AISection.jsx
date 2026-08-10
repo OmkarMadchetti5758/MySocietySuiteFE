@@ -17,14 +17,14 @@ import {
 const SUGGESTION_CARDS = [
   {
     id: 1,
-    text: 'Show unpaid maintenance bills for Wing A',
+    text: 'How can we make community events better?',
     icon: FaListAlt,
     iconBg: 'bg-purple-100',
     iconColor: 'text-purple-600',
   },
   {
     id: 2,
-    text: 'Generate monthly GST audit report',
+    text: 'Is my society cleaned every day?',
     icon: FaChartBar,
     iconBg: 'bg-green-100',
     iconColor: 'text-emerald-600',
@@ -38,7 +38,7 @@ const SUGGESTION_CARDS = [
   },
   {
     id: 4,
-    text: 'Draft announcement for lift maintenance on Sunday',
+    text: 'Is my society secure and staff accountable?',
     icon: FaBullhorn,
     iconBg: 'bg-orange-100',
     iconColor: 'text-orange-500',
@@ -121,8 +121,8 @@ const AISection = () => {
                 <button
                   onClick={() => setActiveTab('try')}
                   className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-base font-semibold transition-all cursor-pointer ${activeTab === 'try'
-                      ? 'bg-purple-100 text-purple-700'
-                      : 'text-gray-400 hover:text-gray-600'
+                    ? 'bg-purple-100 text-purple-700'
+                    : 'text-gray-400 hover:text-gray-600'
                     }`}
                 >
                   <FaBolt className="text-[10px]" />
@@ -131,8 +131,8 @@ const AISection = () => {
                 <button
                   onClick={() => setActiveTab('suggestions')}
                   className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-base font-semibold transition-all cursor-pointer ${activeTab === 'suggestions'
-                      ? 'bg-purple-100 text-purple-700'
-                      : 'text-gray-400 hover:text-gray-600'
+                    ? 'bg-purple-100 text-purple-700'
+                    : 'text-gray-400 hover:text-gray-600'
                     }`}
                 >
                   <span className="text-amber-400 text-xs">✦</span>

@@ -16,7 +16,7 @@ const Footer = () => {
   };
 
   return (
-    <footer id="footer" className="bg-[#0B0B0B] text-gray-400 pt-16 pb-8 border-t border-gray-800/80">
+    <footer id="about-us" className="bg-[#0B0B0B] text-gray-400 pt-16 pb-8 border-t border-gray-800/80">
       <Container>
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10 pb-12 border-b border-gray-800/80 text-base">
 

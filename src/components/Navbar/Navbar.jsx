@@ -56,8 +56,8 @@ const Navbar = () => {
               <div key={link.id} className="relative group flex items-center h-full">
                 <a
                   href={link.href}
-                  className={`flex items-center gap-1.5 text-base font-medium transition-all duration-300 ${scrolled
-                    ? 'text-gray-300 hover:text-white px-4 py-2 rounded-full hover:bg-white/5'
+                  className={`flex items-center gap-1.5 text-[15px] font-medium transition-all duration-300 whitespace-nowrap ${scrolled
+                    ? 'text-gray-300 hover:text-white px-3 py-2 rounded-full hover:bg-white/5'
                     : `py-2 relative ${isActive ? 'text-[#FF6B00]' : 'text-gray-600 hover:text-gray-900'}`
                     }`}
                 >
