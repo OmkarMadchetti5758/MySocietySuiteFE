@@ -45,7 +45,7 @@ const Home = memo(() => {
         <AISection />
 
         {/* 9. Testimonials Section */}
-        <Testimonials />
+        {/* <Testimonials /> */}
 
         {/* FAQ Section */}
         <FAQ />
