@@ -13,7 +13,7 @@ const FAQ_DATA = [
   {
     id: 2,
     question: 'Is our society and resident data secure?',
-    answer: 'Absolutely. We use bank-grade encryption and host all data on secure AWS servers in India. We are fully compliant with Indian data privacy regulations, ensuring your data is never shared or sold to third parties.',
+    answer: 'Absolutely. We use bank-grade encryption and host all data on secure servers in India. We are fully compliant with Indian data privacy regulations, ensuring your data is never shared or sold to third parties.',
   },
   {
     id: 3,
@@ -36,7 +36,7 @@ const FAQ = () => {
   const [openIndex, setOpenIndex] = useState(0);
 
   return (
-    <section id="faq" className="py-20 bg-white relative">
+    <section id="faq" className="py-5 bg-white relative">
       <Container>
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-14 space-y-4">

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NAV_LINKS } from '../../data/navigation';
 import { FaChevronDown, FaBars, FaTimes } from 'react-icons/fa';
 import logoImg from '../../assets/images/webp/MySocietySuite_FinalLogo.webp';
+import navLogoImg from '../../assets/images/webp/nav_logo.webp';
 import LoginModal from '../Auth/LoginModal';
 
 const Navbar = () => {
@@ -17,64 +18,93 @@ const Navbar = () => {
 
   return (
     <header
-      className={`sticky top-0 z-50 flex flex-col items-center transition-all duration-500 ${scrolled ? 'py-3 bg-transparent' : 'py-4 bg-[#0B0B0B]'
+      className={`fixed top-0 w-full z-50 flex flex-col items-center transition-all duration-500 ${scrolled ? 'pt-4 bg-transparent' : 'bg-white shadow-sm'
         }`}
     >
-      {/* Floating pill-shaped navbar */}
+      {/* Navbar Container */}
       <div
-        className={`relative flex items-center justify-between gap-4 px-2 py-1.5 rounded-full transition-all duration-500 w-[92%] max-w-4xl ${scrolled
-          ? 'bg-[#111]/95 shadow-[0_8px_40px_rgba(0,0,0,0.45)] border border-white/[0.08] backdrop-blur-xl'
-          : 'bg-[#111]/90 border border-white/[0.08] backdrop-blur-md shadow-[0_4px_24px_rgba(0,0,0,0.3)]'
+        className={`relative flex items-center justify-between transition-all duration-500 mx-auto ${scrolled
+          ? 'w-[90%] max-w-4xl px-2 py-1.5 rounded-full bg-[#111]/95 shadow-[0_8px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl gap-4'
+          : 'w-full max-w-[1400px] px-6 lg:px-10 py-0 md:py-0 bg-transparent gap-8'
           }`}
       >
-        {/* Logo Circle */}
-        <a href="#" className="shrink-0 flex items-center justify-center">
-          <div className="w-12 h-12 rounded-full bg-black/70 border border-white/10 flex items-center justify-center overflow-hidden shadow-inner">
+        {/* Logo */}
+        <a href="#" className={`shrink-0 flex items-center justify-center transition-all duration-500 ${scrolled ? 'w-12 h-12 rounded-full bg-black/70 overflow-hidden shadow-inner' : ''
+          }`}>
+          {scrolled ? (
             <img
               src={logoImg}
-              alt="MySocietySuite Logo"
-              className="w-24 h-24 object-contain"
+              alt="MySocietySuite Icon"
+              className="transition-all duration-500 object-contain w-18 h-18 max-w-none"
             />
-          </div>
+          ) : (
+            <img
+              src={navLogoImg}
+              alt="MySocietySuite Full Logo"
+              /* Customize the height and width of the initial logo here: */
+              className="transition-all duration-500 object-contain origin-left h-20 md:h-20 w-auto"
+            />
+          )}
         </a>
 
         {/* Desktop Nav Links */}
-        <nav className="hidden lg:flex items-center gap-0.5 flex-1 justify-center">
-          {NAV_LINKS.map((link) => (
-            <div key={link.id} className="relative group">
-              <a
-                href={link.href}
-                className="flex items-center gap-1.5 text-base font-medium text-gray-300 hover:text-white transition-colors duration-200 px-4 py-2 rounded-full hover:bg-white/5"
-              >
-                <span>{link.label}</span>
-                {link.hasDropdown && (
-                  <FaChevronDown className="text-[9px] text-gray-500 group-hover:text-gray-300 transition-transform duration-200 group-hover:rotate-180" />
-                )}
-              </a>
+        <nav className={`hidden lg:flex items-center flex-1 justify-center transition-all duration-500 ${scrolled ? 'gap-0.5' : 'gap-8'
+          }`}>
+          {NAV_LINKS.map((link) => {
+            const isActive = link.label === 'Home'; // Example active state
+            return (
+              <div key={link.id} className="relative group flex items-center h-full">
+                <a
+                  href={link.href}
+                  className={`flex items-center gap-1.5 text-base font-medium transition-all duration-300 ${scrolled
+                    ? 'text-gray-300 hover:text-white px-4 py-2 rounded-full hover:bg-white/5'
+                    : `py-2 relative ${isActive ? 'text-[#FF6B00]' : 'text-gray-600 hover:text-gray-900'}`
+                    }`}
+                >
+                  <span>{link.label}</span>
+                  {link.hasDropdown && (
+                    <FaChevronDown className={`text-[9px] transition-transform duration-200 group-hover:rotate-180 ${scrolled ? 'text-gray-500 group-hover:text-gray-300' : 'text-gray-400'
+                      }`} />
+                  )}
+                  {/* Active underline for non-scrolled state */}
+                  {!scrolled && isActive && (
+                    <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#FF6B00] rounded-t-sm" />
+                  )}
+                </a>
 
-              {/* Dropdown */}
-              {link.hasDropdown && link.dropdownItems && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0 w-52 bg-[#161616]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden py-2 z-50">
-                  {link.dropdownItems.map((item, idx) => (
-                    <a
-                      key={idx}
-                      href={item.href}
-                      className="block px-4 py-2.5 text-base text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
-                    >
-                      {item.label}
-                    </a>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+                {/* Dropdown */}
+                {link.hasDropdown && link.dropdownItems && (
+                  <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0 w-52 rounded-2xl shadow-2xl overflow-hidden py-2 z-50 ${scrolled
+                    ? 'bg-[#161616]/95 backdrop-blur-xl border border-white/10'
+                    : 'bg-white border border-gray-100 shadow-lg'
+                    }`}>
+                    {link.dropdownItems.map((item, idx) => (
+                      <a
+                        key={idx}
+                        href={item.href}
+                        className={`block px-4 py-2.5 text-base transition-colors ${scrolled
+                          ? 'text-gray-400 hover:text-white hover:bg-white/5'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                          }`}
+                      >
+                        {item.label}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </nav>
 
         {/* Right Actions */}
-        <div className="hidden lg:flex items-center gap-2 shrink-0">
+        <div className="hidden lg:flex items-center gap-3 shrink-0">
           <button
             onClick={() => setIsLoginModalOpen(true)}
-            className="text-base font-medium text-gray-400 hover:text-white transition-colors px-4 py-2 rounded-full hover:bg-white/5"
+            className={`text-[15px] font-semibold transition-all duration-300 ${scrolled
+              ? 'text-gray-400 hover:text-white px-4 py-2 rounded-full hover:bg-white/5'
+              : 'text-gray-700 hover:text-gray-900 border-2 border-gray-200 px-6 py-2.5 rounded-lg hover:bg-gray-50'
+              }`}
           >
             Login
           </button>
@@ -84,16 +114,20 @@ const Navbar = () => {
               e.preventDefault();
               document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="bg-white text-gray-900 text-base font-semibold px-5 py-2 rounded-full hover:bg-gray-100 active:bg-gray-200 transition-all duration-200 shadow-sm cursor-pointer"
+            className={`text-[15px] font-bold transition-all duration-300 shadow-sm cursor-pointer flex items-center justify-center ${scrolled
+              ? 'bg-white text-gray-900 px-5 py-2.5 rounded-full hover:bg-gray-100 active:bg-gray-200'
+              : 'bg-[#FF6B00] text-white px-6 py-3 rounded-lg hover:bg-[#e66000] active:bg-[#cc5500]'
+              }`}
           >
-            Start Free Trial
+            {scrolled ? 'Book Demo' : 'Book a Demo'}
           </a>
         </div>
 
         {/* Mobile Hamburger */}
         <button
           onClick={() => setMobileMenuOpen((prev) => !prev)}
-          className="lg:hidden p-2.5 mr-1 text-gray-400 hover:text-white text-lg transition-colors rounded-full hover:bg-white/5"
+          className={`lg:hidden p-2.5 mr-1 text-lg transition-colors rounded-full ${scrolled ? 'text-gray-400 hover:text-white hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
           aria-label="Toggle menu"
         >
           {mobileMenuOpen ? <FaTimes /> : <FaBars />}
@@ -144,7 +178,7 @@ const Navbar = () => {
               onClick={() => setMobileMenuOpen(false)}
               className="text-center bg-white text-gray-900 text-base font-semibold py-2.5 rounded-full hover:bg-gray-100 transition-colors"
             >
-              Start Free Trial
+              Book Demo
             </a>
           </div>
         </div>

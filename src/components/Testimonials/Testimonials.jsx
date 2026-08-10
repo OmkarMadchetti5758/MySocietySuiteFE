@@ -81,23 +81,7 @@ const Testimonials = () => {
           ))}
         </motion.div>
       </div>
-
-      <Container>
-        {/* Logo Wall */}
-        <div className="mt-20 pt-10 border-t border-gray-100 text-center">
-          <p className="text-base font-bold text-gray-400 uppercase tracking-widest mb-6">
-            EMPOWERING 500+ SOCIETIES ACROSS INDIA
-          </p>
-          <div className="flex flex-wrap justify-center items-center gap-6 sm:gap-12 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-            {SOCIETY_LOGOS.map((logo, idx) => (
-              <div key={idx} className="text-lg font-black text-gray-900 tracking-tight">
-                {logo}
-              </div>
-            ))}
-          </div>
-        </div>
-      </Container>
-    </section>
+    </section >
   );
 };
 

@@ -1,10 +1,10 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import Container from '../common/Container';
 import Button from '../common/Button';
 import Badge from '../common/Badge';
-import { FaHeadset, FaRocket, FaCheck, FaCalendarCheck, FaUsers, FaLaptopCode } from 'react-icons/fa';
+import { FaHeadset, FaRocket, FaCheck, FaCalendarCheck, FaUsers, FaLaptopCode, FaPhone, FaEnvelope, FaMapMarkerAlt, FaTimes } from 'react-icons/fa';
 
 const PRICING_PLANS = [
   {
@@ -63,6 +63,8 @@ const ONBOARDING_STEPS = [
 ];
 
 const PricingCTA = () => {
+  const [showContactModal, setShowContactModal] = useState(false);
+
   return (
     <section
       id="pricing"
@@ -80,10 +82,23 @@ const PricingCTA = () => {
             Simple &amp; Transparent Pricing
           </Badge>
 
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-gray-900">
-            Ready to Digitize Your Society?{' '}
-            <span className="orange-gradient-text">Start 30-Day Free Trial</span>
-          </h2>
+          <div className="flex flex-col items-center gap-4">
+            <p className="text-gray-500 text-base sm:text-lg">
+              Interested in getting started? Reach out to us directly.
+            </p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setShowContactModal(true)}
+              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full text-base font-bold text-white shadow-orange-glow cursor-pointer transition-all duration-200 hover:shadow-lg"
+              style={{
+                background: 'linear-gradient(135deg, #ff6b00 0%, #ff9d00 100%)',
+              }}
+            >
+              <FaHeadset className="text-lg" />
+              Contact Us
+            </motion.button>
+          </div>
 
           <p className="text-gray-500 text-base sm:text-lg">
             No credit card required. Onboard your society seamlessly with our dedicated team.
@@ -109,7 +124,7 @@ const PricingCTA = () => {
         </div>
 
         {/* Pricing Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {PRICING_PLANS.map((plan) => (
             <motion.div
               key={plan.id}
@@ -120,7 +135,6 @@ const PricingCTA = () => {
                 : 'bg-white/50 backdrop-blur-md border border-white/80 shadow-[0_4px_24px_rgba(0,0,0,0.07)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:border-white'
                 }`}
             >
-              {/* Popular badge */}
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-black uppercase px-5 py-1.5 rounded-full shadow-orange-glow tracking-wider">
                   Popular for RWAs
@@ -164,7 +178,7 @@ const PricingCTA = () => {
               </button>
             </motion.div>
           ))}
-        </div>
+        </div> */}
 
         {/* Bottom Banner — glass card */}
         <div
@@ -203,9 +217,119 @@ const PricingCTA = () => {
             Request On-Site Demo
           </Button>
         </div>
-      </Container>
-    </section>
+      </Container >
+
+      {/* Contact Us Modal */}
+      < AnimatePresence >
+        {showContactModal && (
+          <motion.div
+            key="contact-modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}
+            onClick={() => setShowContactModal(false)}
+          >
+            <motion.div
+              key="contact-modal-card"
+              initial={{ opacity: 0, scale: 0.9, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 30 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              className="relative w-full max-w-md rounded-3xl overflow-hidden"
+              style={{
+                background: 'rgba(255,255,255,0.95)',
+                backdropFilter: 'blur(20px)',
+                boxShadow: '0 24px 64px rgba(0,0,0,0.18)',
+                border: '1px solid rgba(255,255,255,0.9)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div
+                className="px-8 pt-8 pb-6 text-center relative"
+                style={{ background: 'linear-gradient(135deg, #ff6b00 0%, #ff9d00 100%)' }}
+              >
+                <button
+                  onClick={() => setShowContactModal(false)}
+                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 flex items-center justify-center text-white transition-colors duration-150 cursor-pointer"
+                >
+                  <FaTimes className="text-sm" />
+                </button>
+                <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mx-auto mb-3 border border-white/30">
+                  <FaHeadset className="text-white text-3xl" />
+                </div>
+                <h3 className="text-2xl font-black text-white tracking-tight">Contact Us</h3>
+                <p className="text-white/80 text-sm mt-1">We're here to help you get started</p>
+              </div>
+
+              {/* Modal Body */}
+              <div className="px-8 py-6 space-y-5">
+                {/* Phone */}
+                <div className="flex items-start gap-4">
+                  <div className="w-11 h-11 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0">
+                    <FaPhone className="text-primary text-base" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Phone</p>
+                    <a
+                      href="tel:+919226605656"
+                      className="text-base font-bold text-gray-900 hover:text-primary transition-colors duration-150"
+                    >
+                      +91 9226605656
+                    </a>
+                    <p className="text-sm text-gray-500">Tejas Putta</p>
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div className="flex items-start gap-4">
+                  <div className="w-11 h-11 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0">
+                    <FaEnvelope className="text-primary text-base" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Email</p>
+                    <a
+                      href="mailto:tejas.p@msquaresoftware.com"
+                      className="text-base font-bold text-gray-900 hover:text-primary transition-colors duration-150 break-all"
+                    >
+                      tejas.p@msquaresoftware.com
+                    </a>
+                  </div>
+                </div>
+
+                {/* Address */}
+                <div className="flex items-start gap-4">
+                  <div className="w-11 h-11 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0">
+                    <FaMapMarkerAlt className="text-primary text-base" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Address</p>
+                    <p className="text-base font-bold text-gray-900">Pune, India</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-8 pb-8 pt-2">
+                <a
+                  href="mailto:tejas.p@msquaresoftware.com"
+                  className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl text-base font-bold text-white transition-all duration-200 hover:shadow-lg cursor-pointer"
+                  style={{ background: 'linear-gradient(135deg, #ff6b00 0%, #ff9d00 100%)' }}
+                >
+                  <FaEnvelope />
+                  Send an Email
+                </a>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence >
+    </section >
   );
 };
 
 export default PricingCTA;
+

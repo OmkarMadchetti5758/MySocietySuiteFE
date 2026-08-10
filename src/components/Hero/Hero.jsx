@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Button from '../common/Button';
 import { TRUSTED_AVATARS } from '../../data/navigation';
-import { FaCheckCircle, FaPlay, FaArrowRight } from 'react-icons/fa';
+import { FaCheckCircle, FaPlay, FaChartPie } from 'react-icons/fa';
 
 import banner1 from '../../assets/images/webp/Hero1.webp';
 import banner2 from '../../assets/images/webp/Hero2.webp';
 import banner3 from '../../assets/images/webp/Hero3.webp';
+import banner4 from '../../assets/images/webp/Hero4.webp';
 
 const SLIDES = [
   {
     id: 1,
     badge: "⭐ India's Most Trusted Society Management Platform",
-    title: <>One Platform. Every Society. <span className="text-[#FF6B00]">Every Resident.</span></>,
+    title: <>One Platform. Every Society. <span className="text-[#FF6B00]"><br></br>Every Resident.</span></>,
     subtitle: "Simplify management, enhance communication, and elevate living experiences with MySocietySuite.",
     primaryCta: "Start Free Trial",
     secondaryCta: "Book a Demo",
@@ -41,7 +41,7 @@ const SLIDES = [
   {
     id: 3,
     badge: "BETTER LIVING",
-    title: <>Stronger Communities. <span className="text-[#FF6B00]">Happier Together.</span></>,
+    title: <>Stronger Communities. <span className="text-[#FF6B00]"><br></br>Happier Together.</span></>,
     subtitle: "From secure living to seamless management, we help communities thrive every day.",
     primaryCta: "Explore Apps",
     secondaryCta: "Schedule Demo",
@@ -50,6 +50,24 @@ const SLIDES = [
     image: banner3,
     layout: 'split',
     imageClassName: "absolute inset-0 w-full h-full object-cover object-center sm:ml-50",
+    imageStyle: {},
+  },
+  {
+    id: 4,
+    badge: "MODULES",
+    title: <>Everything Your Society Needs, <span className="text-[#FF6B00]"><br></br>In One Place.</span></>,
+    subtitle: "15 powerful modules to manage your society operations seamlessly and a value-added AI layer to make it smarter.",
+    primaryCta: "Explore Modules",
+    secondaryCta: "Book a Demo",
+    features: ["Complete Management", "Smarter Decisions"],
+    featureDetails: [
+      "Cover every aspect of society operations.",
+      "Data-driven insights for better decision making.",
+    ],
+    hasAvatars: false,
+    image: banner4,
+    layout: 'split',
+    imageClassName: "absolute inset-0 w-full h-full object-cover object-center",
     imageStyle: {},
   }
 ];
@@ -68,7 +86,7 @@ const Hero = () => {
   const slide = SLIDES[currentSlide];
 
   return (
-    <section className="relative bg-[#0B0B0B] text-white overflow-hidden min-h-[600px] flex flex-col">
+    <section className="relative bg-[#0B0B0B] text-white overflow-hidden min-h-[600px] flex flex-col mt-20">
 
       {/* ── FULL-BLEED BACKGROUND IMAGE ── */}
       <AnimatePresence mode="wait">
@@ -103,7 +121,7 @@ const Hero = () => {
             className="space-y-5 max-w-full sm:max-w-[75%] lg:max-w-[55%]"
           >
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-[#FF6B00] text-sm font-bold uppercase tracking-wider backdrop-blur-sm">
+            <div className="inline-flex items-center gap-2 px-1.5 py-1.5 rounded-full bg-orange-500/15 border border-orange-500/30 text-[#FF6B00] text-sm font-bold uppercase tracking-wider backdrop-blur-sm">
               {slide.badge}
             </div>
 
@@ -118,7 +136,7 @@ const Hero = () => {
             </p>
 
             {/* Optional Bullets */}
-            {slide.features && (
+            {slide.features && !slide.featureDetails && (
               <div className="flex flex-wrap gap-3 text-base font-semibold text-gray-200">
                 {slide.features.map((feat, idx) => (
                   <div key={idx} className="flex items-center gap-2">
@@ -129,11 +147,28 @@ const Hero = () => {
               </div>
             )}
 
+            {/* Optional Detailed Features (for Slide 4) */}
+            {slide.featureDetails && (
+              <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                {slide.features.map((feat, idx) => (
+                  <div key={idx} className="flex items-start gap-3 bg-white/5 backdrop-blur-sm p-3 rounded-xl border border-white/10 w-full sm:w-1/2">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${idx === 0 ? 'bg-orange-500/20 text-orange-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                      {idx === 0 ? <FaCheckCircle className="text-2xl" /> : <FaChartPie className="text-2xl" />}
+                    </div>
+                    <div>
+                      <h4 className="text-white font-bold text-sm mb-1">{feat}</h4>
+                      <p className="text-gray-300 text-xs leading-relaxed">{slide.featureDetails[idx]}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Optional Feature Pills */}
             {slide.featurePills && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 max-w-lg">
+              <div className="flex flex-wrap gap-2 pt-1 max-w-lg">
                 {slide.featurePills.map((pill, idx) => (
-                  <div key={idx} className="bg-white/10 backdrop-blur-md px-0 py-2 rounded-xl text-center text-base font-bold text-white border border-white/10">
+                  <div key={idx} className="bg-[#222222]/90 backdrop-blur-md border border-[#444444] px-4 py-2 rounded-lg text-center text-[13px] font-bold text-white uppercase tracking-wide">
                     {pill}
                   </div>
                 ))}
@@ -142,7 +177,7 @@ const Hero = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-wrap items-center gap-3 pt-1">
-              <Button
+              {/* <Button
                 variant="primary"
                 size="lg"
                 icon={FaArrowRight}
@@ -154,7 +189,7 @@ const Hero = () => {
                 }}
               >
                 {slide.primaryCta}
-              </Button>
+              </Button> */}
 
               <button
                 className="flex items-center gap-2 px-6 py-3 rounded-full border border-white/40 bg-black/30 backdrop-blur-sm text-white hover:bg-white/10 transition-all text-base font-semibold"
@@ -164,7 +199,7 @@ const Hero = () => {
                 }}
               >
                 <span>{slide.secondaryCta}</span>
-                {slide.id === 1 && (
+                {(
                   <span className="w-4 h-4 rounded-full border border-gray-300 flex items-center justify-center text-[8px] pl-0.5">
                     <FaPlay />
                   </span>

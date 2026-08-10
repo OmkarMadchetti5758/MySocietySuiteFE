@@ -16,7 +16,7 @@ const BADGES = [
   },
   {
     id: 3,
-    title: 'Secure AWS Hosting',
+    title: 'Secure Hosting',
     icon: FaServer,
   },
   {
