@@ -14,8 +14,6 @@ const LoginModal = ({ isOpen, onClose }) => {
   const [successMsg, setSuccessMsg] = useState('');
 
   // Login State
-  const [societies, setSocieties] = useState([]);
-  const [selectedSociety, setSelectedSociety] = useState('');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
 
@@ -31,48 +29,23 @@ const LoginModal = ({ isOpen, onClose }) => {
   const [otpLoading, setOtpLoading] = useState(false);
   const [generatedOtp, setGeneratedOtp] = useState(null);
 
-  const fetchSocieties = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/v1/societies/active');
-      const data = await response.json();
-      if (data.status === 'success') {
-        setSocieties(data.data.societies);
-        if (data.data.societies.length > 0 && !selectedSociety) {
-          setSelectedSociety(data.data.societies[0].databaseName);
-        }
-      }
-    } catch (err) {
-      console.error("Failed to fetch societies:", err);
-      // Don't show error here to avoid blocking UI if it's just a network hiccup
-    }
-  };
-
   useEffect(() => {
     if (isOpen) {
       setError('');
       setSuccessMsg('');
       setIsLoginMode(true);
-      fetchSocieties();
     }
   }, [isOpen]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!selectedSociety) {
-      setError("Please select a society.");
-      return;
-    }
-
     setError('');
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/v1/auth/login', {
+      const response = await fetch('/api/v1/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-database-name': selectedSociety
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier, password })
       });
 
@@ -81,20 +54,17 @@ const LoginModal = ({ isOpen, onClose }) => {
       if (data.status === 'success') {
         setSuccessMsg("Login Successful!");
 
-        localStorage.setItem('accessToken', data.data.accessToken);
-        localStorage.setItem('refreshToken', data.data.refreshToken);
-        localStorage.setItem('user', JSON.stringify(data.data.user));
-        localStorage.setItem('permissions', JSON.stringify(data.data.permissions));
-        localStorage.setItem('societyDatabase', selectedSociety);
-
-        const societyObj = societies.find(s => s.databaseName === selectedSociety);
-        if (societyObj) {
-          localStorage.setItem('societyName', societyObj.name);
-        }
+        const { user, accessToken, refreshToken, permissions } = data.data;
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('permissions', JSON.stringify(permissions));
+        localStorage.setItem('societyDatabase', user.societyId);
+        localStorage.setItem('societyName', user.societyName || '');
 
         setTimeout(() => {
           onClose();
-          navigate(`/${selectedSociety}/dashboard`);
+          navigate(`/${user.societyId}/dashboard`);
         }, 1000);
       } else {
         setError(data.message || 'Login failed. Please check your credentials.');
@@ -261,33 +231,6 @@ const LoginModal = ({ isOpen, onClose }) => {
           {/* Login Form */}
           {isLoginMode ? (
             <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-gray-300 pl-1">Select Society</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
-                    <FaBuilding />
-                  </div>
-                  <select
-                    value={selectedSociety}
-                    onChange={(e) => setSelectedSociety(e.target.value)}
-                    className="w-full bg-black/50 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-white appearance-none focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/30 transition-all"
-                    required
-                  >
-                    <option value="" disabled>Select your society...</option>
-                    {societies.map((soc) => (
-                      <option key={soc._id} value={soc.databaseName}>
-                        {soc.name}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-gray-500">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-gray-300 pl-1">Email or Mobile</label>
                 <div className="relative">
