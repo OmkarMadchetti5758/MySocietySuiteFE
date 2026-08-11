@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Home from './pages/Home';
 import DashboardLayout from './pages/Dashboard/DashboardLayout';
+import WhoWeServePage from './pages/WhoWeServePage';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/who-we-serve" element={<WhoWeServePage />} />
           <Route path="/:societyId/dashboard/*" element={<DashboardLayout />} />
         </Routes>
       </Router>
