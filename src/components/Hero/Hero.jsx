@@ -17,7 +17,7 @@ const SLIDES = [
     primaryCta: "Start Free Trial",
     secondaryCta: "Book a Demo",
     features: ["Easy to Use", "Secure & Reliable", "Loved by Communities"],
-    hasAvatars: true,
+    hasAvatars: false,
     image: banner1,
     layout: 'split',
     // ── Customize Hero1.png (bannerIsoImg) independently ──
@@ -220,9 +220,7 @@ const Hero = () => {
                     />
                   ))}
                 </div>
-                <p className="text-base text-gray-300">
-                  Trusted by <strong className="text-white font-semibold">500+ Societies & 10,000+ Families</strong>
-                </p>
+
               </div>
             )}
           </motion.div>

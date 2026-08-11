@@ -64,7 +64,7 @@ const Statistics = () => {
         </div>
 
         <Container className="relative z-10">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-8 sm:gap-24 relative max-w-4xl mx-auto">
             {STATS_DATA.map((stat, index) => (
               <motion.div
                 key={stat.id}

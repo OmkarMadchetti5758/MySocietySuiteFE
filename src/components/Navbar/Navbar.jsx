@@ -24,7 +24,7 @@ const Navbar = () => {
       {/* Navbar Container */}
       <div
         className={`relative flex items-center justify-between transition-all duration-500 mx-auto ${scrolled
-          ? 'w-[90%] max-w-4xl px-2 py-1.5 rounded-full bg-[#111]/95 shadow-[0_8px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl gap-4'
+          ? 'w-[95%] max-w-5xl px-3 py-1.5 rounded-full bg-[#111]/95 shadow-[0_8px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl gap-4'
           : 'w-full max-w-[1400px] px-6 lg:px-10 py-0 md:py-0 bg-transparent gap-8'
           }`}
       >
@@ -114,7 +114,7 @@ const Navbar = () => {
               e.preventDefault();
               document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className={`text-[15px] font-bold transition-all duration-300 shadow-sm cursor-pointer flex items-center justify-center ${scrolled
+            className={`text-[15px] font-bold transition-all duration-300 shadow-sm cursor-pointer flex items-center justify-center whitespace-nowrap ${scrolled
               ? 'bg-white text-gray-900 px-5 py-2.5 rounded-full hover:bg-gray-100 active:bg-gray-200'
               : 'bg-[#FF6B00] text-white px-6 py-3 rounded-lg hover:bg-[#e66000] active:bg-[#cc5500]'
               }`}

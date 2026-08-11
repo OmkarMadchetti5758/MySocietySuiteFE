@@ -28,8 +28,7 @@ const Testimonials = () => {
           </span>
 
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 leading-tight">
-            Loved by Communities.<br />
-            Trusted by <span className="text-[#FF6B00]">Thousands.</span>
+            Loved by Communities.
           </h2>
 
           <p className="text-gray-500 text-base max-w-lg mx-auto">

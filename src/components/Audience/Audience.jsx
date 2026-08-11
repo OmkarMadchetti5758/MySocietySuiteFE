@@ -183,19 +183,7 @@ const Audience = () => {
                   ))}
                 </ul>
 
-                {/* CTA Button */}
-                <a
-                  href={`#${h.id}`}
-                  className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold px-4 py-2.5 rounded-xl border transition-all duration-200 self-start hover:opacity-80"
-                  style={{
-                    color: h.ctaColor,
-                    borderColor: h.ctaBorder,
-                    background: h.badgeBg,
-                  }}
-                >
-                  {h.ctaLabel}
-                  <FaIcons.FaArrowRight className="text-[10px]" />
-                </a>
+
               </div>
             </motion.div>
           ))}

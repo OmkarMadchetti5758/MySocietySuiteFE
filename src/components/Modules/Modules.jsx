@@ -43,11 +43,7 @@ const ModuleCard = ({ module, index }) => {
         {module.description}
       </p>
 
-      {/* Explore link */}
-      <div className="mt-4 flex items-center gap-1.5 text-sm font-bold text-[#FF6B00]">
-        <span>Explore</span>
-        <FaIcons.FaArrowRight className="text-[10px]" />
-      </div>
+
     </motion.div>
   );
 };
