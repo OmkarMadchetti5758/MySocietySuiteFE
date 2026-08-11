@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import Home from './pages/Home';
 import DashboardLayout from './pages/Dashboard/DashboardLayout';
 import WhoWeServePage from './pages/WhoWeServePage';
+import ApprovedVendorListBlog from './pages/Blog/ApprovedVendorListBlog';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/who-we-serve" element={<WhoWeServePage />} />
+          <Route path="/blog" element={<ApprovedVendorListBlog />} />
           <Route path="/:societyId/dashboard/*" element={<DashboardLayout />} />
         </Routes>
       </Router>

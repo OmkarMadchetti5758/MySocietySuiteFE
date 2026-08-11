@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { NAV_LINKS } from '../../data/navigation';
 import { FaChevronDown, FaBars, FaTimes } from 'react-icons/fa';
 import logoImg from '../../assets/images/webp/MySocietySuite_FinalLogo.webp';
@@ -9,6 +10,7 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 30);
@@ -51,11 +53,14 @@ const Navbar = () => {
         <nav className={`hidden lg:flex items-center flex-1 justify-center transition-all duration-500 ${scrolled ? 'gap-0.5' : 'gap-8'
           }`}>
           {NAV_LINKS.map((link) => {
-            const isActive = link.label === 'Home'; // Example active state
+            const isActive = location.pathname === link.href || location.pathname.startsWith(link.href + '/');
+            const isInternal = link.href.startsWith('/');
+            const LinkTag = isInternal ? Link : 'a';
+            const linkProps = isInternal ? { to: link.href } : { href: link.href };
             return (
               <div key={link.id} className="relative group flex items-center h-full">
-                <a
-                  href={link.href}
+                <LinkTag
+                  {...linkProps}
                   className={`flex items-center gap-1.5 text-[15px] font-medium transition-all duration-300 whitespace-nowrap ${scrolled
                     ? 'text-gray-300 hover:text-white px-3 py-2 rounded-full hover:bg-white/5'
                     : `py-2 relative ${isActive ? 'text-[#FF6B00]' : 'text-gray-600 hover:text-gray-900'}`
@@ -70,7 +75,7 @@ const Navbar = () => {
                   {!scrolled && isActive && (
                     <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#FF6B00] rounded-t-sm" />
                   )}
-                </a>
+                </LinkTag>
 
                 {/* Dropdown */}
                 {link.hasDropdown && link.dropdownItems && (
@@ -137,32 +142,37 @@ const Navbar = () => {
       {/* Mobile Dropdown Menu */}
       {mobileMenuOpen && (
         <div className="lg:hidden mt-2 w-[92%] max-w-4xl bg-[#111]/95 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl p-4 space-y-1">
-          {NAV_LINKS.map((link) => (
-            <div key={link.id}>
-              <a
-                href={link.href}
-                onClick={() => !link.hasDropdown && setMobileMenuOpen(false)}
-                className="flex items-center justify-between text-base font-medium text-gray-300 hover:text-white px-4 py-2.5 rounded-xl hover:bg-white/5 transition-colors"
-              >
-                <span>{link.label}</span>
-                {link.hasDropdown && <FaChevronDown className="text-[10px] text-gray-500" />}
-              </a>
-              {link.hasDropdown && link.dropdownItems && (
-                <div className="ml-4 pl-3 border-l border-white/10 space-y-0.5 mb-1">
-                  {link.dropdownItems.map((item, idx) => (
-                    <a
-                      key={idx}
-                      href={item.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="block text-base text-gray-500 hover:text-gray-200 py-1.5 px-2 rounded-lg hover:bg-white/5 transition-colors"
-                    >
-                      {item.label}
-                    </a>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+          {NAV_LINKS.map((link) => {
+            const isInternal = link.href.startsWith('/');
+            const LinkTag = isInternal ? Link : 'a';
+            const linkProps = isInternal ? { to: link.href } : { href: link.href };
+            return (
+              <div key={link.id}>
+                <LinkTag
+                  {...linkProps}
+                  onClick={() => !link.hasDropdown && setMobileMenuOpen(false)}
+                  className="flex items-center justify-between text-base font-medium text-gray-300 hover:text-white px-4 py-2.5 rounded-xl hover:bg-white/5 transition-colors"
+                >
+                  <span>{link.label}</span>
+                  {link.hasDropdown && <FaChevronDown className="text-[10px] text-gray-500" />}
+                </LinkTag>
+                {link.hasDropdown && link.dropdownItems && (
+                  <div className="ml-4 pl-3 border-l border-white/10 space-y-0.5 mb-1">
+                    {link.dropdownItems.map((item, idx) => (
+                      <a
+                        key={idx}
+                        href={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="block text-base text-gray-500 hover:text-gray-200 py-1.5 px-2 rounded-lg hover:bg-white/5 transition-colors"
+                      >
+                        {item.label}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
           <div className="pt-3 mt-2 border-t border-white/10 flex flex-col gap-2">
             <button
               onClick={() => {

@@ -13,7 +13,7 @@ export const NAV_LINKS = [
       { label: 'Case Studies', href: '#testimonials' },
     ]
   },
-  { id: 'blog', label: 'Blog', href: '#blog' },
+  { id: 'blog', label: 'Blog', href: '/blog' },
   { id: 'about', label: 'About Us', href: '#about-us' },
   { id: 'contact', label: 'Contact', href: '#contact' },
 ];
