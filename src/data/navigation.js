@@ -8,13 +8,11 @@ export const NAV_LINKS = [
     href: '#resources',
     hasDropdown: true,
     dropdownItems: [
-      { label: 'Guides & Insights', href: '#resources' },
       { label: 'FAQs', href: '#faq' },
-      { label: 'Case Studies', href: '#testimonials' },
     ]
   },
   { id: 'blog', label: 'Blog', href: '/blog' },
-  { id: 'about', label: 'About Us', href: '#about-us' },
+  { id: 'about', label: 'About Us', href: '/about' },
   { id: 'contact', label: 'Contact', href: '#contact' },
 ];
 

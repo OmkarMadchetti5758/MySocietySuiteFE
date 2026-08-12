@@ -5,6 +5,7 @@ import DashboardLayout from './pages/Dashboard/DashboardLayout';
 import WhoWeServePage from './pages/WhoWeServePage';
 import ApprovedVendorListBlog from './pages/Blog/ApprovedVendorListBlog';
 import ActivateAccount from './pages/ActivateAccount';
+import AboutUs from './pages/AboutUs';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/who-we-serve" element={<WhoWeServePage />} />
+          <Route path="/about" element={<AboutUs />} />
           <Route path="/blog" element={<ApprovedVendorListBlog />} />
           <Route path="/activate-account" element={<ActivateAccount />} />
           <Route path="/:societyId/dashboard/*" element={<DashboardLayout />} />

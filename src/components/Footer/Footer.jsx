@@ -77,7 +77,7 @@ const Footer = () => {
             <h4 className="font-bold text-white uppercase text-[11px] tracking-wider">Legal</h4>
             <ul className="space-y-2 text-base">
               <li><a href="#footer" className="hover:text-white transition-colors flex items-center gap-1"><span>Help Center</span><span className="text-[10px] text-[#FF6B00]">↗</span></a></li>
-              <li><a href="#how-it-works" className="hover:text-white transition-colors">Guides</a></li>
+              {/* <li><a href="#how-it-works" className="hover:text-white transition-colors">Guides</a></li> */}
               <li><a href="#footer" className="hover:text-white transition-colors">Privacy Policy</a></li>
               <li><a href="#footer" className="hover:text-white transition-colors">Terms & Conditions</a></li>
             </ul>

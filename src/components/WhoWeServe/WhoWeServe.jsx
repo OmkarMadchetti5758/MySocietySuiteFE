@@ -1,258 +1,245 @@
-import { motion } from 'framer-motion';
+import React from 'react';
 import Container from '../common/Container';
-import * as FaIcons from 'react-icons/fa';
+import { FaUsers, FaBuilding, FaShieldAlt, FaHome, FaCity, FaArrowRight, FaSlidersH, FaHeadset, FaLeaf } from 'react-icons/fa';
+import { MdOutlineSecurity } from 'react-icons/md';
 
-const AUDIENCES = [
+import WWS_Hero from '../../assets/images/webp/WWS-Hero.webp';
+import WWS1 from '../../assets/images/webp/WWS1.webp';
+import WWS2 from '../../assets/images/webp/WWS2.webp';
+import WWS3 from '../../assets/images/webp/WWS3.webp';
+import WWS4 from '../../assets/images/webp/WWS4.webp';
+import WWS5 from '../../assets/images/webp/WWS5.webp';
+import WWS6 from '../../assets/images/webp/WWS6.webp';
+
+const COMMUNITIES = [
   {
-    id: 'residents',
-    num: '01',
-    numColor: '#3B82F6',
-    borderColor: '#DBEAFE',
-    badgeBg: '#EFF6FF',
-    title: 'Residents & Families',
-    subtitle: 'A Better Everyday Living Experience',
-    description: 'Everything residents need to stay informed, connected and engaged with their community.',
-    features: [
-      'Stay updated with society announcements',
-      'Access important information and documents',
-      'Stay informed about festivals and community events',
-      'Raise and track concerns',
-      'Discover people, professionals and businesses within the community',
-      'Stay connected with society activities',
-    ],
-    ctaLabel: 'For Residents →',
-    ctaColor: '#3B82F6',
+    image: WWS1,
+    icon: <FaBuilding />,
+    title: 'Apartment & Residential Societies',
+    description: 'Perfect for apartment and residential societies managing everyday operations, communication, maintenance and community activities.',
+    borderColor: '#3B82F6',
+    iconColor: '#3B82F6',
+    iconBg: '#EFF6FF',
   },
   {
-    id: 'committee',
-    num: '02',
-    numColor: '#8B5CF6',
-    borderColor: '#EDE9FE',
-    badgeBg: '#F5F3FF',
-    title: 'Society Management Committee',
-    subtitle: 'Manage Your Society With Confidence',
-    description: 'A central platform to bring visibility, accountability and control to everyday society management.',
-    features: [
-      'Manage society operations from one place',
-      'Monitor security, cleaning and staff activities',
-      'Improve communication with residents',
-      'Track maintenance and financial activities',
-      'Manage vendors and services',
-      'Get meaningful reports and operational insights',
-    ],
-    ctaLabel: 'For Management Committees →',
-    ctaColor: '#8B5CF6',
+    image: WWS2,
+    icon: <FaCity />,
+    title: 'High-Rise Communities',
+    description: 'Designed to handle the unique needs of high-rise living—from multi-level security and facility management to communication and resident services.',
+    borderColor: '#FF6B00',
+    iconColor: '#FF6B00',
+    iconBg: '#FFF3EA',
   },
   {
-    id: 'security',
-    num: '03',
-    numColor: '#F97316',
-    borderColor: '#FED7AA',
-    badgeBg: '#FFF7ED',
-    title: 'Security & Gate Teams',
-    subtitle: 'Safer Gates. Better Accountability.',
-    description: 'Help security teams manage everyday gate operations while giving management better visibility.',
-    features: [
-      'Visitor and vehicle management',
-      'Staff and watchman attendance',
-      'Gate activity monitoring',
-      'Pre-approved entries',
-      'Security records and activity history',
-      'Better accountability at the gate',
-    ],
-    ctaLabel: 'For Security Teams →',
-    ctaColor: '#F97316',
+    image: WWS3,
+    icon: <MdOutlineSecurity />,
+    title: 'Gated Communities',
+    description: 'Streamline gate operations, visitor management, staff coordination and maintenance—ensuring a safe and well-managed community.',
+    borderColor: '#8B5CF6',
+    iconColor: '#8B5CF6',
+    iconBg: '#F5F3FF',
   },
   {
-    id: 'staff',
-    num: '04',
-    numColor: '#22C55E',
-    borderColor: '#DCFCE7',
-    badgeBg: '#F0FDF4',
-    title: 'Housekeeping & Society Staff',
-    subtitle: 'Cleaner Communities. Accountable Teams.',
-    description: 'Bring structure and visibility to the people responsible for keeping the society clean and operational.',
-    features: [
-      'Daily cleaning schedules',
-      'Area-wise responsibilities',
-      'Staff attendance',
-      'Activity tracking',
-      'Supervisor verification',
-      'Cleaning performance visibility',
-    ],
-    ctaLabel: 'For Society Staff →',
-    ctaColor: '#22C55E',
+    image: WWS4,
+    icon: <FaHome />,
+    title: 'Villa & Row House Communities',
+    description: 'Manage common amenities, staff, maintenance and communication effortlessly for villa and row house communities.',
+    borderColor: '#F59E0B',
+    iconColor: '#F59E0B',
+    iconBg: '#FFFBEB',
   },
   {
-    id: 'vendors',
-    num: '05',
-    numColor: '#06B6D4',
-    borderColor: '#CFFAFE',
-    badgeBg: '#ECFEFF',
-    title: 'Vendors & Service Providers',
-    subtitle: 'Better Coordination. Better Service.',
-    description: 'Make it easier for societies to manage the external partners who support everyday operations.',
-    features: [
-      'Vendor profiles and records',
-      'Service assignments',
-      'Contract visibility',
-      'Service coordination',
-      'Payment and service tracking',
-      'Better communication with management',
-    ],
-    ctaLabel: 'For Vendors & Service Providers →',
-    ctaColor: '#06B6D4',
+    image: WWS5,
+    icon: <FaBuilding />,
+    title: 'Large Residential Communities & Townships',
+    description: 'Built to support large communities with multiple blocks, amenities, teams and thousands of residents.',
+    borderColor: '#FF6B00',
+    iconColor: '#FF6B00',
+    iconBg: '#FFF3EA',
   },
   {
-    id: 'builders',
-    num: '06',
-    numColor: '#EC4899',
-    borderColor: '#FCE7F3',
-    badgeBg: '#FDF2F8',
-    title: 'Builders & Community Developers',
-    subtitle: 'A Smarter Digital Experience for Every Community',
-    description: 'Give new and existing residential communities a structured digital platform for managing operations and engaging residents.',
-    features: [
-      'Digital community management',
-      'Resident engagement',
-      'Security and gate operations',
-      'Staff management',
-      'Communication and announcements',
-      'A modern resident experience',
-    ],
-    ctaLabel: 'For Developers →',
-    ctaColor: '#EC4899',
+    image: WWS6,
+    icon: <FaUsers />,
+    title: 'Cooperative Housing Societies',
+    description: 'A complete digital solution for cooperative housing societies to manage administration, records, finance and resident services.',
+    borderColor: '#EF4444',
+    iconColor: '#EF4444',
+    iconBg: '#FEF2F2',
+  }
+];
+
+const FEATURES = [
+  {
+    icon: <FaUsers className="text-3xl" />,
+    title: 'For Every Community',
+    desc: 'From small societies to large townships, MySocietySuite adapts to your needs.'
+  },
+  {
+    icon: <FaSlidersH className="text-3xl" />,
+    title: 'Flexible & Scalable',
+    desc: 'Start simple and grow. Add modules and features as your community grows.'
+  },
+  {
+    icon: <FaShieldAlt className="text-3xl" />,
+    title: 'Secure & Reliable',
+    desc: 'Your community data is protected with enterprise-grade security.'
+  },
+  {
+    icon: <FaHeadset className="text-3xl" />,
+    title: 'Always With You',
+    desc: 'Our team is here to support you at every step of your community’s journey.'
+  },
+  {
+    icon: <FaLeaf className="text-3xl" />,
+    title: 'Better Communities',
+    desc: 'Technology that helps communities run better and live better.'
   }
 ];
 
 const WhoWeServe = () => {
   return (
-    <section id="who-we-serve" className="py-24 bg-gray-50 relative overflow-hidden">
-      {/* Decorative bg blobs */}
-      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-100/40 rounded-full blur-[100px] pointer-events-none -translate-x-1/2 -translate-y-1/2" />
-      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-orange-100/40 rounded-full blur-[100px] pointer-events-none translate-x-1/2 translate-y-1/2" />
+    <div className="bg-white">
+      {/* HERO SECTION */}
+      <section className="relative pt-12 pb-16 lg:pt-20 lg:pb-24 overflow-hidden">
+        <Container>
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-8">
+            <div className="flex-1 lg:pr-12">
+              <span className="text-sm font-bold tracking-widest text-[#FF6B00] uppercase mb-4 block">
+                WHO WE SERVE
+              </span>
+              <h1 className="text-4xl lg:text-[44px] font-bold text-[#121212] leading-tight mb-8">
+                Built for Every Kind of <br className="hidden lg:block" /> Residential Community
+              </h1>
 
-      <Container>
-        {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-          <span className="text-xs font-black tracking-[0.2em] text-[#FF6B00] uppercase flex items-center justify-center gap-2">
-            <span className="text-base">✦</span> WHO WE SERVE <span className="text-base">✦</span>
-          </span>
+              <div className="w-16 h-[3px] bg-[#FF6B00] mb-8"></div>
 
-          <h2 className="text-3xl sm:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight">
-            Built for Everyone Who Makes a <br className="hidden sm:block" />
-            <span className="text-[#FF6B00]">Society Work.</span>
-          </h2>
+              <p className="text-[17px] font-bold text-[#121212] mb-6 leading-relaxed max-w-lg">
+                Every community is unique. MySocietySuite is designed to fit the way your community lives and operates.
+              </p>
 
-          <p className="text-gray-600 text-lg leading-relaxed max-w-2xl mx-auto">
-            One connected platform for residents, management committees, security teams, staff, vendors and the people who keep the community running every day.
-            <br className="hidden sm:block mt-2" />
-            <span className="font-medium text-gray-800 mt-2 block">MySocietySuite brings everyone onto one platform — making society life safer, simpler, more transparent and more connected.</span>
-          </p>
-        </div>
+              <p className="text-[15px] font-medium text-gray-700 mb-12 leading-relaxed max-w-lg">
+                From small residential societies to large townships, we bring essential tools, information and people together on one connected platform.
+              </p>
 
-        {/* 3-Column Grid of Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {AUDIENCES.map((audience, idx) => (
-            <motion.div
-              key={audience.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ duration: 0.5, delay: idx * 0.1 }}
-              className="bg-white rounded-2xl border p-8 flex flex-col h-full hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 relative group overflow-hidden"
-              style={{ borderColor: audience.borderColor }}
-            >
-              {/* Top Accent Line */}
-              <div 
-                className="absolute top-0 left-0 w-full h-1 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out" 
-                style={{ backgroundColor: audience.numColor }} 
-              />
-              
-              <div className="flex items-center gap-4 mb-6">
-                <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold"
-                  style={{ backgroundColor: audience.badgeBg, color: audience.numColor }}
-                >
-                  {audience.num}
+              <div className="flex flex-col sm:flex-row gap-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-[#FFF3EA] text-[#FF6B00] flex items-center justify-center text-xl shrink-0 border border-[#FF6B00]/20">
+                    <FaUsers />
+                  </div>
+                  <span className="text-[13px] font-bold text-[#121212] leading-tight">For every type<br />of community</span>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 leading-tight flex-1">
-                  {audience.title}
-                </h3>
-              </div>
-
-              <div className="mb-6">
-                <h4 className="text-[15px] font-semibold text-gray-800 mb-2">{audience.subtitle}</h4>
-                <p className="text-sm text-gray-500 leading-relaxed">{audience.description}</p>
-              </div>
-
-              <ul className="space-y-3 mb-8 flex-1">
-                {audience.features.map((feat, fi) => (
-                  <li key={fi} className="flex items-start gap-3 text-sm text-gray-600">
-                    <span
-                      className="mt-1 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0"
-                      style={{ borderColor: audience.numColor }}
-                    >
-                      <FaIcons.FaCheck className="text-[8px]" style={{ color: audience.numColor }} />
-                    </span>
-                    <span className="leading-snug">{feat}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="pt-6 mt-auto border-t border-gray-100">
-                <button 
-                  className="text-sm font-bold flex items-center gap-2 group/btn transition-colors hover:opacity-80"
-                  style={{ color: audience.ctaColor }}
-                >
-                  {audience.ctaLabel}
-                </button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Bottom Banner Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="mt-20 bg-gray-900 rounded-3xl p-10 md:p-16 text-center relative overflow-hidden"
-        >
-          {/* Decorative elements */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#FF6B00]/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#3B82F6]/20 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2 pointer-events-none" />
-          
-          <div className="relative z-10 max-w-4xl mx-auto space-y-6">
-            <h3 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight">
-              One Society. Many People. <br className="hidden md:block" />
-              <span className="text-[#FF6B00]">One Connected Platform.</span>
-            </h3>
-            
-            <p className="text-gray-400 text-lg md:text-xl leading-relaxed max-w-3xl mx-auto">
-              From the resident entering through the gate to the security guard managing access, the housekeeping team maintaining the premises, the committee managing operations and the vendor delivering services — MySocietySuite connects everyone who keeps the community moving.
-            </p>
-
-            <div className="flex flex-wrap justify-center gap-4 md:gap-12 pt-6 pb-8">
-              <div className="text-white font-semibold text-lg flex items-center gap-2">
-                <FaIcons.FaUsers className="text-[#FF6B00]" /> Everyone has a role.
-              </div>
-              <div className="text-white font-semibold text-lg flex items-center gap-2">
-                <FaIcons.FaLink className="text-[#3B82F6]" /> Everyone stays connected.
-              </div>
-              <div className="text-white font-semibold text-lg flex items-center gap-2">
-                <FaIcons.FaSmile className="text-[#22C55E]" /> Everyone benefits.
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-[#FFF3EA] text-[#FF6B00] flex items-center justify-center text-xl shrink-0 border border-[#FF6B00]/20">
+                    <FaBuilding />
+                  </div>
+                  <span className="text-[13px] font-bold text-[#121212] leading-tight">For all sizes<br />and structures</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-[#FFF3EA] text-[#FF6B00] flex items-center justify-center text-xl shrink-0 border border-[#FF6B00]/20">
+                    <FaShieldAlt />
+                  </div>
+                  <span className="text-[13px] font-bold text-[#121212] leading-tight">One platform.<br />Many communities.</span>
+                </div>
               </div>
             </div>
 
-            <button className="bg-[#FF6B00] hover:bg-[#E66000] text-white px-8 py-4 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg shadow-[#FF6B00]/30 inline-flex items-center gap-2">
-              See How MySocietySuite Works <FaIcons.FaArrowRight className="text-sm" />
-            </button>
+            <div className="flex-1 relative w-full lg:max-w-xl xl:max-w-2xl mt-12 lg:mt-0">
+              <div className="relative rounded-3xl overflow-hidden shadow-2xl">
+                <img src={WWS_Hero} alt="Community" className="w-full h-auto object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-transparent to-transparent pointer-events-none"></div>
+              </div>
+            </div>
           </div>
-        </motion.div>
-      </Container>
-    </section>
+        </Container>
+      </section>
+
+      {/* COMMUNITIES SECTION */}
+      <section className="py-20 lg:py-28 bg-[#fdfdfd]">
+        <Container>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#121212] mb-4">Communities We Serve</h2>
+            <div className="flex items-center justify-center gap-3">
+              <div className="h-[2px] w-12 bg-gray-200"></div>
+              <div className="w-2.5 h-2.5 rounded-full bg-[#FF6B00]"></div>
+              <div className="h-[2px] w-12 bg-gray-200"></div>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 gap-y-12">
+            {COMMUNITIES.map((item, idx) => (
+              <div key={idx} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-visible hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col h-full">
+                <div className="h-48 overflow-visible relative rounded-t-3xl bg-gray-100">
+                  <img src={item.image} alt={item.title} className="w-full h-full object-cover rounded-t-3xl group-hover:opacity-90 transition-opacity" />
+                  <div className="absolute -bottom-6 left-8 w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-md border-4 border-white z-10"
+                    style={{ backgroundColor: item.iconBg, color: item.iconColor }}>
+                    {item.icon}
+                  </div>
+                </div>
+                <div className="p-8 pt-12 flex-1 flex flex-col">
+                  <h3 className="text-lg font-bold text-[#121212] mb-3 leading-tight">{item.title}</h3>
+                  <p className="text-[13px] text-gray-600 leading-[1.7] mb-6 flex-1 font-medium">
+                    {item.description}
+                  </p>
+                  <div className="w-8 h-[3px] rounded-full" style={{ backgroundColor: item.borderColor }}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Container>
+      </section>
+
+      {/* FEATURES ROW */}
+      <section className="py-12 lg:py-16">
+        <Container>
+          <div className="bg-[#F7F7F9] border border-gray-200 rounded-[2rem] p-10 lg:p-12">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-8 lg:gap-6 divide-y md:divide-y-0 md:divide-x divide-gray-200">
+              {FEATURES.map((feat, idx) => (
+                <div key={idx} className={`flex flex-col items-center text-center ${idx !== 0 ? 'pt-8 md:pt-0' : ''}`}>
+                  <div className="text-[#FF6B00] mb-5">
+                    {feat.icon}
+                  </div>
+                  <h4 className="text-[14px] font-bold text-[#121212] mb-3">{feat.title}</h4>
+                  <p className="text-[12.5px] font-medium text-gray-500 leading-relaxed px-2">
+                    {feat.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      {/* BOTTOM CTA */}
+      <section className="pb-16 lg:pb-24 pt-4">
+        <Container>
+          <div className="bg-[#0b0b0b] rounded-3xl p-10 lg:p-14 relative overflow-hidden flex flex-col lg:flex-row items-center gap-10 lg:gap-12">
+            {/* Background pattern */}
+            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
+
+            <div className="w-24 h-24 shrink-0 rounded-full bg-white/5 flex items-center justify-center text-white text-4xl border-[1.5px] border-white/20 relative z-10">
+              <FaUsers />
+            </div>
+
+            <div className="flex-1 text-center lg:text-left relative z-10">
+              <h3 className="text-[22px] font-medium text-white/90 mb-2">No matter the size. No matter the structure.</h3>
+              <h2 className="text-3xl lg:text-[34px] font-bold text-[#FF6B00] mb-4">We are here for every community.</h2>
+              <p className="text-white/80 text-[15px] font-medium max-w-2xl">
+                MySocietySuite brings communities together and makes society management simple.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 shrink-0 relative z-10">
+              <button className="bg-[#FF6B00] hover:bg-[#E66000] text-white px-7 py-3.5 rounded-xl font-bold text-[14px] transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#FF6B00]/20">
+                Explore Products <FaArrowRight className="text-xs opacity-80" />
+              </button>
+              <button className="bg-transparent border-[1.5px] border-white/30 hover:bg-white/10 text-white px-7 py-3.5 rounded-xl font-bold text-[14px] transition-all flex items-center justify-center gap-2">
+                Book a Free Demo <FaArrowRight className="text-xs opacity-80" />
+              </button>
+            </div>
+          </div>
+        </Container>
+      </section>
+    </div>
   );
 };
 
