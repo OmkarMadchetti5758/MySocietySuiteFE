@@ -31,7 +31,7 @@ const Navbar = () => {
           }`}
       >
         {/* Logo */}
-        <a href="#" className={`shrink-0 flex items-center justify-center transition-all duration-500 ${scrolled ? 'w-12 h-12 rounded-full bg-black/70 overflow-hidden shadow-inner' : ''
+        <a href="#" className={`shrink-0 flex items-center justify-center transition-all duration-500 ${scrolled ? 'w-12 h-12 rounded-full  overflow-hidden shadow-inner' : ''
           }`}>
           {scrolled ? (
             <img
