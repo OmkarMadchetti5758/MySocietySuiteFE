@@ -57,7 +57,7 @@ const Footer = () => {
             <ul className="space-y-2 text-base">
               <li><Link to="/#features" className="hover:text-white transition-colors">Features</Link></li>
               <li><Link to="/#modules" className="hover:text-white transition-colors">Modules</Link></li>
-              <li><Link to="/#pricing" className="hover:text-white transition-colors">Pricing</Link></li>
+              {/* <li><Link to="/#pricing" className="hover:text-white transition-colors">Pricing</Link></li> */}
               <li><Link to="/#how-it-works" className="hover:text-white transition-colors">How it works</Link></li>
             </ul>
           </div>
@@ -102,7 +102,7 @@ const Footer = () => {
               </li>
             </ul>
 
-            <div className="pt-2 space-y-2">
+            {/* <div className="pt-2 space-y-2">
               <h5 className="font-bold text-white text-base">Subscribe to our newsletter</h5>
               <p className="text-base text-gray-500">Get updates on features and offers.</p>
 
@@ -121,7 +121,7 @@ const Footer = () => {
                   <FaPaperPlane className="text-base" />
                 </button>
               </form>
-            </div>
+            </div> */}
           </div>
 
         </div>

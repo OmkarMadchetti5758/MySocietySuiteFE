@@ -388,43 +388,41 @@ export default function ApprovedVendorListBlog() {
       </div>
 
       {/* ══════════════ CTA BAND ══════════════ */}
-      <section
-        className="relative overflow-hidden py-20 text-center mt-16"
-        style={{ background: '#0b0b0b' }}
-      >
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse 700px 380px at 50% 0%, rgba(251,120,21,.18), transparent 65%)' }}
-        />
-        <div className="relative z-10 max-w-[640px] mx-auto px-6">
-          <div className="inline-flex items-center gap-2 text-[12.5px] font-bold tracking-[1.6px] uppercase text-[#e35f00] mb-4">
-            <span className="text-[10px] text-[#FB7815]">✦</span>
-            Vendor Management, Simplified
-            <span className="text-[10px] text-[#FB7815]">✦</span>
-          </div>
-          <h2
-            className="text-[30px] font-bold text-white mb-4"
-            style={{ fontFamily: "'Baloo 2',sans-serif" }}
-          >
-            Keep Every Vendor{' '}
-            <span className="text-[#FB7815]">Approved, Verified &amp; Visible.</span>
-          </h2>
-          <p className="text-[#c7c9cd] text-[15px] leading-[1.7] mb-8">
-            MySocietySuite lets your committee maintain a living Approved Vendor List — with documents, review dates and contract status in one place.
-          </p>
-          <div className="flex flex-wrap gap-3.5 justify-center">
-            <a
-              href="#"
-              className="inline-flex items-center gap-2 bg-[#FB7815] text-white font-semibold text-[15px] px-7 py-3.5 rounded-full hover:-translate-y-0.5 transition-transform shadow-[0_10px_24px_-8px_rgba(251,120,21,.55)] hover:shadow-[0_14px_28px_-8px_rgba(251,120,21,.65)]"
-            >
-              Book a Demo
-            </a>
-            <a
-              href="#"
-              className="inline-flex items-center gap-2 bg-transparent border border-white/35 text-white font-semibold text-[15px] px-7 py-3.5 rounded-full hover:bg-white/[.08] transition-colors"
-            >
-              Explore Vendor Module
-            </a>
+      <section className="bg-[#f7f7f9] py-24">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="relative bg-[#0b0b0b] text-white rounded-3xl py-16 md:py-20 px-8 md:px-12 text-center overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_700px_380px_at_50%_0%,rgba(251,120,21,0.18),transparent_65%)] pointer-events-none" />
+            <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle,rgba(255,255,255,0.055)_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_600px_320px_at_50%_40%,black,transparent_85%)]" />
+
+            <div className="relative z-10 max-w-2xl mx-auto">
+              <div className="inline-flex items-center justify-center gap-2 font-bold text-[12.5px] tracking-[1.6px] uppercase text-[#fb7815] mb-4">
+                <span className="text-[10px]">✦</span> Vendor Management, Simplified <span className="text-[10px]">✦</span>
+              </div>
+              <h2
+                className="text-3xl md:text-[34px] font-bold text-white mb-4 leading-tight"
+                style={{ fontFamily: "'Baloo 2',sans-serif" }}
+              >
+                Keep Every Vendor{' '}
+                <span className="text-[#fb7815]">Approved, Verified &amp; Visible.</span>
+              </h2>
+              <p className="text-[#c7c9cd] text-[15.5px] leading-[1.7] mb-8">
+                MySocietySuite lets your committee maintain a living Approved Vendor List — with documents, review dates and contract status in one place.
+              </p>
+              <div className="flex flex-wrap justify-center gap-4">
+                <a
+                  href="/#pricing"
+                  className="inline-flex items-center gap-2 font-semibold text-[15px] px-7 py-3.5 rounded-full bg-[#fb7815] text-white shadow-[0_10px_24px_-8px_rgba(251,120,21,0.55)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_-8px_rgba(251,120,21,0.65)] transition-all"
+                >
+                  Book a Demo
+                </a>
+                <a
+                  href="/#products"
+                  className="inline-flex items-center gap-2 font-semibold text-[15px] px-7 py-3.5 rounded-full bg-transparent border-[1.5px] border-white/35 text-white hover:bg-white/10 transition-all"
+                >
+                  Explore Vendor Module
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </section>

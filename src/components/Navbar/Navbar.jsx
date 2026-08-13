@@ -55,13 +55,16 @@ const Navbar = () => {
       {/* Navbar Container */}
       <div
         className={`relative flex items-center justify-between transition-all duration-500 mx-auto ${scrolled
-          ? 'w-[95%] max-w-5xl px-3 py-1.5 rounded-full bg-[#111]/95 shadow-[0_8px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl gap-4'
-          : 'w-full max-w-[1400px] px-6 lg:px-10 py-0 md:py-0 bg-transparent gap-8'
+          ? 'w-[95%] max-w-5xl px-3 py-1.5 rounded-full bg-[#111]/95 shadow-[0_8px_40px_rgba(0,0,0,0.45)] backdrop-blur-xl gap-4 h-16'
+          : 'w-full max-w-[1400px] px-6 lg:px-10 py-0 md:py-0 bg-transparent gap-8 h-20' // fixed height instead of relying on content
           }`}
       >
         {/* Logo */}
-        <a href="#" className={`shrink-0 flex items-center justify-center transition-all duration-500 ${scrolled ? 'w-12 h-12 rounded-full  overflow-hidden shadow-inner' : ''
-          }`}>
+        <a
+          href="#"
+          className={`shrink-0 flex items-center justify-center transition-all duration-500 relative overflow-visible ${scrolled ? 'w-12 h-12 rounded-full overflow-hidden shadow-inner' : 'h-full'
+            }`}
+        >
           {scrolled ? (
             <img
               src={logoImg}
@@ -72,8 +75,8 @@ const Navbar = () => {
             <img
               src={navLogoImg}
               alt="MySocietySuite Full Logo"
-              /* Customize the height and width of the initial logo here: */
-              className="transition-all duration-500 object-contain origin-left h-20 md:h-20 w-auto"
+              /* This can now be taller than the navbar without pushing it down */
+              className="transition-all duration-500 object-contain origin-left h-25 md:h-25 w-auto max-w-none absolute left-0 top-1/2 -translate-y-1/2"
             />
           )}
         </a>
@@ -171,69 +174,71 @@ const Navbar = () => {
       </div>
 
       {/* Mobile Dropdown Menu */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden mt-2 w-[92%] max-w-4xl bg-[#111]/95 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl p-4 space-y-1">
-          {NAV_LINKS.map((link) => {
-            const isInternal = link.href.startsWith('/');
-            const LinkTag = isInternal ? Link : 'a';
-            const linkProps = isInternal ? { to: link.href } : { href: link.href };
-            return (
-              <div key={link.id}>
-                <LinkTag
-                  {...linkProps}
-                  onClick={(e) => {
-                    handleSectionClick(e, link.href);
-                    if (!link.hasDropdown && !getSectionId(link.href)) setMobileMenuOpen(false);
-                  }}
-                  className="flex items-center justify-between text-base font-medium text-gray-300 hover:text-white px-4 py-2.5 rounded-xl hover:bg-white/5 transition-colors"
-                >
-                  <span>{link.label}</span>
-                  {link.hasDropdown && <FaChevronDown className="text-[10px] text-gray-500" />}
-                </LinkTag>
-                {link.hasDropdown && link.dropdownItems && (
-                  <div className="ml-4 pl-3 border-l border-white/10 space-y-0.5 mb-1">
-                    {link.dropdownItems.map((item, idx) => (
-                      <a
-                        key={idx}
-                        href={item.href}
-                        onClick={(e) => handleSectionClick(e, item.href)}
-                        className="block text-base text-gray-500 hover:text-gray-200 py-1.5 px-2 rounded-lg hover:bg-white/5 transition-colors"
-                      >
-                        {item.label}
-                      </a>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-          <div className="pt-3 mt-2 border-t border-white/10 flex flex-col gap-2">
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                setIsLoginModalOpen(true);
-              }}
-              className="text-center text-base font-medium text-gray-400 py-2.5 rounded-full border border-white/10 hover:bg-white/5 transition-colors w-full"
-            >
-              Login / Register
-            </button>
-            <a
-              href="#pricing"
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-center bg-white text-gray-900 text-base font-semibold py-2.5 rounded-full hover:bg-gray-100 transition-colors"
-            >
-              Book Demo
-            </a>
+      {
+        mobileMenuOpen && (
+          <div className="lg:hidden mt-2 w-[92%] max-w-4xl bg-[#111]/95 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl p-4 space-y-1">
+            {NAV_LINKS.map((link) => {
+              const isInternal = link.href.startsWith('/');
+              const LinkTag = isInternal ? Link : 'a';
+              const linkProps = isInternal ? { to: link.href } : { href: link.href };
+              return (
+                <div key={link.id}>
+                  <LinkTag
+                    {...linkProps}
+                    onClick={(e) => {
+                      handleSectionClick(e, link.href);
+                      if (!link.hasDropdown && !getSectionId(link.href)) setMobileMenuOpen(false);
+                    }}
+                    className="flex items-center justify-between text-base font-medium text-gray-300 hover:text-white px-4 py-2.5 rounded-xl hover:bg-white/5 transition-colors"
+                  >
+                    <span>{link.label}</span>
+                    {link.hasDropdown && <FaChevronDown className="text-[10px] text-gray-500" />}
+                  </LinkTag>
+                  {link.hasDropdown && link.dropdownItems && (
+                    <div className="ml-4 pl-3 border-l border-white/10 space-y-0.5 mb-1">
+                      {link.dropdownItems.map((item, idx) => (
+                        <a
+                          key={idx}
+                          href={item.href}
+                          onClick={(e) => handleSectionClick(e, item.href)}
+                          className="block text-base text-gray-500 hover:text-gray-200 py-1.5 px-2 rounded-lg hover:bg-white/5 transition-colors"
+                        >
+                          {item.label}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            <div className="pt-3 mt-2 border-t border-white/10 flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setIsLoginModalOpen(true);
+                }}
+                className="text-center text-base font-medium text-gray-400 py-2.5 rounded-full border border-white/10 hover:bg-white/5 transition-colors w-full"
+              >
+                Login / Register
+              </button>
+              <a
+                href="#pricing"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-center bg-white text-gray-900 text-base font-semibold py-2.5 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                Book Demo
+              </a>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Login Modal */}
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
       />
-    </header>
+    </header >
   );
 };
 
