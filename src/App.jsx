@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Home from './pages/Home';
 import DashboardLayout from './pages/Dashboard/DashboardLayout';
@@ -6,6 +7,23 @@ import WhoWeServePage from './pages/WhoWeServePage';
 import ApprovedVendorListBlog from './pages/Blog/ApprovedVendorListBlog';
 import ActivateAccount from './pages/ActivateAccount';
 import AboutUs from './pages/AboutUs';
+
+function ScrollToHash() {
+  const { pathname, hash } = useLocation();
+
+  useEffect(() => {
+    if (pathname !== '/' || !hash) return;
+
+    const sectionId = hash.slice(1);
+    const timer = setTimeout(() => {
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [pathname, hash]);
+
+  return null;
+}
 
 function App() {
   return (
@@ -22,6 +40,7 @@ function App() {
         }}
       />
       <Router>
+        <ScrollToHash />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/who-we-serve" element={<WhoWeServePage />} />

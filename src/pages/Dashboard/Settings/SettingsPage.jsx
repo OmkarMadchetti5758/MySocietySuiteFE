@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import RolesTab from './RolesTab';
-import { FaUserShield, FaBuilding, FaUserTie } from 'react-icons/fa';
+import SocietyDetailsTab from './SocietyDetailsTab';
+import WingDetailsTab from './WingDetailsTab';
+import { FaUserShield, FaBuilding, FaUserTie, FaLayerGroup } from 'react-icons/fa';
 
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState('society_details');
@@ -35,6 +37,16 @@ const SettingsPage = () => {
             <FaUserTie /> Admin Details
           </button>
           <button
+            onClick={() => setActiveTab('wing_details')}
+            className={`pb-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
+              activeTab === 'wing_details'
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <FaLayerGroup /> Wing Details
+          </button>
+          <button
             onClick={() => setActiveTab('roles')}
             className={`pb-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
               activeTab === 'roles'
@@ -49,10 +61,7 @@ const SettingsPage = () => {
 
       <div className="p-6">
         {activeTab === 'society_details' && (
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Society Details</h3>
-            <p className="text-gray-500">Society details configuration is coming soon.</p>
-          </div>
+          <SocietyDetailsTab />
         )}
 
         {activeTab === 'admin_details' && (
@@ -61,7 +70,9 @@ const SettingsPage = () => {
             <p className="text-gray-500">Admin details configuration is coming soon.</p>
           </div>
         )}
-        
+
+        {activeTab === 'wing_details' && <WingDetailsTab />}
+
         {activeTab === 'roles' && <RolesTab />}
       </div>
     </div>

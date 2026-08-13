@@ -233,7 +233,7 @@ const WhoWeServe = () => {
                 Explore Products <FaArrowRight className="text-xs opacity-80" />
               </button>
               <button className="bg-transparent border-[1.5px] border-white/30 hover:bg-white/10 text-white px-7 py-3.5 rounded-xl font-bold text-[14px] transition-all flex items-center justify-center gap-2">
-                Book a Free Demo <FaArrowRight className="text-xs opacity-80" />
+                Book a Demo <FaArrowRight className="text-xs opacity-80" />
               </button>
             </div>
           </div>

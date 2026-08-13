@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Container from '../common/Container';
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaYoutube, FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaPaperPlane } from 'react-icons/fa';
@@ -16,7 +17,7 @@ const Footer = () => {
   };
 
   return (
-    <footer id="about-us" className="bg-[#0B0B0B] text-gray-400 pt-16 pb-8 border-t border-gray-800/80">
+    <footer id="footer" className="bg-[#0B0B0B] text-gray-400 pt-16 pb-8 border-t border-gray-800/80">
       <Container>
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10 pb-12 border-b border-gray-800/80 text-base">
 
@@ -54,10 +55,10 @@ const Footer = () => {
           <div className="lg:col-span-2 space-y-3">
             <h4 className="font-bold text-white uppercase text-[11px] tracking-wider">Product</h4>
             <ul className="space-y-2 text-base">
-              <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
-              <li><a href="#modules" className="hover:text-white transition-colors">Modules</a></li>
-              <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
-              <li><a href="#how-it-works" className="hover:text-white transition-colors">How it works</a></li>
+              <li><Link to="/#features" className="hover:text-white transition-colors">Features</Link></li>
+              <li><Link to="/#modules" className="hover:text-white transition-colors">Modules</Link></li>
+              <li><Link to="/#pricing" className="hover:text-white transition-colors">Pricing</Link></li>
+              <li><Link to="/#how-it-works" className="hover:text-white transition-colors">How it works</Link></li>
             </ul>
           </div>
 
@@ -65,10 +66,10 @@ const Footer = () => {
           <div className="lg:col-span-2 space-y-3">
             <h4 className="font-bold text-white uppercase text-[11px] tracking-wider">Company</h4>
             <ul className="space-y-2 text-base">
-              <li><a href="#footer" className="hover:text-white transition-colors">About Us</a></li>
-              <li><a href="#mobile-apps" className="hover:text-white transition-colors">Mobile Apps</a></li>
-              <li><a href="#testimonials" className="hover:text-white transition-colors">Testimonials</a></li>
-              <li><a href="#footer" className="hover:text-white transition-colors">Contact Us</a></li>
+              <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
+              <li><Link to="/#mobile-apps" className="hover:text-white transition-colors">Mobile Apps</Link></li>
+              {/* <li><Link to="/#testimonials" className="hover:text-white transition-colors">Testimonials</Link></li> */}
+              <li><Link to="/#footer" className="hover:text-white transition-colors">Contact Us</Link></li>
             </ul>
           </div>
 
@@ -76,10 +77,10 @@ const Footer = () => {
           <div className="lg:col-span-2 space-y-3">
             <h4 className="font-bold text-white uppercase text-[11px] tracking-wider">Legal</h4>
             <ul className="space-y-2 text-base">
-              <li><a href="#footer" className="hover:text-white transition-colors flex items-center gap-1"><span>Help Center</span><span className="text-[10px] text-[#FF6B00]">↗</span></a></li>
-              {/* <li><a href="#how-it-works" className="hover:text-white transition-colors">Guides</a></li> */}
-              <li><a href="#footer" className="hover:text-white transition-colors">Privacy Policy</a></li>
-              <li><a href="#footer" className="hover:text-white transition-colors">Terms & Conditions</a></li>
+              <li><Link to="/#footer" className="hover:text-white transition-colors flex items-center gap-1"><span>Help Center</span><span className="text-[10px] text-[#FF6B00]">↗</span></Link></li>
+              {/* <li><Link to="/#how-it-works" className="hover:text-white transition-colors">Guides</Link></li> */}
+              <li><Link to="/#footer" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/#footer" className="hover:text-white transition-colors">Terms & Conditions</Link></li>
             </ul>
           </div>
 

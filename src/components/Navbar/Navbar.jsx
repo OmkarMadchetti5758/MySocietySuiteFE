@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { NAV_LINKS } from '../../data/navigation';
 import { FaChevronDown, FaBars, FaTimes } from 'react-icons/fa';
 import logoImg from '../../assets/images/webp/MySocietySuite_FinalLogo.webp';
@@ -11,12 +11,41 @@ const Navbar = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 30);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const getSectionId = (href) => {
+    const match = href.match(/#(.+)$/);
+    return match ? match[1] : null;
+  };
+
+  const scrollToSection = (sectionId) => {
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleSectionClick = (e, href) => {
+    const sectionId = getSectionId(href);
+    if (!sectionId) return;
+
+    setMobileMenuOpen(false);
+
+    if (location.pathname === '/') {
+      e.preventDefault();
+      scrollToSection(sectionId);
+      window.history.replaceState(null, '', `/#${sectionId}`);
+      return;
+    }
+
+    if (href.startsWith('#')) {
+      e.preventDefault();
+      navigate(`/#${sectionId}`);
+    }
+  };
 
   return (
     <header
@@ -61,6 +90,7 @@ const Navbar = () => {
               <div key={link.id} className="relative group flex items-center h-full">
                 <LinkTag
                   {...linkProps}
+                  onClick={(e) => handleSectionClick(e, link.href)}
                   className={`flex items-center gap-1.5 text-[15px] font-medium transition-all duration-300 whitespace-nowrap ${scrolled
                     ? 'text-gray-300 hover:text-white px-3 py-2 rounded-full hover:bg-white/5'
                     : `py-2 relative ${isActive ? 'text-[#FF6B00]' : 'text-gray-600 hover:text-gray-900'}`
@@ -87,6 +117,7 @@ const Navbar = () => {
                       <a
                         key={idx}
                         href={item.href}
+                        onClick={(e) => handleSectionClick(e, item.href)}
                         className={`block px-4 py-2.5 text-base transition-colors ${scrolled
                           ? 'text-gray-400 hover:text-white hover:bg-white/5'
                           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -150,7 +181,10 @@ const Navbar = () => {
               <div key={link.id}>
                 <LinkTag
                   {...linkProps}
-                  onClick={() => !link.hasDropdown && setMobileMenuOpen(false)}
+                  onClick={(e) => {
+                    handleSectionClick(e, link.href);
+                    if (!link.hasDropdown && !getSectionId(link.href)) setMobileMenuOpen(false);
+                  }}
                   className="flex items-center justify-between text-base font-medium text-gray-300 hover:text-white px-4 py-2.5 rounded-xl hover:bg-white/5 transition-colors"
                 >
                   <span>{link.label}</span>
@@ -162,7 +196,7 @@ const Navbar = () => {
                       <a
                         key={idx}
                         href={item.href}
-                        onClick={() => setMobileMenuOpen(false)}
+                        onClick={(e) => handleSectionClick(e, item.href)}
                         className="block text-base text-gray-500 hover:text-gray-200 py-1.5 px-2 rounded-lg hover:bg-white/5 transition-colors"
                       >
                         {item.label}

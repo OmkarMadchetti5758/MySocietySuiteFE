@@ -13,7 +13,7 @@ export const NAV_LINKS = [
   },
   { id: 'blog', label: 'Blog', href: '/blog' },
   { id: 'about', label: 'About Us', href: '/about' },
-  { id: 'contact', label: 'Contact', href: '#contact' },
+  { id: 'contact', label: 'Contact', href: '/#footer' },
 ];
 
 export const TRUSTED_AVATARS = [

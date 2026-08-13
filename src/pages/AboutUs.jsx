@@ -11,14 +11,14 @@ const AboutUs = () => {
   return (
     <div className="font-sans text-[#121212] bg-white overflow-x-hidden selection:bg-[#fb7815] selection:text-white">
       <Navbar />
-      
+
       <main className="pt-20 lg:pt-24">
         {/* HERO */}
         <section className="relative text-white overflow-hidden py-24 text-center bg-[#0b0b0b]">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_900px_500px_at_82%_15%,rgba(251,120,21,0.16),transparent_60%)] pointer-events-none"></div>
           {/* Dot pattern placeholder */}
           <div className="absolute inset-0 opacity-50 bg-[radial-gradient(circle,rgba(255,255,255,0.055)_1px,transparent_1px)] bg-[size:26px_26px] [mask-image:radial-gradient(ellipse_700px_400px_at_50%_30%,black,transparent_80%)]"></div>
-          
+
           <div className="relative z-10 max-w-3xl mx-auto px-6">
             <div className="inline-flex items-center gap-2 bg-[rgba(251,120,21,0.12)] border border-[rgba(251,120,21,0.45)] text-[#fb7815] text-xs font-bold tracking-[1px] uppercase px-4 py-2 rounded-full mb-6">
               <FaPeopleRoof /> About MySocietySuite
@@ -46,7 +46,7 @@ const AboutUs = () => {
         </section>
 
         {/* VISION */}
-        <section className="relative bg-[#0b0b0b] text-white mt-20 py-24 overflow-hidden">
+        <section className="relative bg-[#0b0b0b] text-white py-24 overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_800px_420px_at_15%_20%,rgba(251,120,21,0.16),transparent_60%)] pointer-events-none"></div>
           <div className="relative z-10 max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-12 md:gap-16 lg:gap-20 items-center">
             <div>
@@ -80,11 +80,11 @@ const AboutUs = () => {
         </section>
 
         {/* MISSION */}
-        <section className="py-24">
+        <section className="bg-[#f7f7f9] py-24">
           <div className="max-w-6xl mx-auto px-6">
             <div className="text-center max-w-2xl mx-auto mb-14">
-              <div className="inline-flex items-center gap-2 font-bold text-[12.5px] tracking-[1.6px] uppercase text-[#e35f00] mb-4">
-                <span className="text-[#fb7815] text-[10px]">✦</span> Our Mission <span className="text-[#fb7815] text-[10px]">✦</span>
+              <div className="inline-flex items-center gap-2 font-bold text-[12.5px] tracking-[1.6px] uppercase text-[#fb7815] mb-4">
+                <span className="text-[10px]">✦</span> Our Mission <span className="text-[10px]">✦</span>
               </div>
               <h2 className="text-3xl md:text-4xl font-bold mb-4 leading-tight">
                 Simplify Society Management. <span className="text-[#fb7815]">Strengthen Community Living.</span>
@@ -93,7 +93,7 @@ const AboutUs = () => {
                 Our mission is to build practical technology that addresses the real challenges of residential community management. We focus on creating products that are:
               </p>
             </div>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               {[
                 { icon: <FaWandMagicSparkles />, title: "Simple", desc: "Easy to understand and easy to use." },
@@ -102,8 +102,8 @@ const AboutUs = () => {
                 { icon: <FaScrewdriverWrench />, title: "Practical", desc: "Designed around real-world society requirements." },
                 { icon: <FaBrain />, title: "Intelligent", desc: "Using modern technology and AI to make society management smarter." }
               ].map((card, i) => (
-                <div key={i} className="bg-[#f7f7f9] rounded-xl p-6 text-left transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-[0_20px_40px_-20px_rgba(0,0,0,0.22)]">
-                  <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center text-[#fb7815] text-lg mb-4 shadow-[0_8px_18px_-10px_rgba(0,0,0,0.18)]">
+                <div key={i} className="bg-white border border-[#ececec] rounded-xl p-6 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-20px_rgba(0,0,0,0.12)]">
+                  <div className="w-11 h-11 rounded-xl bg-[#fff3ea] flex items-center justify-center text-[#fb7815] text-lg mb-4">
                     {card.icon}
                   </div>
                   <h4 className="text-[16.5px] font-bold mb-2 text-[#121212]">{card.title}</h4>
@@ -115,11 +115,11 @@ const AboutUs = () => {
         </section>
 
         {/* COMMITMENT */}
-        <section className="bg-[#f7f7f9] py-24">
+        <section className="bg-white py-24">
           <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <div className="inline-flex items-center gap-2 font-bold text-[12.5px] tracking-[1.6px] uppercase text-[#e35f00] mb-4">
-                <span className="text-[#fb7815] text-[10px]">✦</span> Our Commitment <span className="text-[#fb7815] text-[10px]">✦</span>
+              <div className="inline-flex items-center gap-2 font-bold text-[12.5px] tracking-[1.6px] uppercase text-[#fb7815] mb-4">
+                <span className="text-[10px]">✦</span> Our Commitment <span className="text-[10px]">✦</span>
               </div>
               <h2 className="text-3xl md:text-[30px] font-bold mb-4 leading-tight text-[#121212]">
                 Simple for Residents. <span className="text-[#fb7815]">Powerful for Management.</span>
@@ -135,7 +135,7 @@ const AboutUs = () => {
                 { icon: <FaMagnifyingGlassChart />, title: "Better transparency." },
                 { icon: <FaPeopleGroup />, title: "Better community management." }
               ].map((card, i) => (
-                <div key={i} className="bg-white border border-[#ececec] rounded-xl p-6">
+                <div key={i} className="bg-[#f7f7f9] border border-[#ececec] rounded-xl p-6">
                   <div className="w-[42px] h-[42px] rounded-xl bg-[#fff3ea] text-[#fb7815] flex items-center justify-center text-[17px] mb-4">
                     {card.icon}
                   </div>
@@ -147,25 +147,31 @@ const AboutUs = () => {
         </section>
 
         {/* CTA BAND */}
-        <section className="relative bg-[#0b0b0b] text-white py-24 text-center overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_700px_380px_at_50%_0%,rgba(251,120,21,0.2),transparent_65%)] pointer-events-none"></div>
-          <div className="relative z-10 max-w-2xl mx-auto px-6">
-            <div className="inline-flex items-center justify-center gap-2 font-bold text-[12.5px] tracking-[1.6px] uppercase text-[#e35f00] mb-4">
-              <span className="text-[#fb7815] text-[10px]">✦</span> Let's Build Better Communities Together. <span className="text-[#fb7815] text-[10px]">✦</span>
-            </div>
-            <h2 className="text-3xl md:text-[34px] font-bold text-white mb-4 leading-tight">
-              A Simpler, Smarter Way to <span className="text-[#fb7815]">Manage Your Society.</span>
-            </h2>
-            <p className="text-[#c7c9cd] text-[15.5px] leading-[1.7] mb-8">
-              Discover MySocietySuite and see how technology can transform everyday society management.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <a href="/#products" className="inline-flex items-center gap-2 font-semibold text-[15px] px-7 py-3.5 rounded-full bg-[#fb7815] text-white shadow-[0_10px_24px_-8px_rgba(251,120,21,0.55)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_-8px_rgba(251,120,21,0.65)] transition-all">
-                <FaCompass /> Explore Products
-              </a>
-              <a href="#pricing" className="inline-flex items-center gap-2 font-semibold text-[15px] px-7 py-3.5 rounded-full bg-transparent border-[1.5px] border-white/35 text-white hover:bg-white/10 transition-all">
-                <FaPlay /> Book a Free Demo
-              </a>
+        <section className="bg-[#f7f7f9] py-24">
+          <div className="max-w-5xl mx-auto px-6">
+            <div className="relative bg-[#0b0b0b] text-white rounded-3xl py-16 md:py-20 px-8 md:px-12 text-center overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_700px_380px_at_50%_0%,rgba(251,120,21,0.18),transparent_65%)] pointer-events-none"></div>
+              <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle,rgba(255,255,255,0.055)_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_600px_320px_at_50%_40%,black,transparent_85%)]"></div>
+
+              <div className="relative z-10 max-w-2xl mx-auto">
+                <div className="inline-flex items-center justify-center gap-2 font-bold text-[12.5px] tracking-[1.6px] uppercase text-[#fb7815] mb-4">
+                  <span className="text-[10px]">✦</span> Let's Build Better Communities Together. <span className="text-[10px]">✦</span>
+                </div>
+                <h2 className="text-3xl md:text-[34px] font-bold text-white mb-4 leading-tight">
+                  A Simpler, Smarter Way to <span className="text-[#fb7815]">Manage Your Society.</span>
+                </h2>
+                <p className="text-[#c7c9cd] text-[15.5px] leading-[1.7] mb-8">
+                  Discover MySocietySuite and see how technology can transform everyday society management.
+                </p>
+                <div className="flex flex-wrap justify-center gap-4">
+                  <a href="/#products" className="inline-flex items-center gap-2 font-semibold text-[15px] px-7 py-3.5 rounded-full bg-[#fb7815] text-white shadow-[0_10px_24px_-8px_rgba(251,120,21,0.55)] hover:-translate-y-0.5 hover:shadow-[0_14px_28px_-8px_rgba(251,120,21,0.65)] transition-all">
+                    <FaCompass /> Explore Products
+                  </a>
+                  <a href="/#pricing" className="inline-flex items-center gap-2 font-semibold text-[15px] px-7 py-3.5 rounded-full bg-transparent border-[1.5px] border-white/35 text-white hover:bg-white/10 transition-all">
+                    <FaPlay /> Book a Demo
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </section>
