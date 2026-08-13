@@ -17,14 +17,17 @@ import {
   FaSignOutAlt,
   FaBars,
   FaUserCircle,
-  FaCog
+  FaCog,
+  FaUsers
 } from 'react-icons/fa';
 
 import logoImg from '../../assets/images/webp/MySocietySuite_FinalLogo.webp';
 import SettingsPage from './Settings/SettingsPage';
+import ResidentsPage from './Residents/ResidentsPage';
 
 const MODULE_DEF = [
   { id: 'society_flat_setup', label: 'Society & Flats', icon: FaBuilding, path: 'setup' },
+  { id: 'society_flat_setup', label: 'Residents', icon: FaUsers, path: 'residents', routeKey: 'residents' },
   { id: 'billing_accounts', label: 'Billing & Accounts', icon: FaMoneyBillWave, path: 'billing' },
   { id: 'visitor_management', label: 'Visitors', icon: FaIdBadge, path: 'visitors' },
   { id: 'complaints_helpdesk', label: 'Helpdesk', icon: FaExclamationCircle, path: 'helpdesk' },
@@ -124,7 +127,7 @@ const DashboardLayout = () => {
 
           {allowedModules.map(mod => (
             <NavLink
-              key={mod.id}
+              key={mod.routeKey || mod.path}
               to={`/${societyId}/dashboard/${mod.path}`}
               className={({ isActive }) =>
                 `flex items-center px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${isActive
@@ -188,9 +191,12 @@ const DashboardLayout = () => {
               </div>} />
               {allowedModules.map(mod => {
                 if (mod.id === 'settings') {
-                  return <Route key={mod.id} path={mod.path} element={<SettingsPage />} />;
+                  return <Route key={mod.routeKey || mod.path} path={mod.path} element={<SettingsPage />} />;
                 }
-                return <Route key={mod.id} path={mod.path} element={<Placeholder title={mod.label} />} />;
+                if (mod.path === 'residents') {
+                  return <Route key={mod.routeKey || mod.path} path={mod.path} element={<ResidentsPage />} />;
+                }
+                return <Route key={mod.routeKey || mod.path} path={mod.path} element={<Placeholder title={mod.label} />} />;
               })}
             </Routes>
           </div>
