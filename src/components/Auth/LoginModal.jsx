@@ -133,13 +133,6 @@ const LoginModal = ({ isOpen, onClose }) => {
       if (data.status === 'success') {
         setSuccessMsg("Society registered! Please log in.");
 
-        // Refresh societies list so the new one appears
-        await fetchSocieties();
-
-        // Auto select the new society (generate rough db name based on logic)
-        const cleanName = regSocietyName.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
-        setSelectedSociety(`society_${cleanName}`);
-
         // Switch to login tab after brief delay
         setTimeout(() => {
           setSuccessMsg('');

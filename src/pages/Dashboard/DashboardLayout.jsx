@@ -16,10 +16,12 @@ import {
   FaGift,
   FaSignOutAlt,
   FaBars,
-  FaUserCircle
+  FaUserCircle,
+  FaCog
 } from 'react-icons/fa';
 
 import logoImg from '../../assets/images/webp/MySocietySuite_FinalLogo.webp';
+import SettingsPage from './Settings/SettingsPage';
 
 const MODULE_DEF = [
   { id: 'society_flat_setup', label: 'Society & Flats', icon: FaBuilding, path: 'setup' },
@@ -34,7 +36,8 @@ const MODULE_DEF = [
   { id: 'documents_manager', label: 'Documents', icon: FaFolderOpen, path: 'documents' },
   { id: 'reports_dashboard', label: 'Reports', icon: FaChartBar, path: 'reports' },
   { id: 'ai_assistant', label: 'AI Assistant', icon: FaRobot, path: 'ai' },
-  { id: 'festival_collection', label: 'Festivals', icon: FaGift, path: 'festivals' }
+  { id: 'festival_collection', label: 'Festivals', icon: FaGift, path: 'festivals' },
+  { id: 'settings', label: 'Settings', icon: FaCog, path: 'settings' }
 ];
 
 const Placeholder = ({ title }) => (
@@ -183,9 +186,12 @@ const DashboardLayout = () => {
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to {societyName}</h2>
                 <p className="text-gray-600">Select a module from the sidebar to get started.</p>
               </div>} />
-              {allowedModules.map(mod => (
-                <Route key={mod.id} path={mod.path} element={<Placeholder title={mod.label} />} />
-              ))}
+              {allowedModules.map(mod => {
+                if (mod.id === 'settings') {
+                  return <Route key={mod.id} path={mod.path} element={<SettingsPage />} />;
+                }
+                return <Route key={mod.id} path={mod.path} element={<Placeholder title={mod.label} />} />;
+              })}
             </Routes>
           </div>
         </main>
