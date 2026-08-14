@@ -1,27 +1,15 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+import apiClient from './apiClient';
 
 export const societyApi = {
   getCurrentSociety: async () => {
-    const token = localStorage.getItem('accessToken');
-    const response = await axios.get(`${API_URL}/societies/current`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
+    const res = await apiClient.get('/societies/current');
+    return res.data;
   },
 
   updateCurrentSociety: async (formData) => {
-    const token = localStorage.getItem('accessToken');
-    // Using multipart/form-data for file uploads
-    const response = await axios.put(`${API_URL}/societies/current`, formData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data',
-      },
+    const res = await apiClient.put('/societies/current', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
-    return response.data;
-  }
+    return res.data;
+  },
 };

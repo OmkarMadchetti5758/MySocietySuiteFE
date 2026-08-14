@@ -3,9 +3,11 @@ import { useRoles } from '../../../hooks/useRoles';
 import { FaArrowLeft, FaUndo, FaSave, FaExclamationTriangle, FaInfoCircle } from 'react-icons/fa';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { usePermissions } from '../../../context/PermissionsContext';
 
 const RoleEditView = ({ role, onBack, societyId }) => {
   const { updateRole, resetRole, loading, error, setError } = useRoles(societyId);
+  const { refreshPermissions } = usePermissions();
 
   // Local state for toggles before saving
   const [localPermissions, setLocalPermissions] = useState({});
@@ -51,6 +53,7 @@ const RoleEditView = ({ role, onBack, societyId }) => {
     if (success) {
       toast.success('Role permissions updated');
       setHasChanges(false);
+      await refreshPermissions({ silent: true });
     }
   };
 
@@ -59,6 +62,7 @@ const RoleEditView = ({ role, onBack, societyId }) => {
     if (success) {
       toast.success('Role reset to default template');
       setShowResetConfirm(false);
+      await refreshPermissions({ silent: true });
     }
   };
 

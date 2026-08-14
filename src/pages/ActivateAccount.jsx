@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import apiClient from '../services/apiClient';
+import { usePermissions } from '../context/PermissionsContext';
 
-// -- Shared API base (uses Vite proxy or direct)
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const api = axios.create({ baseURL: API_BASE });
 
@@ -56,6 +57,7 @@ const strengthColor = ['', '#ef4444', '#f59e0b', '#3b82f6', '#10b981'];
 export default function ActivateAccount() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
+    const { setPermissionsFromLogin } = usePermissions();
     const token = searchParams.get('token');
 
     // UI state machine: 'loading' | 'valid' | 'invalid' | 'activating' | 'success'
@@ -96,8 +98,33 @@ export default function ActivateAccount() {
 
         setPhase('activating');
         try {
-            await api.post('/api/v1/auth/invite/activate', { token, password });
+            const res = await apiClient.post('/auth/invite/activate', { token, password });
+            const {
+                user,
+                accessToken,
+                refreshToken,
+                permissions,
+                permissionsVersion,
+                roleKeys,
+            } = res.data.data;
+
+            localStorage.setItem('user', JSON.stringify(user));
+            localStorage.setItem('societyDatabase', user.societyId);
+            localStorage.setItem('societyName', user.societyName || '');
+
+            setPermissionsFromLogin({
+                permissions,
+                permissionsVersion,
+                roleKeys: roleKeys || user.roleKeys,
+                accessToken,
+                refreshToken,
+            });
+
             setPhase('success');
+
+            setTimeout(() => {
+                navigate(`/${user.societyId}/dashboard`);
+            }, 1500);
         } catch (err) {
             setFormError(err.response?.data?.message || 'Activation failed. Please try again.');
             setPhase('valid');
@@ -302,13 +329,20 @@ export default function ActivateAccount() {
                         </div>
                         <h1 className="text-2xl font-bold text-white mb-2">Account Activated!</h1>
                         <p className="text-white/50 text-sm mb-8">
-                            Your account is ready. You can now log in to your society dashboard.
+                            Redirecting you to your society dashboard…
                         </p>
                         <button
-                            onClick={() => navigate('/')}
+                            onClick={() => {
+                                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                                if (user.societyId) {
+                                    navigate(`/${user.societyId}/dashboard`);
+                                } else {
+                                    navigate('/');
+                                }
+                            }}
                             className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-[#FF6B00] to-[#FF8800] hover:shadow-lg hover:shadow-orange-500/30 transition-all"
                         >
-                            Go to Login →
+                            Go to Dashboard →
                         </button>
                     </div>
                 )}

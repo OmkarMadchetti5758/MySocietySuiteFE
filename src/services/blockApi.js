@@ -1,27 +1,18 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('accessToken');
-  return {
-    headers: { Authorization: `Bearer ${token}` }
-  };
-};
+import apiClient from './apiClient';
 
 export const blockApi = {
   getWings: async () => {
-    const res = await axios.get(`${API_URL}/blocks`, getAuthHeaders());
+    const res = await apiClient.get('/blocks');
     return res.data;
   },
 
   saveWings: async (wings) => {
-    const res = await axios.put(`${API_URL}/blocks`, { wings }, getAuthHeaders());
+    const res = await apiClient.put('/blocks', { wings });
     return res.data;
   },
 
   getStaffList: async () => {
-    const res = await axios.get(`${API_URL}/blocks/staff`, getAuthHeaders());
+    const res = await apiClient.get('/blocks/staff');
     return res.data;
-  }
+  },
 };

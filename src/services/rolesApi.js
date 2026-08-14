@@ -1,34 +1,23 @@
-import axios from 'axios';
-
-const API_BASE = '/api/v1/societies';
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('accessToken');
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  };
-};
+import apiClient from './apiClient';
 
 export const rolesApi = {
   getRoles: async (societyId) => {
-    const res = await axios.get(`${API_BASE}/${societyId}/roles`, getAuthHeaders());
+    const res = await apiClient.get(`/societies/${societyId}/roles`);
     return res.data;
   },
 
   getRoleByKey: async (societyId, roleKey) => {
-    const res = await axios.get(`${API_BASE}/${societyId}/roles/${roleKey}`, getAuthHeaders());
+    const res = await apiClient.get(`/societies/${societyId}/roles/${roleKey}`);
     return res.data;
   },
 
   patchRole: async (societyId, roleKey, permissions) => {
-    const res = await axios.patch(`${API_BASE}/${societyId}/roles/${roleKey}`, { permissions }, getAuthHeaders());
+    const res = await apiClient.patch(`/societies/${societyId}/roles/${roleKey}`, { permissions });
     return res.data;
   },
 
   resetRole: async (societyId, roleKey) => {
-    const res = await axios.post(`${API_BASE}/${societyId}/roles/${roleKey}/reset`, {}, getAuthHeaders());
+    const res = await apiClient.post(`/societies/${societyId}/roles/${roleKey}/reset`, {});
     return res.data;
-  }
+  },
 };

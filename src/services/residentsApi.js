@@ -1,25 +1,15 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('accessToken');
-  return {
-    headers: { Authorization: `Bearer ${token}` }
-  };
-};
+import apiClient from './apiClient';
 
 export const residentsApi = {
-  getResidents: async (params = {}) => {
-    const res = await axios.get(`${API_URL}/residents`, {
-      ...getAuthHeaders(),
-      params
+  getResidents: async ({ page = 1, limit = 10, search } = {}) => {
+    const res = await apiClient.get('/residents', {
+      params: { page, limit, search },
     });
     return res.data;
   },
 
   inviteResident: async (payload) => {
-    const res = await axios.post(`${API_URL}/residents`, payload, getAuthHeaders());
+    const res = await apiClient.post('/residents', payload);
     return res.data;
-  }
+  },
 };

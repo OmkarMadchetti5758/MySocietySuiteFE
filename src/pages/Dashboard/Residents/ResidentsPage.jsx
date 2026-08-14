@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, Plus, Loader2, X, Check, Copy } from 'lucide-react';
 import { residentsApi } from '../../../services/residentsApi';
 import { blockApi } from '../../../services/blockApi';
+import { usePermissions } from '../../../context/PermissionsContext';
 
 const STATUS_STYLES = {
   active: 'bg-emerald-100 text-emerald-700 border-emerald-200',
@@ -36,6 +37,8 @@ const ResidentsPage = () => {
   const [inviteLink, setInviteLink] = useState(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState('');
+  const { hasModuleAccess, PERMISSION_LEVELS } = usePermissions();
+  const canManageResidents = hasModuleAccess('society_flat_setup', PERMISSION_LEVELS.FULL);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -144,13 +147,15 @@ const ResidentsPage = () => {
           <h1 className="text-2xl font-bold text-gray-900">Residents</h1>
           <p className="text-gray-500 mt-1">Manage society residents and send account invitations.</p>
         </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium transition-colors shadow-sm"
-        >
-          <Plus className="w-5 h-5" />
-          Add Resident
-        </button>
+        {canManageResidents && (
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium transition-colors shadow-sm"
+          >
+            <Plus className="w-5 h-5" />
+            Add Resident
+          </button>
+        )}
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
