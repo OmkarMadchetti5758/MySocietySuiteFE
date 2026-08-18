@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import apiClient from '../services/apiClient';
+import { otpApi } from '../services/otpApi';
 import { usePermissions } from '../context/PermissionsContext';
+import OtpVerificationStep from './OtpVerificationStep';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -60,7 +62,7 @@ export default function ActivateAccount() {
     const { setPermissionsFromLogin } = usePermissions();
     const token = searchParams.get('token');
 
-    // UI state machine: 'loading' | 'valid' | 'invalid' | 'activating' | 'success'
+    // UI state machine: 'loading' | 'valid' | 'invalid' | 'otp_verify' | 'activating' | 'success'
     const [phase, setPhase] = useState('loading');
     const [inviteData, setInviteData] = useState(null); // { adminName, societyName, adminEmail }
     const [errorMsg, setErrorMsg] = useState('');
@@ -82,7 +84,18 @@ export default function ActivateAccount() {
         if (!token) { setPhase('invalid'); setErrorMsg('No invite token found in the URL.'); return; }
 
         api.get(`/api/v1/auth/invite/validate?token=${token}`)
-            .then(res => { setInviteData(res.data.data); setPhase('valid'); })
+            .then(res => { 
+                const data = res.data.data;
+                setInviteData(data); 
+                
+                if (data.purpose === 'manager' && !data.otpEmailVerified && !data.otpPhoneVerified) {
+                    setPhase('otp_verify');
+                } else if (data.purpose === 'resident') {
+                    setPhase('otp_verify');
+                } else {
+                    setPhase('valid'); 
+                }
+            })
             .catch(err => {
                 setErrorMsg(err.response?.data?.message || 'This invite link is invalid or has expired.');
                 setPhase('invalid');
@@ -216,6 +229,19 @@ export default function ActivateAccount() {
                                 )}
                             </form>
                         </div>
+                    </div>
+                )}
+
+                {/* ── OTP VERIFICATION ── */}
+                {phase === 'otp_verify' && inviteData && (
+                    <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-xl shadow-2xl">
+                        <OtpVerificationStep
+                            identifier={inviteData.adminEmail || inviteData.adminPhone}
+                            purpose={inviteData.purpose === 'manager' ? 'manager_invite' : 'resident_invite'}
+                            societyId={inviteData.societyId}
+                            otpApi={otpApi}
+                            onVerified={() => setPhase('valid')}
+                        />
                     </div>
                 )}
 
