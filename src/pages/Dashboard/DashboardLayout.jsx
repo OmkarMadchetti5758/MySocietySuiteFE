@@ -30,6 +30,7 @@ import SettingsPage from './Settings/SettingsPage';
 import ResidentsPage from './Residents/ResidentsPage';
 import AdminDashboard from './AdminDashboard';
 import ProfilePage from './ProfilePage';
+import StaffPage from './Staff/StaffPage';
 import { usePermissions } from '../../context/PermissionsContext';
 import { clearAuthSession, redirectToLogin } from '../../utils/authSession';
 
@@ -98,8 +99,9 @@ const DashboardLayout = () => {
 
   // Filter modules based on permissions
   // Level 0 = NO_ACCESS, 1 = VIEW, 2 = MANAGE, 3 = FULL
+  const safePermissions = permissions || {};
   const allowedModules = MODULE_DEF.filter(mod => {
-    const perm = permissions[mod.id];
+    const perm = safePermissions[mod.id];
     return perm && perm.level >= 1;
   });
 
@@ -265,6 +267,9 @@ const DashboardLayout = () => {
                 }
                 if (mod.path === 'residents') {
                   return <Route key={mod.routeKey || mod.path} path={mod.path} element={<ResidentsPage />} />;
+                }
+                if (mod.path === 'staff') {
+                  return <Route key={mod.routeKey || mod.path} path={mod.path} element={<StaffPage />} />;
                 }
                 return <Route key={mod.routeKey || mod.path} path={mod.path} element={<Placeholder title={mod.label} />} />;
               })}
