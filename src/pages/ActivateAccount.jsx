@@ -90,7 +90,7 @@ export default function ActivateAccount() {
                 
                 if (data.purpose === 'manager' && !data.otpEmailVerified && !data.otpPhoneVerified) {
                     setPhase('otp_verify');
-                } else if (data.purpose === 'resident') {
+                } else if (data.purpose === 'resident' || data.purpose === 'staff') {
                     setPhase('otp_verify');
                 } else {
                     setPhase('valid'); 
@@ -237,7 +237,7 @@ export default function ActivateAccount() {
                     <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-xl shadow-2xl">
                         <OtpVerificationStep
                             identifier={inviteData.adminEmail || inviteData.adminPhone}
-                            purpose={inviteData.purpose === 'manager' ? 'manager_invite' : 'resident_invite'}
+                            purpose={inviteData.purpose === 'manager' ? 'manager_invite' : inviteData.purpose === 'staff' ? 'staff_invite' : 'resident_invite'}
                             societyId={inviteData.societyId}
                             otpApi={otpApi}
                             onVerified={() => setPhase('valid')}
