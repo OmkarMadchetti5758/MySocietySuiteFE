@@ -34,13 +34,17 @@ import StaffPage from './Staff/StaffPage';
 import { usePermissions } from '../../context/PermissionsContext';
 import { clearAuthSession, redirectToLogin } from '../../utils/authSession';
 
+import NoticeBoard from './NoticeBoard/NoticeBoard';
+import PollsList from './Polls/PollsList';
+
 const MODULE_DEF = [
   { id: 'society_flat_setup', label: 'Society & Flats', icon: FaBuilding, path: 'setup', group: 'SOCIETY' },
   { id: 'society_flat_setup', label: 'Residents', icon: FaUsers, path: 'residents', routeKey: 'residents', group: 'SOCIETY' },
   { id: 'billing_accounts', label: 'Billing & Accounts', icon: FaMoneyBillWave, path: 'billing', group: 'FINANCE' },
   { id: 'visitor_management', label: 'Visitors', icon: FaIdBadge, path: 'visitors', group: 'SECURITY' },
   { id: 'complaints_helpdesk', label: 'Helpdesk', icon: FaExclamationCircle, path: 'helpdesk', group: 'OPERATIONS' },
-  { id: 'notice_board_polls', label: 'Notices & Polls', icon: FaClipboardList, path: 'notices', group: 'COMMUNITY' },
+  { id: 'notice_board_polls', label: 'Notices', icon: FaClipboardList, path: 'notices', group: 'COMMUNITY' },
+  { id: 'notice_board_polls', label: 'Polls', icon: FaChartBar, path: 'polls', group: 'COMMUNITY' },
   { id: 'amenity_booking', label: 'Amenities', icon: FaCalendarAlt, path: 'amenities', group: 'OPERATIONS' },
   { id: 'parking_management', label: 'Parking', icon: FaCar, path: 'parking', group: 'OPERATIONS' },
   { id: 'vendor_management', label: 'Vendors', icon: FaStore, path: 'vendors', group: 'OPERATIONS' },
@@ -270,6 +274,12 @@ const DashboardLayout = () => {
                 }
                 if (mod.path === 'staff') {
                   return <Route key={mod.routeKey || mod.path} path={mod.path} element={<StaffPage />} />;
+                }
+                if (mod.path === 'notices') {
+                  return <Route key={mod.routeKey || mod.path} path={mod.path} element={<NoticeBoard />} />;
+                }
+                if (mod.path === 'polls') {
+                  return <Route key={mod.routeKey || mod.path} path={mod.path} element={<PollsList />} />;
                 }
                 return <Route key={mod.routeKey || mod.path} path={mod.path} element={<Placeholder title={mod.label} />} />;
               })}
