@@ -36,6 +36,7 @@ import { clearAuthSession, redirectToLogin } from '../../utils/authSession';
 
 import NoticeBoard from './NoticeBoard/NoticeBoard';
 import PollsList from './Polls/PollsList';
+import AmenityBookingContainer from './AmenityBooking/AmenityBookingContainer';
 
 const MODULE_DEF = [
   { id: 'society_flat_setup', label: 'Society & Flats', icon: FaBuilding, path: 'setup', group: 'SOCIETY' },
@@ -280,6 +281,9 @@ const DashboardLayout = () => {
                 }
                 if (mod.path === 'polls') {
                   return <Route key={mod.routeKey || mod.path} path={mod.path} element={<PollsList />} />;
+                }
+                if (mod.path === 'amenities') {
+                  return <Route key={mod.routeKey || mod.path} path={`${mod.path}/*`} element={<AmenityBookingContainer />} />;
                 }
                 return <Route key={mod.routeKey || mod.path} path={mod.path} element={<Placeholder title={mod.label} />} />;
               })}
