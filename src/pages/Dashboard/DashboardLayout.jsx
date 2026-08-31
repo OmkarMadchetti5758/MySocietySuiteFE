@@ -37,6 +37,9 @@ import { clearAuthSession, redirectToLogin } from '../../utils/authSession';
 import NoticeBoard from './NoticeBoard/NoticeBoard';
 import PollsList from './Polls/PollsList';
 import AmenityBookingContainer from './AmenityBooking/AmenityBookingContainer';
+import VendorsPage from './VendorManagement/VendorsPage';
+import VendorTasksPage from '../VendorPortal/VendorTasksPage';
+import HelpdeskPage from './Helpdesk/HelpdeskPage';
 
 const MODULE_DEF = [
   { id: 'society_flat_setup', label: 'Society & Flats', icon: FaBuilding, path: 'setup', group: 'SOCIETY' },
@@ -118,6 +121,13 @@ const DashboardLayout = () => {
     : (user.role || roleKeys[0] || '').replace(/_/g, ' ');
 
   const isAdmin = user.role === 'admin' || user.role === 'super_admin' || roleKeys.includes('admin') || roleKeys.includes('super_admin');
+  const isVendor = user.role === 'vendor' || roleKeys.includes('vendor');
+
+  // Vendor-only nav tabs
+  const VENDOR_NAV = [
+    { label: 'My Tasks', icon: FaClipboardList, path: 'vendors' },
+    { label: 'Helpdesk', icon: FaExclamationCircle, path: 'helpdesk' },
+  ];
 
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
@@ -136,40 +146,15 @@ const DashboardLayout = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1 custom-scrollbar">
-          {isAdmin && (
-            <NavLink
-              to={`/${societyId}/dashboard`}
-              end
-              className={({ isActive }) =>
-                `flex items-center px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 mb-4 ${isActive
-                  ? 'bg-orange-50 text-orange-600 shadow-sm'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`
-              }
-            >
-              <FaHome className="mr-3 text-lg opacity-80" />
-              Dashboard
-            </NavLink>
-          )}
 
-          {allowedModules.length === 0 && (
-            <div className="px-3 text-sm text-gray-500 italic">No access to any modules.</div>
-          )}
-
-          {Object.entries(allowedModules.reduce((acc, mod) => {
-            const group = mod.group || 'GENERAL';
-            if (!acc[group]) acc[group] = [];
-            acc[group].push(mod);
-            return acc;
-          }, {})).map(([groupName, mods]) => (
-            <div key={groupName} className="mb-4">
-              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">
-                {groupName}
-              </div>
-              {mods.map(mod => (
+          {/* ── Vendor nav (restricted view) ── */}
+          {isVendor ? (
+            <>
+              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-3 mt-2">Vendor</div>
+              {VENDOR_NAV.map(item => (
                 <NavLink
-                  key={mod.routeKey || mod.path}
-                  to={`/${societyId}/dashboard/${mod.path}`}
+                  key={item.path}
+                  to={`/${societyId}/dashboard/${item.path}`}
                   className={({ isActive }) =>
                     `flex items-center px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${isActive
                       ? 'bg-orange-50 text-orange-600 shadow-sm'
@@ -177,12 +162,62 @@ const DashboardLayout = () => {
                     }`
                   }
                 >
-                  <mod.icon className="mr-3 text-lg opacity-80" />
-                  {mod.label}
+                  <item.icon className="mr-3 text-lg opacity-80" />
+                  {item.label}
                 </NavLink>
               ))}
-            </div>
-          ))}
+            </>
+          ) : (
+            <>
+              {isAdmin && (
+                <NavLink
+                  to={`/${societyId}/dashboard`}
+                  end
+                  className={({ isActive }) =>
+                    `flex items-center px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 mb-4 ${isActive
+                      ? 'bg-orange-50 text-orange-600 shadow-sm'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    }`
+                  }
+                >
+                  <FaHome className="mr-3 text-lg opacity-80" />
+                  Dashboard
+                </NavLink>
+              )}
+
+              {allowedModules.length === 0 && (
+                <div className="px-3 text-sm text-gray-500 italic">No access to any modules.</div>
+              )}
+
+              {Object.entries(allowedModules.reduce((acc, mod) => {
+                const group = mod.group || 'GENERAL';
+                if (!acc[group]) acc[group] = [];
+                acc[group].push(mod);
+                return acc;
+              }, {})).map(([groupName, mods]) => (
+                <div key={groupName} className="mb-4">
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">
+                    {groupName}
+                  </div>
+                  {mods.map(mod => (
+                    <NavLink
+                      key={mod.routeKey || mod.path}
+                      to={`/${societyId}/dashboard/${mod.path}`}
+                      className={({ isActive }) =>
+                        `flex items-center px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${isActive
+                          ? 'bg-orange-50 text-orange-600 shadow-sm'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        }`
+                      }
+                    >
+                      <mod.icon className="mr-3 text-lg opacity-80" />
+                      {mod.label}
+                    </NavLink>
+                  ))}
+                </div>
+              ))}
+            </>
+          )}
         </div>
 
         <div className="p-4 border-t border-gray-100 bg-gray-50/50">
@@ -255,18 +290,30 @@ const DashboardLayout = () => {
           <div className="max-w-7xl mx-auto">
             <Routes>
               <Route path="/" element={
-                isAdmin 
-                  ? <AdminDashboard societyName={societyName} />
-                  : <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center h-[60vh]">
-                      <div className="w-20 h-20 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mb-6 shadow-inner">
-                        <FaBuilding className="text-3xl" />
+                isVendor
+                  ? <VendorTasksPage />
+                  : isAdmin 
+                    ? <AdminDashboard societyName={societyName} />
+                    : <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center h-[60vh]">
+                        <div className="w-20 h-20 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                          <FaBuilding className="text-3xl" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to {societyName}</h2>
+                        <p className="text-gray-500 max-w-md">Select a module from the sidebar to get started.</p>
                       </div>
-                      <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to {societyName}</h2>
-                      <p className="text-gray-500 max-w-md">Select a module from the sidebar to get started.</p>
-                    </div>
               } />
               <Route path="profile" element={<ProfilePage />} />
-              {allowedModules.map(mod => {
+
+              {/* ── Vendor-specific routes ── */}
+              {isVendor && (
+                <>
+                  <Route path="vendors" element={<VendorTasksPage />} />
+                  <Route path="helpdesk" element={<Placeholder title="Helpdesk" />} />
+                </>
+              )}
+
+              {/* ── Regular module routes (non-vendor) ── */}
+              {!isVendor && allowedModules.map(mod => {
                 if (mod.id === 'settings') {
                   return <Route key={mod.routeKey || mod.path} path={mod.path} element={<SettingsPage />} />;
                 }
@@ -284,6 +331,12 @@ const DashboardLayout = () => {
                 }
                 if (mod.path === 'amenities') {
                   return <Route key={mod.routeKey || mod.path} path={`${mod.path}/*`} element={<AmenityBookingContainer />} />;
+                }
+                if (mod.path === 'vendors') {
+                  return <Route key={mod.routeKey || mod.path} path={mod.path} element={<VendorsPage />} />;
+                }
+                if (mod.path === 'helpdesk') {
+                  return <Route key={mod.routeKey || mod.path} path={mod.path} element={<HelpdeskPage />} />;
                 }
                 return <Route key={mod.routeKey || mod.path} path={mod.path} element={<Placeholder title={mod.label} />} />;
               })}
