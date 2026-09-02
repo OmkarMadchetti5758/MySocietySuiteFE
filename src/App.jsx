@@ -7,6 +7,7 @@ import WhoWeServePage from './pages/WhoWeServePage';
 import ApprovedVendorListBlog from './pages/Blog/ApprovedVendorListBlog';
 import ActivateAccount from './pages/ActivateAccount';
 import AboutUs from './pages/AboutUs';
+import VendorTasksPage from './pages/VendorPortal/VendorTasksPage';
 
 function ScrollToHash() {
   const { pathname, hash } = useLocation();
@@ -48,6 +49,7 @@ function App() {
           <Route path="/blog" element={<ApprovedVendorListBlog />} />
           <Route path="/activate-account" element={<ActivateAccount />} />
           <Route path="/:societyId/dashboard/*" element={<DashboardLayout />} />
+          <Route path="/:societyId/vendor-portal/*" element={<VendorTasksPage />} />
         </Routes>
       </Router>
     </>

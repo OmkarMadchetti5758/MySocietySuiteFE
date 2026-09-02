@@ -55,7 +55,11 @@ const LoginModal = ({ isOpen, onClose }) => {
 
         setTimeout(() => {
           onClose();
-          navigate(`/${user.societyId}/dashboard`);
+          if (user.role === 'vendor' || (user.roleKeys && user.roleKeys.includes('vendor'))) {
+            navigate(`/${user.societyId}/dashboard/vendors`);
+          } else {
+            navigate(`/${user.societyId}/dashboard`);
+          }
         }, 1000);
       } else {
         setError(data.message || 'Login failed. Please check your credentials.');

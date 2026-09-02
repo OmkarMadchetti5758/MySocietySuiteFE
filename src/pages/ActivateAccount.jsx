@@ -90,7 +90,7 @@ export default function ActivateAccount() {
                 
                 if (data.purpose === 'manager' && !data.otpEmailVerified && !data.otpPhoneVerified) {
                     setPhase('otp_verify');
-                } else if (data.purpose === 'resident' || data.purpose === 'staff') {
+                } else if (data.purpose === 'resident' || data.purpose === 'staff' || data.purpose === 'vendor') {
                     setPhase('otp_verify');
                 } else {
                     setPhase('valid'); 
@@ -136,7 +136,11 @@ export default function ActivateAccount() {
             setPhase('success');
 
             setTimeout(() => {
-                navigate(`/${user.societyId}/dashboard`);
+                if (user.role === 'vendor' || (user.roleKeys && user.roleKeys.includes('vendor'))) {
+                    navigate(`/${user.societyId}/dashboard/vendors`);
+                } else {
+                    navigate(`/${user.societyId}/dashboard`);
+                }
             }, 1500);
         } catch (err) {
             setFormError(err.response?.data?.message || 'Activation failed. Please try again.');
@@ -237,7 +241,7 @@ export default function ActivateAccount() {
                     <div className="bg-white/5 border border-white/10 rounded-3xl p-8 backdrop-blur-xl shadow-2xl">
                         <OtpVerificationStep
                             identifier={inviteData.adminEmail || inviteData.adminPhone}
-                            purpose={inviteData.purpose === 'manager' ? 'manager_invite' : inviteData.purpose === 'staff' ? 'staff_invite' : 'resident_invite'}
+                            purpose={inviteData.purpose === 'manager' ? 'manager_invite' : inviteData.purpose === 'staff' ? 'staff_invite' : inviteData.purpose === 'vendor' ? 'vendor_invite' : 'resident_invite'}
                             societyId={inviteData.societyId}
                             otpApi={otpApi}
                             onVerified={() => setPhase('valid')}
@@ -361,7 +365,11 @@ export default function ActivateAccount() {
                             onClick={() => {
                                 const user = JSON.parse(localStorage.getItem('user') || '{}');
                                 if (user.societyId) {
-                                    navigate(`/${user.societyId}/dashboard`);
+                                    if (user.role === 'vendor' || (user.roleKeys && user.roleKeys.includes('vendor'))) {
+                                        navigate(`/${user.societyId}/dashboard/vendors`);
+                                    } else {
+                                        navigate(`/${user.societyId}/dashboard`);
+                                    }
                                 } else {
                                     navigate('/');
                                 }
