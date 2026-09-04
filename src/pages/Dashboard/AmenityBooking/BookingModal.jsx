@@ -4,20 +4,20 @@ import { FaTimes, FaCalendarAlt, FaClock, FaCheckCircle } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
 const BookingModal = ({ amenity, onClose }) => {
-  const today       = new Date().toISOString().split('T')[0];
-  const maxDate     = (() => {
+  const today = new Date().toISOString().split('T')[0];
+  const maxDate = (() => {
     const d = new Date();
     d.setDate(d.getDate() + (amenity.advanceBookingLimit || 30));
     return d.toISOString().split('T')[0];
   })();
 
-  const [date, setDate]               = useState('');
-  const [slots, setSlots]             = useState([]);
+  const [date, setDate] = useState('');
+  const [slots, setSlots] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
-  const [loading, setLoading]         = useState(false);
-  const [booking, setBooking]         = useState(false);
-  const [availError, setAvailError]   = useState('');
-  const bookingInFlight               = useRef(false); // prevents double-click
+  const [loading, setLoading] = useState(false);
+  const [booking, setBooking] = useState(false);
+  const [availError, setAvailError] = useState('');
+  const bookingInFlight = useRef(false); // prevents double-click
 
   const fetchAvailability = useCallback(async (d) => {
     setLoading(true);
@@ -81,7 +81,7 @@ const BookingModal = ({ amenity, onClose }) => {
   };
 
   const available = slots.filter(s => s.isAvailable);
-  const booked    = slots.filter(s => !s.isAvailable);
+  const booked = slots.filter(s => !s.isAvailable);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -150,11 +150,10 @@ const BookingModal = ({ amenity, onClose }) => {
                       key={slot._id}
                       id={`slot-${slot._id}`}
                       onClick={() => setSelectedSlot(slot._id)}
-                      className={`w-full flex items-center justify-between p-3.5 rounded-xl border text-sm font-medium transition-all ${
-                        selectedSlot === slot._id
+                      className={`w-full flex items-center justify-between p-3.5 rounded-xl border text-sm font-medium transition-all ${selectedSlot === slot._id
                           ? 'bg-orange-50 border-orange-400 text-orange-700 shadow-sm ring-1 ring-orange-400'
                           : 'bg-white border-gray-200 text-gray-700 hover:border-orange-300 hover:bg-orange-50/30'
-                      }`}
+                        }`}
                     >
                       <span>{slot.startTime} – {slot.endTime}</span>
                       {selectedSlot === slot._id && <FaCheckCircle className="text-orange-500" />}

@@ -44,6 +44,7 @@ import FestivalsPage from './Festivals/FestivalsPage';
 import BillingPage from './Billing/BillingPage';
 import FlatsSetupPage from './FlatsSetup/FlatsSetupPage';
 import FlatDetailsPage from './FlatsSetup/FlatDetailsPage';
+import ParkingPage from './Parking/ParkingPage';
 
 const MODULE_DEF = [
   { id: 'society_flat_setup', label: 'Society & Flats', icon: FaBuilding, path: 'setup', group: 'SOCIETY' },
@@ -354,6 +355,9 @@ const DashboardLayout = () => {
                 }
                 if (mod.path === 'billing') {
                   return <Route key={mod.routeKey || mod.path} path={mod.path} element={<BillingPage />} />;
+                }
+                if (mod.path === 'parking') {
+                  return <Route key={mod.routeKey || mod.path} path={mod.path} element={<ParkingPage />} />;
                 }
                 return <Route key={mod.routeKey || mod.path} path={mod.path} element={<Placeholder title={mod.label} />} />;
               })}
