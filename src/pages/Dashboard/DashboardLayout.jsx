@@ -40,6 +40,10 @@ import AmenityBookingContainer from './AmenityBooking/AmenityBookingContainer';
 import VendorsPage from './VendorManagement/VendorsPage';
 import VendorTasksPage from '../VendorPortal/VendorTasksPage';
 import HelpdeskPage from './Helpdesk/HelpdeskPage';
+import FestivalsPage from './Festivals/FestivalsPage';
+import BillingPage from './Billing/BillingPage';
+import FlatsSetupPage from './FlatsSetup/FlatsSetupPage';
+import FlatDetailsPage from './FlatsSetup/FlatDetailsPage';
 
 const MODULE_DEF = [
   { id: 'society_flat_setup', label: 'Society & Flats', icon: FaBuilding, path: 'setup', group: 'SOCIETY' },
@@ -56,7 +60,8 @@ const MODULE_DEF = [
   { id: 'documents_manager', label: 'Documents', icon: FaFolderOpen, path: 'documents', group: 'ADMINISTRATION' },
   { id: 'reports_dashboard', label: 'Reports', icon: FaChartBar, path: 'reports', group: 'REPORTS' },
   { id: 'ai_assistant', label: 'AI Assistant', icon: FaRobot, path: 'ai', group: 'AI ASSISTANT' },
-  { id: 'festival_collection', label: 'Festivals', icon: FaGift, path: 'festivals', group: 'COMMUNITY' },
+  { id: 'festival_collection', label: 'Fest Collections', icon: FaGift, path: 'festivals-collection', group: 'COMMUNITY' },
+  { id: 'community_events', label: 'Festivals & Events', icon: FaCalendarAlt, path: 'festivals', group: 'COMMUNITY' },
   { id: 'settings', label: 'Settings', icon: FaCog, path: 'settings', group: 'ADMINISTRATION' }
 ];
 
@@ -314,6 +319,12 @@ const DashboardLayout = () => {
 
               {/* ── Regular module routes (non-vendor) ── */}
               {!isVendor && allowedModules.map(mod => {
+                if (mod.path === 'setup') {
+                  return [
+                    <Route key={`${mod.routeKey || mod.path}-main`} path={mod.path} element={<FlatsSetupPage />} />,
+                    <Route key={`${mod.routeKey || mod.path}-details`} path={`${mod.path}/flats/:flatId`} element={<FlatDetailsPage />} />
+                  ];
+                }
                 if (mod.id === 'settings') {
                   return <Route key={mod.routeKey || mod.path} path={mod.path} element={<SettingsPage />} />;
                 }
@@ -337,6 +348,12 @@ const DashboardLayout = () => {
                 }
                 if (mod.path === 'helpdesk') {
                   return <Route key={mod.routeKey || mod.path} path={mod.path} element={<HelpdeskPage />} />;
+                }
+                if (mod.path === 'festivals') {
+                  return <Route key={mod.routeKey || mod.path} path={mod.path} element={<FestivalsPage />} />;
+                }
+                if (mod.path === 'billing') {
+                  return <Route key={mod.routeKey || mod.path} path={mod.path} element={<BillingPage />} />;
                 }
                 return <Route key={mod.routeKey || mod.path} path={mod.path} element={<Placeholder title={mod.label} />} />;
               })}
