@@ -24,6 +24,7 @@ const SocietyDetailsTab = () => {
   });
 
   const [blocks, setBlocks] = useState([]);
+  const [savedBlocks, setSavedBlocks] = useState([]); // tracks already-saved wings (read-only)
 
   useEffect(() => {
     fetchSocietyDetails();
@@ -53,8 +54,11 @@ const SocietyDetailsTab = () => {
 
       if (society.blocks && Array.isArray(society.blocks)) {
         setBlocks(society.blocks);
+        setSavedBlocks(society.blocks); // remember existing saved wings
       } else if (society.numberOfBlocks > 0) {
-        setBlocks(Array(society.numberOfBlocks).fill(''));
+        const initial = Array(society.numberOfBlocks).fill('');
+        setBlocks(initial);
+        setSavedBlocks(initial);
       }
     } catch (err) {
       console.error(err);
@@ -75,9 +79,13 @@ const SocietyDetailsTab = () => {
     if (name === 'numberOfBlocks') {
       const num = parseInt(value, 10) || 0;
       const newBlocks = Array(num).fill('');
-      // Preserve existing block names if any
+      // Preserve existing block names (saved + any unsaved edits)
       for (let i = 0; i < Math.min(num, blocks.length); i++) {
         newBlocks[i] = blocks[i];
+      }
+      // If increasing beyond saved, fill from savedBlocks for preserved slots
+      for (let i = 0; i < Math.min(num, savedBlocks.length); i++) {
+        newBlocks[i] = savedBlocks[i];
       }
       setBlocks(newBlocks);
     }
@@ -318,21 +326,43 @@ const SocietyDetailsTab = () => {
 
           {blocks.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-              {blocks.map((block, index) => (
-                <div key={index}>
-                  <label className="block text-sm text-gray-600 mb-1">Block/Wing {index + 1} Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={block}
-                    onChange={(e) => handleBlockChange(index, e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-                    placeholder={`e.g. A, B, or Wing ${index + 1}`}
-                  />
-                </div>
-              ))}
+              {blocks.map((block, index) => {
+                const isExisting = index < savedBlocks.length;
+                return (
+                  <div key={index}>
+                    <label className="block text-sm text-gray-600 mb-1 flex items-center gap-1">
+                      Block/Wing {index + 1} Name
+                      {/* {isExisting && (
+                        <span
+                          title="Already saved — cannot be renamed here"
+                          className="ml-1 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 font-medium"
+                        >
+                          🔒 Saved
+                        </span>
+                      )} */}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={block}
+                      readOnly={isExisting}
+                      onChange={isExisting ? undefined : (e) => handleBlockChange(index, e.target.value)}
+                      className={`w-full px-4 py-2 border rounded-lg outline-none transition-colors ${isExisting
+                        ? 'border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed'
+                        : 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                        }`}
+                      placeholder={isExisting ? '' : `e.g. A, B, or Wing ${index + 1}`}
+                    />
+                  </div>
+                );
+              })}
             </div>
           )}
+          {/* {blocks.length > savedBlocks.length && (
+            <p className="mt-3 text-xs text-blue-600 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+              ℹ️ Wings 1–{savedBlocks.length} are already saved and locked. Enter the name for the new wing{blocks.length - savedBlocks.length > 1 ? 's' : ''} below.
+            </p>
+          )} */}
         </div>
 
         <div className="flex justify-end pt-4 border-t">
