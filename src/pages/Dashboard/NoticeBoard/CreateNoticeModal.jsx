@@ -2,16 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { FaTimes, FaUpload } from 'react-icons/fa';
 import { noticeApi } from '../../../services/noticeApi';
 import { blockApi } from '../../../services/blockApi';
+import { resolveMediaUrl } from '../../../utils/mediaUrl';
 
 const CreateNoticeModal = ({ onClose, onSuccess, noticeToEdit }) => {
+  const existingUrl = resolveMediaUrl(noticeToEdit?.attachmentUrl);
   const [formData, setFormData] = useState({
     title: noticeToEdit?.title || '',
     description: noticeToEdit?.description || '',
     type: noticeToEdit?.type || 'general',
     targetType: noticeToEdit?.targetType || 'ALL',
     targetBlockId: noticeToEdit?.targetBlockId || '',
-    attachmentUrl: noticeToEdit?.attachmentUrl || '',
   });
+  const [attachmentFile, setAttachmentFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(existingUrl);
   const [blocks, setBlocks] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -27,18 +30,59 @@ const CreateNoticeModal = ({ onClose, onSuccess, noticeToEdit }) => {
     fetchBlocks();
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file (JPG, PNG, WebP, or GIF).');
+      e.target.value = '';
+      return;
+    }
+    if (previewUrl && previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setAttachmentFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      if (noticeToEdit) {
-        await noticeApi.updateNotice(noticeToEdit._id, formData);
+      let payload;
+      if (attachmentFile) {
+        payload = new FormData();
+        payload.append('title', formData.title);
+        payload.append('description', formData.description);
+        payload.append('type', formData.type);
+        payload.append('targetType', formData.targetType);
+        if (formData.targetType === 'BLOCK' && formData.targetBlockId) {
+          payload.append('targetBlockId', formData.targetBlockId);
+        }
+        payload.append('attachment', attachmentFile);
       } else {
-        await noticeApi.createNotice(formData);
+        payload = { ...formData };
+        if (existingUrl) {
+          payload.attachmentUrl = noticeToEdit.attachmentUrl;
+        }
+      }
+
+      if (noticeToEdit) {
+        await noticeApi.updateNotice(noticeToEdit._id, payload);
+      } else {
+        await noticeApi.createNotice(payload);
       }
       onSuccess();
     } catch (error) {
@@ -150,18 +194,22 @@ const CreateNoticeModal = ({ onClose, onSuccess, noticeToEdit }) => {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Attachment (Optional)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Image (Optional)</label>
               <label className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors cursor-pointer">
                 <FaUpload className="text-2xl mb-2 text-gray-400" />
-                <span className="text-sm">Click to select file (PDF, Image)</span>
-                <input type="file" className="hidden" onChange={(e) => {
-                  if (e.target.files.length > 0) {
-                    setFormData({ ...formData, attachmentUrl: URL.createObjectURL(e.target.files[0]) });
-                  }
-                }} />
+                <span className="text-sm">Click to select an image</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
               </label>
-              {formData.attachmentUrl && <p className="text-sm text-green-600 mt-2">File selected successfully.</p>}
-              <p className="text-xs text-gray-400 mt-1">Uploads are simulated locally in this phase.</p>
+              {previewUrl && (
+                <div className="mt-3 rounded-xl overflow-hidden border border-gray-100 bg-gray-50">
+                  <img src={previewUrl} alt="Notice preview" className="w-full h-40 object-cover" />
+                </div>
+              )}
             </div>
           </form>
         </div>

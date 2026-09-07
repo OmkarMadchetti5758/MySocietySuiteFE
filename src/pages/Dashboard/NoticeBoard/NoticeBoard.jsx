@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaBullhorn, FaFileAlt, FaEye, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaBullhorn, FaEye, FaEdit, FaTrash } from 'react-icons/fa';
 import { noticeApi } from '../../../services/noticeApi';
 import CreateNoticeModal from './CreateNoticeModal';
 import NoticeDetailsModal from './NoticeDetailsModal';
 import ConfirmModal from '../../../components/common/ConfirmModal';
+import { isImageAttachment, resolveMediaUrl } from '../../../utils/mediaUrl';
 
 const NoticeBoard = () => {
   const [notices, setNotices] = useState([]);
@@ -88,51 +89,73 @@ const NoticeBoard = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {notices.map((notice) => (
-            <div key={notice._id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-3">
-              <div className="flex justify-between items-start">
-                <span className={`text-xs font-semibold px-2 py-1 rounded-md ${notice.type === 'circular' ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
-                  {notice.type.toUpperCase()}
-                </span>
-                <span className="text-xs text-gray-400">
-                  {new Date(notice.createdAt).toLocaleDateString()}
-                </span>
-                {isAdmin && (
-                  <div className="flex gap-2">
+          {notices.map((notice) => {
+            const imageUrl = isImageAttachment(notice.attachmentUrl)
+              ? resolveMediaUrl(notice.attachmentUrl)
+              : '';
+            return (
+              <div key={notice._id} className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
+                {imageUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedNotice(notice)}
+                    className="block w-full h-40 bg-gray-100 overflow-hidden"
+                  >
+                    <img
+                      src={imageUrl}
+                      alt={notice.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.parentElement.style.display = "none";
+                      }}
+                    />
+                  </button>
+                )}
+                <div className="p-5 flex flex-col gap-3 flex-1">
+                  <div className="flex justify-between items-start">
+                    <span className={`text-xs font-semibold px-2 py-1 rounded-md ${notice.type === 'circular' ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
+                      {notice.type.toUpperCase()}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      {new Date(notice.createdAt).toLocaleDateString()}
+                    </span>
+                    {isAdmin && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => { setNoticeToEdit(notice); setIsCreateModalOpen(true); }}
+                          className="text-gray-400 hover:text-blue-500 transition-colors"
+                          title="Edit"
+                        >
+                          <FaEdit />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(notice._id)}
+                          className="text-gray-400 hover:text-red-500 transition-colors"
+                          title="Delete"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-800 line-clamp-2">{notice.title}</h3>
+                  <p className="text-gray-500 text-sm line-clamp-3 flex-1">{notice.description}</p>
+
+                  <div className="flex items-center justify-between mt-2 pt-3 border-t border-gray-50">
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <span>{notice.targetType === 'BLOCK' ? `📍 ${notice.targetBlockName || 'Specific Block'}` : '🏘️ All Residents'}</span>
+                    </div>
                     <button
-                      onClick={() => { setNoticeToEdit(notice); setIsCreateModalOpen(true); }}
-                      className="text-gray-400 hover:text-blue-500 transition-colors"
-                      title="Edit"
+                      onClick={() => setSelectedNotice(notice)}
+                      className="text-orange-500 hover:text-orange-600 text-sm font-medium flex items-center gap-1"
                     >
-                      <FaEdit />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClick(notice._id)}
-                      className="text-gray-400 hover:text-red-500 transition-colors"
-                      title="Delete"
-                    >
-                      <FaTrash />
+                      <FaEye /> View
                     </button>
                   </div>
-                )}
-              </div>
-              <h3 className="text-lg font-bold text-gray-800 line-clamp-2">{notice.title}</h3>
-              <p className="text-gray-500 text-sm line-clamp-3 flex-1">{notice.description}</p>
-              
-              <div className="flex items-center justify-between mt-2 pt-3 border-t border-gray-50">
-                <div className="flex items-center gap-1 text-xs text-gray-500">
-                  {notice.attachmentUrl && <FaFileAlt className="text-gray-400" />}
-                  <span>{notice.targetType === 'BLOCK' ? `📍 ${notice.targetBlockName || 'Specific Block'}` : '🏘️ All Residents'}</span>
                 </div>
-                <button
-                  onClick={() => setSelectedNotice(notice)}
-                  className="text-orange-500 hover:text-orange-600 text-sm font-medium flex items-center gap-1"
-                >
-                  <FaEye /> View
-                </button>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

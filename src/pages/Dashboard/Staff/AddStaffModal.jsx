@@ -19,7 +19,7 @@ const AddStaffModal = ({ onClose, onAdded }) => {
 
   const designations = [
     { value: 'housekeeping', label: 'Housekeeping' },
-    // { value: 'security', label: 'Security guard' },
+    { value: 'security', label: 'Security guard' },
     { value: 'gardener', label: 'Gardener' },
     { value: 'electrician', label: 'Electrician' },
     { value: 'plumber', label: 'Plumber' },

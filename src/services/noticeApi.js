@@ -12,6 +12,7 @@ export const noticeApi = {
   },
 
   createNotice: async (data) => {
+    // Let the browser set multipart boundary when sending FormData.
     const res = await apiClient.post('/notices', data);
     return res.data;
   },
