@@ -35,10 +35,8 @@ const FlatDetailsPage = () => {
           area: data.area || '',
           ownershipType: data.ownershipType || '',
           occupancyStatus: data.occupancyStatus || '',
-          numberOfResidents: data.numberOfResidents || 0,
           parkingSlots: data.parkingSlots || 0,
           status: data.status || '',
-          possessionDate: data.possessionDate ? new Date(data.possessionDate).toISOString().split('T')[0] : '',
           ownerName: data.ownerName || '',
           ownerContact: data.ownerContact || ''
         });
@@ -64,7 +62,6 @@ const FlatDetailsPage = () => {
     try {
       const payload = { ...formData };
       if (payload.area) payload.area = Number(payload.area);
-      if (payload.numberOfResidents) payload.numberOfResidents = Number(payload.numberOfResidents);
       if (payload.parkingSlots) payload.parkingSlots = Number(payload.parkingSlots);
 
       await flatApi.updateFlat(flatId, payload);
@@ -180,11 +177,11 @@ const FlatDetailsPage = () => {
               )}
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Possession Date</label>
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Parking Slots</label>
               {isEditing ? (
-                <input type="date" name="possessionDate" value={formData.possessionDate} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500" />
+                <input type="number" name="parkingSlots" value={formData.parkingSlots} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500" />
               ) : (
-                <div className="text-gray-900 font-medium">{flat.possessionDate ? new Date(flat.possessionDate).toLocaleDateString() : '—'}</div>
+                <div className="text-gray-900 font-medium">{flat.parkingSlots || '0'}</div>
               )}
             </div>
           </div>
@@ -234,24 +231,6 @@ const FlatDetailsPage = () => {
               ) : (
                 <div className="text-gray-900 font-medium capitalize">{flat.status || '—'}</div>
               )}
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Residents</label>
-                {isEditing ? (
-                  <input type="number" name="numberOfResidents" value={formData.numberOfResidents} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500" />
-                ) : (
-                  <div className="text-gray-900 font-medium">{flat.numberOfResidents || '0'}</div>
-                )}
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Parking Slots</label>
-                {isEditing ? (
-                  <input type="number" name="parkingSlots" value={formData.parkingSlots} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500" />
-                ) : (
-                  <div className="text-gray-900 font-medium">{flat.parkingSlots || '0'}</div>
-                )}
-              </div>
             </div>
           </div>
         </div>

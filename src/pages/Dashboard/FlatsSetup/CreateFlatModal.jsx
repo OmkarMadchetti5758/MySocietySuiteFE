@@ -16,13 +16,9 @@ const CreateFlatModal = ({ isOpen, onClose, wings, flats = [], onSuccess }) => {
     area: '',
     ownershipType: 'Freehold',
     occupancyStatus: 'Vacant',
-    numberOfResidents: 0,
     parkingSlots: 0,
     status: 'vacant',
-    possessionDate: ''
   });
-
-  if (!isOpen) return null;
 
   const selectedWing = wings.find((w) => w._id === formData.blockId) || null;
   const limitReached = selectedWing && selectedWing.totalFlats && currentWingFlatCount >= selectedWing.totalFlats;
@@ -59,7 +55,6 @@ const CreateFlatModal = ({ isOpen, onClose, wings, flats = [], onSuccess }) => {
       const payload = { ...formData };
       if (payload.area) payload.area = Number(payload.area);
       if (payload.floor) payload.floor = Number(payload.floor);
-      if (payload.numberOfResidents) payload.numberOfResidents = Number(payload.numberOfResidents);
       if (payload.parkingSlots) payload.parkingSlots = Number(payload.parkingSlots);
       
       await flatApi.createFlat(payload);
@@ -80,6 +75,8 @@ const CreateFlatModal = ({ isOpen, onClose, wings, flats = [], onSuccess }) => {
       ...(name === 'blockId' ? { floor: '' } : {}),
     }));
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
@@ -233,18 +230,6 @@ const CreateFlatModal = ({ isOpen, onClose, wings, flats = [], onSuccess }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">No. of Residents</label>
-                <input
-                  type="number"
-                  name="numberOfResidents"
-                  value={formData.numberOfResidents}
-                  onChange={handleChange}
-                  min="0"
-                  className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-
-              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Parking Slots</label>
                 <input
                   type="number"
@@ -252,17 +237,6 @@ const CreateFlatModal = ({ isOpen, onClose, wings, flats = [], onSuccess }) => {
                   value={formData.parkingSlots}
                   onChange={handleChange}
                   min="0"
-                  className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Possession Date</label>
-                <input
-                  type="date"
-                  name="possessionDate"
-                  value={formData.possessionDate}
-                  onChange={handleChange}
                   className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>

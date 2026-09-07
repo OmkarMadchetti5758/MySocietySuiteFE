@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, Plus, Loader2, X, Check, Copy } from 'lucide-react';
 import { residentsApi } from '../../../services/residentsApi';
 import { blockApi } from '../../../services/blockApi';
+import { flatApi } from '../../../services/flatApi';
 import { usePermissions } from '../../../context/PermissionsContext';
 
 const STATUS_STYLES = {
@@ -23,13 +24,17 @@ const ResidentsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const [wings, setWings] = useState([]);
+  const [wingFlats, setWingFlats] = useState([]);
+  const [loadingFlats, setLoadingFlats] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
+    flatId: '',
     flatNumber: '',
+    blockId: '',
     wingCode: '',
     residentType: 'owner',
     role: 'resident_owner',
@@ -58,6 +63,27 @@ const ResidentsPage = () => {
     };
     loadWings();
   }, []);
+
+  useEffect(() => {
+    if (!formData.blockId) {
+      setWingFlats([]);
+      return;
+    }
+
+    const loadFlats = async () => {
+      setLoadingFlats(true);
+      try {
+        const response = await flatApi.getFlats({ blockId: formData.blockId });
+        setWingFlats(response.data?.data?.flats || []);
+      } catch {
+        setWingFlats([]);
+      } finally {
+        setLoadingFlats(false);
+      }
+    };
+
+    loadFlats();
+  }, [formData.blockId]);
 
   const fetchResidents = async (page, search) => {
     setLoading(true);
@@ -99,7 +125,9 @@ const ResidentsPage = () => {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
+        flatId: formData.flatId,
         flatNumber: formData.flatNumber,
+        blockId: formData.blockId,
         wingCode: formData.wingCode || undefined,
         residentType: formData.residentType,
         role: formData.role,
@@ -133,11 +161,14 @@ const ResidentsPage = () => {
       name: '',
       email: '',
       phone: '',
+      flatId: '',
       flatNumber: '',
+      blockId: '',
       wingCode: '',
       residentType: 'owner',
       role: 'resident_owner',
     });
+    setWingFlats([]);
   };
 
   return (
@@ -181,6 +212,7 @@ const ResidentsPage = () => {
               <tr className="bg-gray-50 border-b border-gray-100 text-sm text-gray-500">
                 <th className="px-6 py-4 font-semibold">Name</th>
                 <th className="px-6 py-4 font-semibold">Contact</th>
+                <th className="px-6 py-4 font-semibold">Wing</th>
                 <th className="px-6 py-4 font-semibold">Flat</th>
                 <th className="px-6 py-4 font-semibold">Type</th>
                 <th className="px-6 py-4 font-semibold">Role</th>
@@ -190,7 +222,7 @@ const ResidentsPage = () => {
             <tbody className="divide-y divide-gray-50 relative">
               {loading && (
                 <tr>
-                  <td colSpan="6">
+                  <td colSpan="7">
                     <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-10 min-h-[200px]">
                       <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
                     </div>
@@ -200,7 +232,7 @@ const ResidentsPage = () => {
 
               {!loading && residents.length === 0 && (
                 <tr>
-                  <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
                     No residents found. Add your first resident to get started.
                   </td>
                 </tr>
@@ -214,6 +246,9 @@ const ResidentsPage = () => {
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-900">{resident.email || '—'}</div>
                     <div className="text-xs text-gray-500 mt-0.5">{resident.mobile || '—'}</div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-700">
+                    {resident.wingName || resident.wingCode || '—'}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">
                     {resident.flatNumber || '—'}
@@ -343,15 +378,26 @@ const ResidentsPage = () => {
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Wing / Block</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Wing / Block *</label>
                         <select
-                          value={formData.wingCode}
-                          onChange={(e) => setFormData({ ...formData, wingCode: e.target.value })}
+                          required
+                          value={formData.blockId}
+                          onChange={(e) => {
+                            const blockId = e.target.value;
+                            const wing = wings.find((w) => w._id === blockId);
+                            setFormData({
+                              ...formData,
+                              blockId,
+                              wingCode: wing?.code || '',
+                              flatId: '',
+                              flatNumber: '',
+                            });
+                          }}
                           className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
-                          <option value="">No wing selected</option>
+                          <option value="">Select Wing</option>
                           {wings.map((wing) => (
-                            <option key={wing._id || wing.code} value={wing.code}>
+                            <option key={wing._id || wing.code} value={wing._id}>
                               {wing.name} ({wing.code})
                             </option>
                           ))}
@@ -359,14 +405,38 @@ const ResidentsPage = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">Flat Number *</label>
-                        <input
-                          type="text"
+                        <select
                           required
-                          value={formData.flatNumber}
-                          onChange={(e) => setFormData({ ...formData, flatNumber: e.target.value })}
-                          className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="e.g. 101"
-                        />
+                          value={formData.flatId}
+                          disabled={!formData.blockId || loadingFlats}
+                          onChange={(e) => {
+                            const flatId = e.target.value;
+                            const flat = wingFlats.find((f) => f._id === flatId);
+                            setFormData({
+                              ...formData,
+                              flatId,
+                              flatNumber: flat?.flatNumber || '',
+                            });
+                          }}
+                          className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
+                        >
+                          <option value="">
+                            {!formData.blockId
+                              ? 'Select Wing first'
+                              : loadingFlats
+                                ? 'Loading flats...'
+                                : wingFlats.length === 0
+                                  ? 'No flats in this wing'
+                                  : 'Select Flat'}
+                          </option>
+                          {wingFlats.map((flat) => (
+                            <option key={flat._id} value={flat._id}>
+                              {flat.flatNumber}
+                              {flat.floor ? ` · Floor ${flat.floor}` : ''}
+                              {flat.occupancyStatus ? ` · ${flat.occupancyStatus}` : ''}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">Resident Type</label>
@@ -449,7 +519,7 @@ const ResidentsPage = () => {
                   </button>
                   <button
                     type="submit"
-                    disabled={submitting}
+                    disabled={submitting || loadingFlats || !formData.flatId}
                     className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-medium transition-all shadow-sm disabled:opacity-70"
                   >
                     {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create & Invite Resident'}
