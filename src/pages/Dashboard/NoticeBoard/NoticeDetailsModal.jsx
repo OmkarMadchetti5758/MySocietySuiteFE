@@ -1,7 +1,12 @@
 import React from 'react';
-import { FaTimes, FaCalendarAlt, FaUser, FaFileDownload, FaBuilding } from 'react-icons/fa';
+import { FaTimes, FaCalendarAlt, FaUser, FaBuilding } from 'react-icons/fa';
+import { isImageAttachment, resolveMediaUrl } from '../../../utils/mediaUrl';
 
 const NoticeDetailsModal = ({ notice, onClose }) => {
+  const imageUrl = isImageAttachment(notice.attachmentUrl)
+    ? resolveMediaUrl(notice.attachmentUrl)
+    : '';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -35,31 +40,22 @@ const NoticeDetailsModal = ({ notice, onClose }) => {
             </div>
           </div>
 
-          <div className="prose max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap mb-8">
-            {notice.description}
-          </div>
-
-          {notice.attachmentUrl && (
-            <div className="bg-gray-50 rounded-2xl p-4 flex items-center justify-between border border-gray-200">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-orange-100 text-orange-500 rounded-xl flex items-center justify-center">
-                  <FaFileDownload />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-800">Attached Document</p>
-                  <p className="text-xs text-gray-500">Click to download</p>
-                </div>
-              </div>
-              <a
-                href={notice.attachmentUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-              >
-                Download
-              </a>
+          {imageUrl && (
+            <div className="mb-6 rounded-2xl overflow-hidden border border-gray-100 bg-gray-50">
+              <img
+                src={imageUrl}
+                alt={notice.title}
+                className="w-full max-h-80 object-contain bg-gray-50"
+                onError={(e) => {
+                  e.currentTarget.parentElement.style.display = "none";
+                }}
+              />
             </div>
           )}
+
+          <div className="prose max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap">
+            {notice.description}
+          </div>
         </div>
       </div>
     </div>

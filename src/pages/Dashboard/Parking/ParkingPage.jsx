@@ -23,14 +23,16 @@ import ParkingRequestsTab from './components/ParkingRequestsTab';
 import ViolationsTab from './components/ViolationsTab';
 import { ParkingModals } from './components/ParkingModals';
 
+import ResidentParkingTab from './components/ResidentParkingTab';
+
 const ParkingPage = () => {
   const { societyId } = useParams();
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [loading, setLoading] = useState(false);
-
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
   const isResident = user?.role === 'resident_owner' || user?.role === 'resident_tenant' || user?.role === 'resident';
+
+  const [activeTab, setActiveTab] = useState(isResident ? 'my_parking' : 'dashboard');
+  const [loading, setLoading] = useState(false);
 
   // Module Data States
   const [stats, setStats] = useState(null);
@@ -100,7 +102,20 @@ const ParkingPage = () => {
   const loadTabContent = async (tab) => {
     setLoading(true);
     try {
-      if (tab === 'dashboard') {
+      if (tab === 'my_parking') {
+        const [assignRes, vehRes] = await Promise.allSettled([
+          parkingApi.getAssignments(),
+          parkingApi.getVehicles(),
+        ]);
+        if (assignRes.status === 'fulfilled') {
+          const val = assignRes.value;
+          setAssignments(val?.data?.data?.assignments || val?.data?.assignments || []);
+        }
+        if (vehRes.status === 'fulfilled') {
+          const val = vehRes.value;
+          setVehicles(val?.data?.data?.vehicles || val?.data?.vehicles || []);
+        }
+      } else if (tab === 'dashboard') {
         const res = await parkingApi.getDashboardStats();
         setStats(res?.data?.data?.stats || res?.data?.data || res?.data);
       } else if (tab === 'slots') {
@@ -168,7 +183,7 @@ const ParkingPage = () => {
         showSuccess(`Parking slot ${slotData.slotNumber} added for Wing ${slotData.wing}`);
       }
       setActiveModal(null);
-      loadTabContent('slots');
+      loadTabContent(activeTab);
     } catch (err) {
       showError(err, 'Failed to save parking slot');
     }
@@ -179,7 +194,7 @@ const ParkingPage = () => {
     try {
       await parkingApi.deleteSlot(slotId);
       showSuccess('Parking slot deleted');
-      loadTabContent('slots');
+      loadTabContent(activeTab);
     } catch (err) {
       showError(err, 'Failed to delete slot');
     }
@@ -196,7 +211,7 @@ const ParkingPage = () => {
         showSuccess(`Vehicle ${vehicleData.registrationNumber || vehicleData.regNumber} registered successfully`);
       }
       setActiveModal(null);
-      loadTabContent('vehicles');
+      loadTabContent(activeTab);
     } catch (err) {
       showError(err, 'Failed to register vehicle');
     }
@@ -207,7 +222,7 @@ const ParkingPage = () => {
     try {
       await parkingApi.deactivateVehicle(vehicleId);
       showSuccess('Vehicle registration deactivated');
-      loadTabContent('vehicles');
+      loadTabContent(activeTab);
     } catch (err) {
       showError(err, 'Failed to deactivate vehicle');
     }
@@ -219,7 +234,7 @@ const ParkingPage = () => {
       await parkingApi.assignSlot(assignData);
       showSuccess('Parking slot successfully allocated');
       setActiveModal(null);
-      loadTabContent('assignments');
+      loadTabContent(activeTab);
     } catch (err) {
       showError(err, 'Failed to allocate slot');
     }
@@ -230,7 +245,7 @@ const ParkingPage = () => {
     try {
       await parkingApi.unassignSlot(assignmentId, { releaseReason: 'Admin unassigned' });
       showSuccess('Slot unassigned and marked available');
-      loadTabContent('assignments');
+      loadTabContent(activeTab);
     } catch (err) {
       showError(err, 'Failed to unassign slot');
     }
@@ -242,7 +257,7 @@ const ParkingPage = () => {
       await parkingApi.checkInVisitor(visitorData);
       showSuccess('Visitor checked in & parking pass issued');
       setActiveModal(null);
-      loadTabContent('visitors');
+      loadTabContent(activeTab);
     } catch (err) {
       showError(err, 'Failed to check-in visitor');
     }
@@ -252,7 +267,7 @@ const ParkingPage = () => {
     try {
       await parkingApi.checkOutVisitor(visitorId, {});
       showSuccess('Visitor checked out successfully');
-      loadTabContent('visitors');
+      loadTabContent(activeTab);
     } catch (err) {
       showError(err, 'Failed to checkout visitor');
     }
@@ -264,7 +279,7 @@ const ParkingPage = () => {
       await parkingApi.createRequest(reqData);
       showSuccess('Parking request submitted successfully');
       setActiveModal(null);
-      loadTabContent('requests');
+      loadTabContent(activeTab);
     } catch (err) {
       showError(err, 'Failed to submit request');
     }
@@ -280,7 +295,7 @@ const ParkingPage = () => {
     try {
       await parkingApi.rejectRequest(reqId, { reviewNotes: reason || 'Rejected by Admin' });
       showSuccess('Request rejected');
-      loadTabContent('requests');
+      loadTabContent(activeTab);
     } catch (err) {
       showError(err, 'Failed to reject request');
     }
@@ -292,7 +307,7 @@ const ParkingPage = () => {
       await parkingApi.reportViolation(violData);
       showSuccess('Parking violation reported successfully');
       setActiveModal(null);
-      loadTabContent('violations');
+      loadTabContent(activeTab);
     } catch (err) {
       showError(err, 'Failed to report violation');
     }
@@ -303,13 +318,17 @@ const ParkingPage = () => {
     try {
       await parkingApi.resolveViolation(violId, { actionTaken: 'RESOLVED', resolutionNotes: notes || 'Resolved' });
       showSuccess('Violation marked as resolved');
-      loadTabContent('violations');
+      loadTabContent(activeTab);
     } catch (err) {
       showError(err, 'Failed to resolve violation');
     }
   };
 
-  const tabs = [
+  const tabs = isResident ? [
+    { id: 'my_parking', label: 'My Vehicles & Slots', icon: FaCar },
+    { id: 'requests', label: 'Requests', icon: FaClock },
+    { id: 'violations', label: 'Violations', icon: FaExclamationTriangle }
+  ] : [
     { id: 'dashboard', label: 'Overview', icon: FaChartPie },
     { id: 'slots', label: 'Parking Slots', icon: FaParking },
     { id: 'vehicles', label: 'Vehicles', icon: FaCar },
@@ -361,6 +380,18 @@ const ParkingPage = () => {
 
       {/* Tab Content Render */}
       <div className="min-h-[500px]">
+        {activeTab === 'my_parking' && (
+          <ResidentParkingTab
+            assignments={assignments}
+            vehicles={vehicles}
+            loading={loading}
+            onAddVehicle={() => { setModalData(null); setActiveModal('addVehicle'); }}
+            onEditVehicle={(v) => { setModalData(v); setActiveModal('editVehicle'); }}
+            onDeactivateVehicle={handleDeactivateVehicle}
+            onRequestSlot={() => { setModalData(null); setActiveModal('requestSlot'); }}
+          />
+        )}
+
         {activeTab === 'dashboard' && (
           <ParkingDashboardTab
             stats={stats}

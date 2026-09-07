@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 
+/** Survives React Strict Mode remount so auto-send fires once per identifier. */
+const autoSentOtpKeys = new Set();
+
 const OtpVerificationStep = ({
   identifier,
   purpose,
@@ -17,9 +20,12 @@ const OtpVerificationStep = ({
   const inputsRef = useRef([]);
 
   useEffect(() => {
-    // Send initial OTP
+    const key = `${identifier}|${purpose}|${societyId}`;
+    if (autoSentOtpKeys.has(key)) return;
+    autoSentOtpKeys.add(key);
     handleSendOtp();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [identifier, purpose, societyId]);
 
   useEffect(() => {
     let interval;
@@ -33,10 +39,7 @@ const OtpVerificationStep = ({
     setResending(true);
     setError('');
     try {
-      const data = await otpApi.sendOtp({ identifier, purpose, societyId });
-      if (data?.data?.devOtpCode) {
-        console.log(`%c🔑 DEV OTP: ${data.data.devOtpCode}`, 'color: #10b981; font-weight: bold; font-size: 16px;');
-      }
+      await otpApi.sendOtp({ identifier, purpose, societyId });
       setTimer(30);
       inputsRef.current[0]?.focus();
     } catch (err) {
