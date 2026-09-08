@@ -3,6 +3,7 @@ import { FaTimes, FaHistory, FaImage, FaUser, FaBuilding, FaUserEdit, FaCheckCir
 import complaintApi from '../../../../services/complaintApi';
 import { toast } from 'react-toastify';
 import dayjs from 'dayjs';
+import { resolveMediaUrl } from '../../../../utils/mediaUrl';
 
 const ComplaintDetailsModal = ({ complaintId, onClose }) => {
   const [complaint, setComplaint] = useState(null);
@@ -177,11 +178,14 @@ const ComplaintDetailsModal = ({ complaintId, onClose }) => {
                     <FaImage className="text-gray-400" /> Attached Photos
                   </h3>
                   <div className="flex gap-3 overflow-x-auto pb-2">
-                    {complaint.attachments.map((url, idx) => (
-                      <a key={idx} href={`http://localhost:5000${url}`} target="_blank" rel="noopener noreferrer" className="shrink-0 block rounded-lg overflow-hidden border border-gray-200 hover:border-blue-400 transition-colors">
-                        <img src={`http://localhost:5000${url}`} alt={`Attachment ${idx + 1}`} className="h-24 w-24 object-cover" />
+                    {complaint.attachments.map((url, idx) => {
+                      const src = resolveMediaUrl(url);
+                      return (
+                      <a key={idx} href={src} target="_blank" rel="noopener noreferrer" className="shrink-0 block rounded-lg overflow-hidden border border-gray-200 hover:border-blue-400 transition-colors">
+                        <img src={src} alt={`Attachment ${idx + 1}`} className="h-24 w-24 object-cover" />
                       </a>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}

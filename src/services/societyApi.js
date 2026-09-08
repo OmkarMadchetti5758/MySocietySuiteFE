@@ -7,9 +7,7 @@ export const societyApi = {
   },
 
   updateCurrentSociety: async (formData) => {
-    const res = await apiClient.put('/societies/current', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const res = await apiClient.put('/societies/current', formData);
     return res.data;
   },
 };

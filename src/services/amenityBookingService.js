@@ -22,14 +22,12 @@ export const amenityService = {
   },
 
   createAmenity: async (data) => {
-    const headers = data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : {};
-    const res = await apiClient.post(BASE_URL, data, { headers });
+    const res = await apiClient.post(BASE_URL, data);
     return normalize(res);
   },
 
   updateAmenity: async (id, data) => {
-    const headers = data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : {};
-    const res = await apiClient.patch(`${BASE_URL}/${id}`, data, { headers });
+    const res = await apiClient.patch(`${BASE_URL}/${id}`, data);
     return normalize(res);
   },
 
