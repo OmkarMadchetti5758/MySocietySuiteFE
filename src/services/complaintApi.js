@@ -8,12 +8,6 @@ const complaintApi = {
     // ── Resident Only ──
     getResidentInfo: () => api.get('/complaints/resident-info'),
     createComplaint: (data) => {
-        // If data contains File objects, we use FormData
-        if (data instanceof FormData) {
-            return api.post('/complaints', data, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-        }
         return api.post('/complaints', data);
     },
     confirmResolution: (id) => api.patch(`/complaints/${id}/confirm-resolution`),

@@ -17,7 +17,6 @@ export const festivalApi = {
   },
 
   updateFestival: async (id, data) => {
-    // Controller uses PATCH
     const res = await apiClient.patch(`/festivals/${id}`, data);
     return res.data;
   },

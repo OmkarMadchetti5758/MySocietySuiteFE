@@ -4,6 +4,7 @@ import {
   FaGlobe, FaBan, FaEdit, FaUserCircle, FaCheckCircle,
   FaFileAlt
 } from 'react-icons/fa';
+import { resolveMediaUrl } from '../../../utils/mediaUrl';
 
 const STATUS_CONFIG = {
   DRAFT:     { label: 'Draft',     bg: 'bg-yellow-100', text: 'text-yellow-700', border: 'border-yellow-200', icon: FaFileAlt },
@@ -41,7 +42,7 @@ const FestivalDetailsModal = ({ festival, isAdmin, onClose, onStatusAction, onEd
         <div className="relative h-48 bg-gradient-to-br from-orange-100 via-amber-100 to-yellow-50 shrink-0">
           {festival.image ? (
             <img
-              src={festival.image}
+              src={resolveMediaUrl(festival.image)}
               alt={festival.title}
               className="w-full h-full object-cover"
               onError={e => { e.target.style.display = 'none'; }}

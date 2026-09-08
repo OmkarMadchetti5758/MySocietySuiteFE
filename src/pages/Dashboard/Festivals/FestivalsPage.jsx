@@ -8,6 +8,7 @@ import { festivalApi } from '../../../services/festivalApi';
 import FestivalModal from './FestivalModal';
 import FestivalDetailsModal from './FestivalDetailsModal';
 import ConfirmModal from '../../../components/common/ConfirmModal';
+import { resolveMediaUrl } from '../../../utils/mediaUrl';
 
 const STATUS_CONFIG = {
   DRAFT:     { label: 'Draft',     bg: 'bg-yellow-100', text: 'text-yellow-700', icon: FaFileAlt },
@@ -253,7 +254,7 @@ const FestivalsPage = () => {
                   <div className="relative h-40 bg-gradient-to-br from-orange-50 to-amber-100 overflow-hidden">
                     {festival.image ? (
                       <img
-                        src={festival.image}
+                        src={resolveMediaUrl(festival.image)}
                         alt={festival.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         onError={e => { e.target.style.display = 'none'; }}

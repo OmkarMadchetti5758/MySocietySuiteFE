@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { FaTimes, FaCalendarAlt, FaClock, FaMapMarkerAlt, FaImage, FaUpload } from 'react-icons/fa';
 import { festivalApi } from '../../../services/festivalApi';
+import { resolveMediaUrl } from '../../../utils/mediaUrl';
 
 const FestivalModal = ({ festivalToEdit, onClose, onSuccess }) => {
   const isEditing = !!festivalToEdit;
@@ -12,8 +13,10 @@ const FestivalModal = ({ festivalToEdit, onClose, onSuccess }) => {
     startTime: festivalToEdit?.startTime || '',
     endTime: festivalToEdit?.endTime || '',
     venue: festivalToEdit?.venue || '',
-    image: festivalToEdit?.image || '',
   });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(resolveMediaUrl(festivalToEdit?.image));
+  const [existingImage, setExistingImage] = useState(festivalToEdit?.image || '');
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -63,13 +66,19 @@ const FestivalModal = ({ festivalToEdit, onClose, onSuccess }) => {
 
     setLoading(true);
     try {
-      const payload = {
-        ...formData,
-        title: formData.title.trim(),
-        description: formData.description?.trim() || undefined,
-        venue: formData.venue.trim(),
-        image: formData.image?.trim() || undefined,
-      };
+      const payload = new FormData();
+      payload.append('title', formData.title.trim());
+      if (formData.description?.trim()) payload.append('description', formData.description.trim());
+      payload.append('date', formData.date);
+      payload.append('startTime', formData.startTime);
+      payload.append('endTime', formData.endTime);
+      payload.append('venue', formData.venue.trim());
+
+      if (imageFile) {
+        payload.append('image', imageFile);
+      } else if (isEditing) {
+        payload.append('existingImage', existingImage || '');
+      }
 
       if (isEditing) {
         await festivalApi.updateFestival(festivalToEdit._id, payload);
@@ -260,16 +269,20 @@ const FestivalModal = ({ festivalToEdit, onClose, onSuccess }) => {
                   className="hidden"
                   accept="image/*"
                   onChange={(e) => {
-                    if (e.target.files && e.target.files.length > 0) {
-                      setFormData({ ...formData, image: URL.createObjectURL(e.target.files[0]) });
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (imagePreview && imagePreview.startsWith('blob:')) {
+                      URL.revokeObjectURL(imagePreview);
                     }
+                    setImageFile(file);
+                    setImagePreview(URL.createObjectURL(file));
                   }}
                 />
               </label>
-              {formData.image && (
+              {imagePreview && (
                 <div className="mt-3 rounded-xl overflow-hidden h-32 bg-gray-50 border border-gray-100 relative">
                   <img
-                    src={formData.image}
+                    src={imagePreview}
                     alt="Preview"
                     className="w-full h-full object-cover"
                     onError={e => { e.target.style.display = 'none'; }}
@@ -278,7 +291,12 @@ const FestivalModal = ({ festivalToEdit, onClose, onSuccess }) => {
                     type="button"
                     onClick={(e) => {
                       e.preventDefault();
-                      setFormData({ ...formData, image: '' });
+                      if (imagePreview && imagePreview.startsWith('blob:')) {
+                        URL.revokeObjectURL(imagePreview);
+                      }
+                      setImageFile(null);
+                      setImagePreview('');
+                      setExistingImage('');
                     }}
                     className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full transition-colors"
                   >
