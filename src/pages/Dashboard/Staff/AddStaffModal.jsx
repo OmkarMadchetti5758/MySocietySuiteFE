@@ -45,7 +45,12 @@ const AddStaffModal = ({ onClose, onAdded }) => {
     try {
       setLoading(true);
       setError('');
-      const response = await staffApi.addStaff(formData);
+      const payload = {
+        ...formData,
+        mobile: formData.mobile.replace(/\D/g, ''),
+        email: formData.email.trim(),
+      };
+      const response = await staffApi.addStaff(payload);
       const link = response.data?.data?.devInviteLink || response.data?.devInviteLink;
       if (link) {
         setInviteLink(link);
