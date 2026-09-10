@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Info, Send, Check, Copy } from 'lucide-react';
 import staffApi from '../../../services/staffApi';
+import toast from 'react-hot-toast';
 
 const AddStaffModal = ({ onClose, onAdded }) => {
   const [formData, setFormData] = useState({
@@ -13,7 +14,6 @@ const AddStaffModal = ({ onClose, onAdded }) => {
     address: ''
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [inviteLink, setInviteLink] = useState(null);
   const [copied, setCopied] = useState(false);
 
@@ -38,13 +38,12 @@ const AddStaffModal = ({ onClose, onAdded }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.mobile || !formData.designation || !formData.shiftTiming) {
-      setError('Please fill all required fields');
+      toast.error('Please fill all required fields');
       return;
     }
 
     try {
       setLoading(true);
-      setError('');
       const payload = {
         ...formData,
         mobile: formData.mobile.replace(/\D/g, ''),
@@ -56,11 +55,12 @@ const AddStaffModal = ({ onClose, onAdded }) => {
         setInviteLink(link);
         onAdded();
       } else {
+        toast.success('Staff member added successfully');
         onAdded();
         onClose();
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to add staff');
+      toast.error(err.response?.data?.message || 'Failed to add staff');
     } finally {
       setLoading(false);
     }
@@ -142,7 +142,6 @@ const AddStaffModal = ({ onClose, onAdded }) => {
         </div>
 
         <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
-          {error && <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100">{error}</div>}
 
           <form id="add-staff-form" onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-1.5">
@@ -203,11 +202,12 @@ const AddStaffModal = ({ onClose, onAdded }) => {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">Email (optional)</label>
+              <label className="text-sm font-semibold text-gray-700">Email <span className="text-red-500">*</span></label>
               <input
                 type="email"
                 placeholder="name@example.com"
                 value={formData.email}
+                required
                 onChange={e => setFormData({ ...formData, email: e.target.value })}
                 className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
               />

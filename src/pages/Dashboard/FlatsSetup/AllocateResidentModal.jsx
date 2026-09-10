@@ -156,6 +156,7 @@ const AllocateResidentModal = ({ flat, mode, onClose, onSuccess }) => {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="e.g. rahul@example.com"
+                autoComplete="off"
                 className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
               />
             </div>
