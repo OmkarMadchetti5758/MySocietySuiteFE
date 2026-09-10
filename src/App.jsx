@@ -8,6 +8,8 @@ import ApprovedVendorListBlog from './pages/Blog/ApprovedVendorListBlog';
 import ActivateAccount from './pages/ActivateAccount';
 import AboutUs from './pages/AboutUs';
 import VendorTasksPage from './pages/VendorPortal/VendorTasksPage';
+import GuardAppLayout from './pages/GuardApp/GuardAppLayout';
+import GuardLogin from './pages/GuardApp/GuardLogin';
 
 function ScrollToHash() {
   const { pathname, hash } = useLocation();
@@ -48,8 +50,10 @@ function App() {
           <Route path="/about" element={<AboutUs />} />
           <Route path="/blog" element={<ApprovedVendorListBlog />} />
           <Route path="/activate-account" element={<ActivateAccount />} />
+          <Route path="/guard-login" element={<GuardLogin />} />
           <Route path="/:societyId/dashboard/*" element={<DashboardLayout />} />
           <Route path="/:societyId/vendor-portal/*" element={<VendorTasksPage />} />
+          <Route path="/:societyId/guard/*" element={<GuardAppLayout />} />
         </Routes>
       </Router>
     </>

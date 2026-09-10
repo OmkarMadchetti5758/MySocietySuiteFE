@@ -22,7 +22,8 @@ import {
   FaSearch,
   FaBell,
   FaHome,
-  FaChevronDown
+  FaChevronDown,
+  FaShieldAlt
 } from 'react-icons/fa';
 
 import logoImg from '../../assets/images/webp/MySocietySuite_FinalLogo.webp';
@@ -45,6 +46,12 @@ import BillingPage from './Billing/BillingPage';
 import FlatsSetupPage from './FlatsSetup/FlatsSetupPage';
 import FlatDetailsPage from './FlatsSetup/FlatDetailsPage';
 import ParkingPage from './Parking/ParkingPage';
+
+import GuardDashboard from '../GuardApp/GuardDashboard';
+import WalkInVisitor from '../GuardApp/WalkInVisitor';
+import QRScanner from '../GuardApp/QRScanner';
+import VehicleLookup from '../GuardApp/VehicleLookup';
+import VisitorApprovalPage from './Visitors/VisitorApprovalPage';
 
 const MODULE_DEF = [
   { id: 'society_flat_setup', label: 'Society & Flats', icon: FaBuilding, path: 'setup', group: 'SOCIETY' },
@@ -111,6 +118,12 @@ const DashboardLayout = () => {
     redirectToLogin('/');
   };
 
+  const handleNavClick = () => {
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+  };
+
   // Filter modules based on permissions
   // Level 0 = NO_ACCESS, 1 = VIEW, 2 = MANAGE, 3 = FULL
   const safePermissions = permissions || {};
@@ -122,12 +135,15 @@ const DashboardLayout = () => {
   if (!user) return null;
 
   const roleKeys = user.roleKeys || JSON.parse(localStorage.getItem('roleKeys') || '[]');
-  const roleLabel = roleKeys.length > 1
-    ? `${roleKeys.length} roles`
-    : (user.role || roleKeys[0] || '').replace(/_/g, ' ');
+  const roleLabel = user.displayRole
+    ? user.displayRole.replace(/_/g, ' ')
+    : roleKeys.length > 1
+      ? `${roleKeys.length} roles`
+      : (user.role || roleKeys[0] || '').replace(/_/g, ' ');
 
   const isAdmin = user.role === 'admin' || user.role === 'super_admin' || roleKeys.includes('admin') || roleKeys.includes('super_admin');
   const isVendor = user.role === 'vendor' || roleKeys.includes('vendor');
+  const isGuard = user.role === 'security_guard' || roleKeys.includes('security_guard') || user.role === 'security';
 
   // Vendor-only nav tabs
   const VENDOR_NAV = [
@@ -135,13 +151,30 @@ const DashboardLayout = () => {
     { label: 'Helpdesk', icon: FaExclamationCircle, path: 'helpdesk' },
   ];
 
+  // Guard-only nav tabs
+  const GUARD_NAV = [
+    { label: 'Guard Dashboard', icon: FaShieldAlt, path: '' },
+    { label: 'Walk-in Visitor', icon: FaIdBadge, path: 'walk-in' },
+    { label: 'QR Scan', icon: FaSearch, path: 'qr-scan' },
+    { label: 'Vehicle Lookup', icon: FaCar, path: 'vehicle-lookup' },
+    { label: 'SOS Alert', icon: FaExclamationCircle, path: 'sos' },
+  ];
+
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
 
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-20 lg:hidden backdrop-blur-sm" 
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
-        className={`bg-white border-r border-gray-200 transition-all duration-300 ease-in-out z-20 flex flex-col shrink-0 h-screen overflow-hidden ${
-          sidebarOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full lg:translate-x-0'
+        className={`bg-white border-r border-gray-200 transition-all duration-300 ease-in-out z-30 flex flex-col shrink-0 h-screen overflow-hidden ${
+          sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64 lg:translate-x-0 lg:w-0'
         } fixed inset-y-0 left-0 lg:relative`}
       >
         <div className="h-18 flex items-center px-6 border-b border-gray-100 bg-white shrink-0">
@@ -161,6 +194,28 @@ const DashboardLayout = () => {
                 <NavLink
                   key={item.path}
                   to={`/${societyId}/dashboard/${item.path}`}
+                  onClick={handleNavClick}
+                  className={({ isActive }) =>
+                    `flex items-center px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${isActive
+                      ? 'bg-orange-50 text-orange-600 shadow-sm'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    }`
+                  }
+                >
+                  <item.icon className="mr-3 text-lg opacity-80" />
+                  {item.label}
+                </NavLink>
+              ))}
+            </>
+          ) : isGuard ? (
+            <>
+              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-3 mt-2">Security Guard</div>
+              {GUARD_NAV.map(item => (
+                <NavLink
+                  key={item.path}
+                  to={`/${societyId}/dashboard${item.path ? `/${item.path}` : ''}`}
+                  end={item.path === ''}
+                  onClick={handleNavClick}
                   className={({ isActive }) =>
                     `flex items-center px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${isActive
                       ? 'bg-orange-50 text-orange-600 shadow-sm'
@@ -179,6 +234,7 @@ const DashboardLayout = () => {
                 <NavLink
                   to={`/${societyId}/dashboard`}
                   end
+                  onClick={handleNavClick}
                   className={({ isActive }) =>
                     `flex items-center px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 mb-4 ${isActive
                       ? 'bg-orange-50 text-orange-600 shadow-sm'
@@ -209,6 +265,7 @@ const DashboardLayout = () => {
                     <NavLink
                       key={mod.routeKey || mod.path}
                       to={`/${societyId}/dashboard/${mod.path}`}
+                      onClick={handleNavClick}
                       className={({ isActive }) =>
                         `flex items-center px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${isActive
                           ? 'bg-orange-50 text-orange-600 shadow-sm'
@@ -295,18 +352,21 @@ const DashboardLayout = () => {
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
           <div className="max-w-7xl mx-auto">
             <Routes>
-              <Route path="/" element={
-                isVendor
-                  ? <VendorTasksPage />
-                  : isAdmin 
-                    ? <AdminDashboard societyName={societyName} />
-                    : <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center h-[60vh]">
-                        <div className="w-20 h-20 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mb-6 shadow-inner">
-                          <FaBuilding className="text-3xl" />
+              {/* ── Main Dashboard Index Route ── */}
+              <Route index element={
+                isGuard
+                  ? <GuardDashboard />
+                  : isVendor
+                    ? <VendorTasksPage />
+                    : isAdmin 
+                      ? <AdminDashboard societyName={societyName} />
+                      : <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center h-[60vh]">
+                          <div className="w-20 h-20 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                            <FaBuilding className="text-3xl" />
+                          </div>
+                          <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to {societyName}</h2>
+                          <p className="text-gray-500 max-w-md">Select a module from the sidebar to get started.</p>
                         </div>
-                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to {societyName}</h2>
-                        <p className="text-gray-500 max-w-md">Select a module from the sidebar to get started.</p>
-                      </div>
               } />
               <Route path="profile" element={<ProfilePage />} />
 
@@ -315,6 +375,35 @@ const DashboardLayout = () => {
                 <>
                   <Route path="vendors" element={<VendorTasksPage />} />
                   <Route path="helpdesk" element={<Placeholder title="Helpdesk" />} />
+                </>
+              )}
+
+              {/* ── Guard-specific routes ── */}
+              {isGuard && (
+                <>
+                  <Route path="walk-in" element={<WalkInVisitor />} />
+                  <Route path="qr-scan" element={<QRScanner />} />
+                  <Route path="vehicle-lookup" element={<VehicleLookup />} />
+                  <Route path="sos" element={
+                    <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center h-[60vh]">
+                      <div className="w-24 h-24 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6 shadow-inner animate-pulse">
+                        <FaExclamationCircle className="text-5xl" />
+                      </div>
+                      <h2 className="text-3xl font-bold text-gray-900 mb-4">Emergency SOS</h2>
+                      <p className="text-gray-500 max-w-md mb-8">Trigger an emergency alert to all residents and admins immediately.</p>
+                      <button 
+                        onClick={() => {
+                           if(window.confirm("Are you sure you want to trigger SOS?")) {
+                               // Simulating SOS trigger for now
+                               alert("SOS Alert Triggered!");
+                           }
+                        }}
+                        className="bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-12 rounded-full text-lg shadow-lg shadow-red-600/30 transition-all active:scale-95"
+                      >
+                        TRIGGER SOS NOW
+                      </button>
+                    </div>
+                  } />
                 </>
               )}
 
@@ -358,6 +447,9 @@ const DashboardLayout = () => {
                 }
                 if (mod.path === 'parking') {
                   return <Route key={mod.routeKey || mod.path} path={mod.path} element={<ParkingPage />} />;
+                }
+                if (mod.path === 'visitors') {
+                  return <Route key={mod.routeKey || mod.path} path={mod.path} element={<VisitorApprovalPage />} />;
                 }
                 return <Route key={mod.routeKey || mod.path} path={mod.path} element={<Placeholder title={mod.label} />} />;
               })}

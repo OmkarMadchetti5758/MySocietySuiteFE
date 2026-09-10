@@ -159,7 +159,7 @@ const LoginModal = ({ isOpen, onClose }) => {
                 'Sign In'
               )}
             </button>
-          </form>
+            </form>
         </div>
       </div>
     </div>

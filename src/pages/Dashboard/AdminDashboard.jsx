@@ -24,20 +24,16 @@ const AdminDashboard = ({ societyName }) => {
           <p className="text-gray-500 text-sm mt-1">Here's what's happening in {societyName}.</p>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="relative flex-1 md:flex-none">
-            <select
-              className="appearance-none bg-white border border-gray-200 text-gray-700 py-2 pl-10 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm font-medium w-full shadow-sm"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            >
-              <option value="14 May 2024, Tuesday">14 May 2024, Tuesday</option>
-              <option value="15 May 2024, Wednesday">15 May 2024, Wednesday</option>
-            </select>
-            <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-              <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
-            </div>
-          </div>
+          {/* Quick link to Guard App for testing */}
+          <a
+            href={`/${window.location.pathname.split('/')[1]}/guard/dashboard`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-xl text-sm font-semibold transition-colors shadow-sm whitespace-nowrap flex items-center gap-2"
+          >
+            <FaShieldAlt className="w-4 h-4" />
+            Open Guard Portal
+          </a>
           <button className="bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-xl text-sm font-semibold transition-colors shadow-sm whitespace-nowrap flex items-center gap-2">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
             Customize Dashboard
