@@ -267,6 +267,32 @@ const BillingPage = () => {
   const [selectedModule, setSelectedModule] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // ── Hub Dynamic Stats State ────────────────────────────────────────────────
+  const [hubStats, setHubStats] = useState({
+    invoicesIssued: null,
+    activeChargeHeads: null,
+  });
+
+  useEffect(() => {
+    const invEndpoint = isResident ? '/billing/my/invoices/stats' : '/billing/invoices/stats';
+    apiClient.get(invEndpoint)
+      .then(res => {
+        if (res.data?.data) {
+          setHubStats(prev => ({ ...prev, invoicesIssued: res.data.data.total ?? 0 }));
+        }
+      })
+      .catch(() => {});
+
+    apiClient.get('/billing/charge-heads')
+      .then(res => {
+        if (res.data?.data) {
+          const list = Array.isArray(res.data.data) ? res.data.data : [];
+          setHubStats(prev => ({ ...prev, activeChargeHeads: list.length }));
+        }
+      })
+      .catch(() => {});
+  }, [isResident]);
+
   // ── Charge Head & Billing Config State ─────────────────────────────────────
   const [activeTab, setActiveTab] = useState('charge_heads'); // 'charge_heads' | 'society_config'
   const [chargeHeads, setChargeHeads] = useState([]);
@@ -1176,17 +1202,25 @@ const BillingPage = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {visibleSubmodules.map((mod) => (
-            <SectionCard
-              key={mod.id}
-              title={mod.title}
-              icon={mod.icon}
-              colorClass={mod.colorClass}
-              desc={mod.desc}
-              stats={mod.stats}
-              onClick={() => handleSelectModule(mod.slug)}
-            />
-          ))}
+          {visibleSubmodules.map((mod) => {
+            let dynamicStats = mod.stats;
+            if (mod.id === 'invoice_billing_generation' && hubStats.invoicesIssued !== null) {
+              dynamicStats = { ...mod.stats, value: String(hubStats.invoicesIssued) };
+            } else if (mod.id === 'billing_config_charge_head' && hubStats.activeChargeHeads !== null) {
+              dynamicStats = { ...mod.stats, value: String(hubStats.activeChargeHeads) };
+            }
+            return (
+              <SectionCard
+                key={mod.id}
+                title={mod.title}
+                icon={mod.icon}
+                colorClass={mod.colorClass}
+                desc={mod.desc}
+                stats={dynamicStats}
+                onClick={() => handleSelectModule(mod.slug)}
+              />
+            );
+          })}
         </div>
       </div>
     </div>
