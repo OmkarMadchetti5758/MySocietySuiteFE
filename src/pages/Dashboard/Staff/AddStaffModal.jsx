@@ -3,15 +3,15 @@ import { X, Info, Send, Check, Copy } from 'lucide-react';
 import staffApi from '../../../services/staffApi';
 import toast from 'react-hot-toast';
 
-const AddStaffModal = ({ onClose, onAdded }) => {
+const AddStaffModal = ({ onClose, onAdded, editData }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    mobile: '',
-    designation: '',
-    shiftTiming: '',
-    gateOrArea: '',
-    email: '',
-    address: ''
+    name: editData?.name || '',
+    mobile: editData?.phone || '',
+    designation: editData?.role || '',
+    shiftTiming: editData?.shift || '',
+    gateOrArea: editData?.gateOrArea || '',
+    email: editData?.user?.email || '',
+    address: editData?.address || ''
   });
   const [loading, setLoading] = useState(false);
   const [inviteLink, setInviteLink] = useState(null);
@@ -37,30 +37,48 @@ const AddStaffModal = ({ onClose, onAdded }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.mobile || !formData.designation || !formData.shiftTiming) {
+    if (!formData.name || !formData.designation || !formData.shiftTiming) {
+      toast.error('Please fill all required fields');
+      return;
+    }
+    if (!editData && (!formData.mobile || !formData.email)) {
       toast.error('Please fill all required fields');
       return;
     }
 
     try {
       setLoading(true);
-      const payload = {
-        ...formData,
-        mobile: formData.mobile.replace(/\D/g, ''),
-        email: formData.email.trim(),
-      };
-      const response = await staffApi.addStaff(payload);
-      const link = response.data?.data?.devInviteLink || response.data?.devInviteLink;
-      if (link) {
-        setInviteLink(link);
-        onAdded();
-      } else {
-        toast.success('Staff member added successfully');
+      if (editData) {
+        const payload = {
+          name: formData.name,
+          designation: formData.designation,
+          shiftTiming: formData.shiftTiming,
+          gateOrArea: formData.gateOrArea,
+          address: formData.address
+        };
+        await staffApi.updateStaff(editData._id, payload);
+        toast.success('Staff member updated successfully');
         onAdded();
         onClose();
+      } else {
+        const payload = {
+          ...formData,
+          mobile: formData.mobile.replace(/\D/g, ''),
+          email: formData.email.trim(),
+        };
+        const response = await staffApi.addStaff(payload);
+        const link = response.data?.data?.devInviteLink || response.data?.devInviteLink;
+        if (link) {
+          setInviteLink(link);
+          onAdded();
+        } else {
+          toast.success('Staff member added successfully');
+          onAdded();
+          onClose();
+        }
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to add staff');
+      toast.error(err.response?.data?.message || (editData ? 'Failed to update staff' : 'Failed to add staff'));
     } finally {
       setLoading(false);
     }
@@ -133,8 +151,8 @@ const AddStaffModal = ({ onClose, onAdded }) => {
       <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-xl">
         <div className="flex items-center justify-between p-6 border-b border-gray-100 shrink-0">
           <div>
-            <h3 className="text-lg font-bold text-gray-900">Add staff member</h3>
-            <p className="text-sm text-gray-500 mt-1">They'll receive an invite link to set up their account</p>
+            <h3 className="text-lg font-bold text-gray-900">{editData ? 'Edit staff member' : 'Add staff member'}</h3>
+            {!editData && <p className="text-sm text-gray-500 mt-1">They'll receive an invite link to set up their account</p>}
           </div>
           <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
             <X className="w-5 h-5" />
@@ -155,16 +173,18 @@ const AddStaffModal = ({ onClose, onAdded }) => {
               />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">Phone number <span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                placeholder="+91 98765 43210"
-                value={formData.mobile}
-                onChange={e => setFormData({ ...formData, mobile: e.target.value })}
-                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
-              />
-            </div>
+            {!editData && (
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-gray-700">Phone number <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  placeholder="+91 98765 43210"
+                  value={formData.mobile}
+                  onChange={e => setFormData({ ...formData, mobile: e.target.value })}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+                />
+              </div>
+            )}
 
             <div className="space-y-1.5">
               <label className="text-sm font-semibold text-gray-700">Role <span className="text-red-500">*</span></label>
@@ -201,17 +221,19 @@ const AddStaffModal = ({ onClose, onAdded }) => {
               />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-gray-700">Email <span className="text-red-500">*</span></label>
-              <input
-                type="email"
-                placeholder="name@example.com"
-                value={formData.email}
-                required
-                onChange={e => setFormData({ ...formData, email: e.target.value })}
-                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
-              />
-            </div>
+            {!editData && (
+              <div className="space-y-1.5">
+                <label className="text-sm font-semibold text-gray-700">Email <span className="text-red-500">*</span></label>
+                <input
+                  type="email"
+                  placeholder="name@example.com"
+                  value={formData.email}
+                  required
+                  onChange={e => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+                />
+              </div>
+            )}
 
             <div className="space-y-1.5 md:col-span-2">
               <label className="text-sm font-semibold text-gray-700">Address (optional)</label>
@@ -225,12 +247,14 @@ const AddStaffModal = ({ onClose, onAdded }) => {
             </div>
           </form>
 
-          <div className="flex gap-3 bg-blue-50/50 border border-blue-100 rounded-xl p-4 mt-6">
-            <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-            <p className="text-sm text-blue-900/80 leading-relaxed">
-              An invite link will be generated for this staff member to set their password and complete registration.
-            </p>
-          </div>
+          {!editData && (
+            <div className="flex gap-3 bg-blue-50/50 border border-blue-100 rounded-xl p-4 mt-6">
+              <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+              <p className="text-sm text-blue-900/80 leading-relaxed">
+                An invite link will be generated for this staff member to set their password and complete registration.
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="p-6 border-t border-gray-100 shrink-0 flex justify-end gap-3 bg-gray-50/50 rounded-b-2xl">
@@ -247,7 +271,7 @@ const AddStaffModal = ({ onClose, onAdded }) => {
             disabled={loading}
             className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm disabled:opacity-50"
           >
-            {loading ? 'Sending...' : <><Send className="w-4 h-4" /> Send invite</>}
+            {loading ? (editData ? 'Saving...' : 'Sending...') : (editData ? 'Save Changes' : <><Send className="w-4 h-4" /> Send invite</>)}
           </button>
         </div>
       </div>

@@ -7,6 +7,12 @@ const staffApi = {
     getAllStaff: async (role = "All roles") => {
         return api.get(`/staff?role=${encodeURIComponent(role)}`);
     },
+    updateStaff: async (id, payload) => {
+        return api.put(`/staff/${id}`, payload);
+    },
+    deleteStaff: async (id) => {
+        return api.delete(`/staff/${id}`);
+    },
     getShiftView: async () => {
         return api.get("/staff/shift-view");
     },
