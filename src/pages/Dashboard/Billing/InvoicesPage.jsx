@@ -345,6 +345,7 @@ const InvoicesPage = () => {
 
                     <th className="py-4 px-5">Due Date</th>
                     <th className="py-4 px-5 text-right">Amount</th>
+                    <th className="py-4 px-5 text-right">Fine</th>
                     <th className="py-4 px-5 text-right">Paid</th>
                     <th className="py-4 px-5 text-right">Balance</th>
                     <th className="py-4 px-5">Status</th>
@@ -355,14 +356,14 @@ const InvoicesPage = () => {
                   {loading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <tr key={i} className="border-b border-gray-50 animate-pulse">
-                        {Array.from({ length: isResident ? 9 : 10 }).map((_, j) => (
+                        {Array.from({ length: isResident ? 10 : 11 }).map((_, j) => (
                           <td key={j} className="py-4 px-5"><div className="h-4 bg-gray-100 rounded w-full" /></td>
                         ))}
                       </tr>
                     ))
                   ) : invoices.length === 0 ? (
                     <tr>
-                      <td colSpan={isResident ? 9 : 10} className="py-16 text-center">
+                      <td colSpan={isResident ? 10 : 11} className="py-16 text-center">
                         <FaFileInvoiceDollar className="text-4xl text-gray-200 mx-auto mb-3" />
                         <div className="text-gray-500 font-medium">No invoices found</div>
                         <div className="text-gray-400 text-sm mt-1">
@@ -380,7 +381,9 @@ const InvoicesPage = () => {
                     </tr>
                   ) : (
                     invoices.map(inv => {
-                      const balance = (inv.totalAmount || 0) - (inv.paidAmount || 0);
+                      const fine = inv.fineAmount || 0;
+                      const totalPayable = (inv.totalAmount || 0) + fine;
+                      const balance = Math.max(0, totalPayable - (inv.paidAmount || 0));
                       return (
                         <tr
                           key={inv._id}
@@ -403,6 +406,7 @@ const InvoicesPage = () => {
 
                           <td className="py-3.5 px-5 text-gray-600">{fmtDate(inv.dueDate)}</td>
                           <td className="py-3.5 px-5 text-right font-bold text-gray-900">{fmt(inv.totalAmount)}</td>
+                          <td className="py-3.5 px-5 text-right font-semibold text-purple-600">{fine > 0 ? fmt(fine) : '—'}</td>
                           <td className="py-3.5 px-5 text-right text-emerald-600 font-semibold">{fmt(inv.paidAmount)}</td>
                           <td className={`py-3.5 px-5 text-right font-bold ${balance > 0 ? 'text-red-500' : 'text-emerald-600'}`}>{fmt(balance)}</td>
                           <td className="py-3.5 px-5"><StatusBadge status={inv.status} /></td>

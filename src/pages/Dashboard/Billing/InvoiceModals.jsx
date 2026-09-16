@@ -52,7 +52,9 @@ export const InvoiceDetailModal = ({ invoice, onClose, onRecordPayment, currentU
   const canRecordPayment = isAdmin || isAccountant;
   const isResident = currentUser?.role === 'resident_owner' || roleKeys.includes('resident_owner') || (!isAdmin && !isAccountant);
 
-  const balance = (invoice.totalAmount || 0) - (invoice.paidAmount || 0);
+  const fineAmount = invoice.fineAmount || 0;
+  const totalPayable = (invoice.totalAmount || 0) + fineAmount;
+  const balance = Math.max(0, totalPayable - (invoice.paidAmount || 0));
 
   useEffect(() => {
     if (activeTab === 'payments') {
@@ -136,14 +138,14 @@ export const InvoiceDetailModal = ({ invoice, onClose, onRecordPayment, currentU
               <div className="bg-orange-50 border border-orange-100 rounded-2xl p-5">
                 <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Amount Summary</div>
                 <div className="space-y-2.5 text-sm">
-                  <div className="flex justify-between"><span className="text-gray-600">Subtotal</span><span className="font-semibold">{fmt(invoice.subTotal)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-600">Subtotal</span><span className="font-semibold">{fmt(invoice.subTotal || invoice.totalAmount)}</span></div>
                   {(invoice.totalGst > 0) && <div className="flex justify-between"><span className="text-gray-600">GST (CGST + SGST)</span><span className="font-semibold">{fmt(invoice.totalGst)}</span></div>}
                   {(invoice.arrearsAmount > 0) && <div className="flex justify-between"><span className="text-amber-700">Previous Arrears</span><span className="font-semibold text-amber-700">{fmt(invoice.arrearsAmount)}</span></div>}
-                  {(invoice.fineAmount > 0) && <div className="flex justify-between"><span className="text-red-600">Fine</span><span className="font-semibold text-red-600">{fmt(invoice.fineAmount)}</span></div>}
+                  {(fineAmount > 0) && <div className="flex justify-between"><span className="text-red-600">Fine</span><span className="font-semibold text-red-600">{fmt(fineAmount)}</span></div>}
                   {(invoice.discountAmount > 0) && <div className="flex justify-between"><span className="text-emerald-700">Discount</span><span className="font-semibold text-emerald-700">-{fmt(invoice.discountAmount)}</span></div>}
                   {(invoice.creditNoteAmount > 0) && <div className="flex justify-between"><span className="text-emerald-700">Credit Note</span><span className="font-semibold text-emerald-700">-{fmt(invoice.creditNoteAmount)}</span></div>}
                   <div className="border-t border-orange-200 pt-2.5 flex justify-between font-black text-gray-900 text-base">
-                    <span>Total Payable</span><span>{fmt(invoice.totalAmount)}</span>
+                    <span>Total Payable</span><span>{fmt(totalPayable)}</span>
                   </div>
                   <div className="flex justify-between text-emerald-700"><span>Paid</span><span className="font-bold">{fmt(invoice.paidAmount)}</span></div>
                   <div className={`flex justify-between font-bold ${balance > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
@@ -256,7 +258,8 @@ export const RecordPaymentModal = ({ invoice, onClose, onSuccess }) => {
     paymentDate: new Date().toISOString().split('T')[0],
   });
   const [saving, setSaving] = useState(false);
-  const balance = (invoice.totalAmount || 0) - (invoice.paidAmount || 0);
+  const totalPayable = (invoice.totalAmount || 0) + (invoice.fineAmount || 0);
+  const balance = Math.max(0, totalPayable - (invoice.paidAmount || 0));
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -48,6 +48,7 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
     bucket61_90: 0,
     bucket90Plus: 0
   });
+  const [ageingTable, setAgeingTable] = useState([]);
 
   // Defaulters State (Dynamic from Backend)
   const [defaulterCyclesThreshold, setDefaulterCyclesThreshold] = useState(2);
@@ -102,6 +103,7 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
       }
       if (ageingRes.status === 'fulfilled' && ageingRes.value?.data?.data) {
         setAgeingSummary(ageingRes.value.data.data.summary || { bucket0_30: 0, bucket31_60: 0, bucket61_90: 0, bucket90Plus: 0 });
+        setAgeingTable(ageingRes.value.data.data.table || []);
       }
       if (defRes.status === 'fulfilled') {
         setDefaultersList(defRes.value?.data?.data || []);
@@ -207,16 +209,18 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
   // Dispatch Reminder Handler
   const handleSendReminder = async (item) => {
     try {
+      const targetFlat = item.flat || item.flatNumber || 'A-101';
+      const targetResident = item.resident || item.residentName || 'Resident';
       const res = await apiClient.post('/billing/dunning/reminders/send', {
-        flat: item.flat,
-        resident: item.resident,
+        flat: targetFlat,
+        resident: targetResident,
         channel: 'SMS',
         reminderType: 'DEFAULTER_FOLLOWUP'
       });
-      toast.success("Reminder dispatched via SMS");
+      toast.success(res?.data?.message || "Reminder dispatched via SMS");
       fetchDunningData();
     } catch (err) {
-      toast.error("Failed to send reminder");
+      toast.error(err.response?.data?.message || "Failed to send reminder");
     }
   };
 
@@ -364,70 +368,72 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 text-gray-500 text-xs font-semibold uppercase border-b border-gray-100">
-                  <th className="py-4 px-6">Rule Name</th>
-                  <th className="py-4 px-6">Type</th>
-                  <th className="py-4 px-6">Calculation</th>
-                  <th className="py-4 px-6">Start Reference</th>
-                  <th className="py-4 px-6">Status</th>
-                  <th className="py-4 px-6">Effective From</th>
-                  <th className="py-4 px-6">Created By</th>
-                  <th className="py-4 px-6 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rules.length > 0 ? (
-                  rules.map((rule, idx) => (
-                    <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 text-sm">
-                      <td className="py-4 px-6 font-bold text-gray-900">{rule.ruleName}</td>
-                      <td className="py-4 px-6 text-gray-700 font-semibold">{rule.calculationType}</td>
-                      <td className="py-4 px-6 text-gray-600">
-                        {rule.calculationType === 'FLAT' && `₹${rule.flatAmount}`}
-                        {rule.calculationType === 'PERCENTAGE' && `${rule.percentageRate}%`}
-                        {rule.calculationType === 'SLAB' && 'Slab-Based Penalty'}
-                      </td>
-                      <td className="py-4 px-6 text-xs font-bold text-indigo-700 bg-indigo-50/50 w-fit px-2 py-1 rounded-lg">
-                        {rule.startRule === 'DUE_DATE' ? 'Due Date' : 'Invoice Date'}
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className={`text-xs font-bold px-3 py-1 rounded-full border ${rule.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                          rule.status === 'PENDING_APPROVAL' ? 'bg-amber-50 text-amber-600 border-amber-200' :
-                            'bg-gray-50 text-gray-600 border-gray-200'
-                          }`}>
-                          {rule.status}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-xs text-gray-500">{rule.effectiveFrom ? new Date(rule.effectiveFrom).toLocaleDateString() : 'N/A'}</td>
-                      <td className="py-4 px-6 text-xs font-medium text-gray-700">
-                        {typeof rule.createdBy === 'object' && rule.createdBy !== null
-                          ? (rule.createdBy.name || `${rule.createdBy.firstName || ''} ${rule.createdBy.lastName || ''}`.trim() || rule.createdBy.email || 'Admin')
-                          : (rule.createdBy || 'Admin')}
-                      </td>
-                      <td className="py-4 px-6 text-right">
-                        {rule.status === 'PENDING_APPROVAL' && currentUserRole === 'ADMIN' ? (
-                          <button
-                            onClick={() => handleApproveRule(rule._id)}
-                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm"
-                          >
-                            Approve
-                          </button>
-                        ) : (
-                          <span className="text-xs text-gray-400 font-medium">{rule.status}</span>
-                        )}
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full text-left border-collapse min-w-[900px]">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-500 text-xs font-semibold uppercase border-b border-gray-100 whitespace-nowrap">
+                    <th className="py-4 px-6">Rule Name</th>
+                    <th className="py-4 px-6">Type</th>
+                    <th className="py-4 px-6">Calculation</th>
+                    <th className="py-4 px-6">Start Reference</th>
+                    <th className="py-4 px-6">Status</th>
+                    <th className="py-4 px-6">Effective From</th>
+                    <th className="py-4 px-6">Created By</th>
+                    <th className="py-4 px-6 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rules.length > 0 ? (
+                    rules.map((rule, idx) => (
+                      <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 text-sm">
+                        <td className="py-4 px-6 font-bold text-gray-900">{rule.ruleName}</td>
+                        <td className="py-4 px-6 text-gray-700 font-semibold">{rule.calculationType}</td>
+                        <td className="py-4 px-6 text-gray-600">
+                          {rule.calculationType === 'FLAT' && `₹${rule.flatAmount}`}
+                          {rule.calculationType === 'PERCENTAGE' && `${rule.percentageRate}%`}
+                          {rule.calculationType === 'SLAB' && 'Slab-Based Penalty'}
+                        </td>
+                        <td className="py-4 px-6 text-xs font-bold text-indigo-700 bg-indigo-50/50 w-fit px-2 py-1 rounded-lg">
+                          {rule.startRule === 'DUE_DATE' ? 'Due Date' : 'Invoice Date'}
+                        </td>
+                        <td className="py-4 px-6">
+                          <span className={`text-xs font-bold px-3 py-1 rounded-full border ${rule.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+                            rule.status === 'PENDING_APPROVAL' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                              'bg-gray-50 text-gray-600 border-gray-200'
+                            }`}>
+                            {rule.status}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 text-xs text-gray-500">{rule.effectiveFrom ? new Date(rule.effectiveFrom).toLocaleDateString() : 'N/A'}</td>
+                        <td className="py-4 px-6 text-xs font-medium text-gray-700">
+                          {typeof rule.createdBy === 'object' && rule.createdBy !== null
+                            ? (rule.createdBy.name || `${rule.createdBy.firstName || ''} ${rule.createdBy.lastName || ''}`.trim() || rule.createdBy.email || 'Admin')
+                            : (rule.createdBy || 'Admin')}
+                        </td>
+                        <td className="py-4 px-6 text-right">
+                          {rule.status === 'PENDING_APPROVAL' && currentUserRole === 'ADMIN' ? (
+                            <button
+                              onClick={() => handleApproveRule(rule._id)}
+                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm"
+                            >
+                              Approve
+                            </button>
+                          ) : (
+                            <span className="text-xs text-gray-400 font-medium">{rule.status}</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="8" className="py-8 text-center text-xs text-gray-500 font-medium">
+                        No fine/interest rules configured yet. Click "Create Fine / Interest Rule" to configure one.
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="8" className="py-8 text-center text-xs text-gray-500 font-medium">
-                      No fine/interest rules configured yet. Click "Create Fine / Interest Rule" to configure one.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -440,55 +446,65 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
               <h3 className="text-sm font-bold text-gray-900">Unpaid Arrears Carried Forward</h3>
             </div>
 
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 text-gray-500 text-xs font-semibold uppercase border-b border-gray-100">
-                  <th className="py-4 px-6">Flat</th>
-                  <th className="py-4 px-6">Resident</th>
-                  <th className="py-4 px-6">Previous Invoice</th>
-                  <th className="py-4 px-6">Billing Cycle</th>
-                  <th className="py-4 px-6">Original Amount</th>
-                  <th className="py-4 px-6">Paid</th>
-                  <th className="py-4 px-6">Outstanding</th>
-                  <th className="py-4 px-6">Days Overdue</th>
-                  <th className="py-4 px-6">Fine / Interest</th>
-                  <th className="py-4 px-6">Total Due</th>
-                  <th className="py-4 px-6 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {arrears.length > 0 ? (
-                  arrears.map((item, idx) => (
-                    <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 text-sm">
-                      <td className="py-4 px-6 font-bold text-gray-900">{item.flat}</td>
-                      <td className="py-4 px-6 text-gray-700">{item.resident}</td>
-                      <td className="py-4 px-6 font-mono text-xs text-gray-600">{item.previousInvoice}</td>
-                      <td className="py-4 px-6 text-xs text-gray-500">{item.billingCycle}</td>
-                      <td className="py-4 px-6 text-gray-700">₹{(item.originalAmount || 0).toLocaleString()}</td>
-                      <td className="py-4 px-6 text-emerald-600 font-semibold">₹{(item.paid || 0).toLocaleString()}</td>
-                      <td className="py-4 px-6 text-red-600 font-bold">₹{(item.outstanding || 0).toLocaleString()}</td>
-                      <td className="py-4 px-6 text-xs font-bold text-amber-600">{item.daysOverdue} Days</td>
-                      <td className="py-4 px-6 text-purple-600 font-semibold">₹{item.fine || 0}</td>
-                      <td className="py-4 px-6 text-gray-900 font-extrabold">₹{(item.totalDue || 0).toLocaleString()}</td>
-                      <td className="py-4 px-6 text-right">
-                        <button
-                          onClick={() => setSelectedArrearsDetail(item)}
-                          className="text-xs font-bold text-orange-600 hover:underline"
-                        >
-                          View Details
-                        </button>
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full text-left border-collapse min-w-[1100px]">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-500 text-xs font-semibold uppercase border-b border-gray-100 whitespace-nowrap">
+                    <th className="py-4 px-6">Flat</th>
+                    <th className="py-4 px-6">Wing</th>
+                    <th className="py-4 px-6">Resident</th>
+                    <th className="py-4 px-6">Previous Invoice</th>
+                    <th className="py-4 px-6">Billing Cycle</th>
+                    <th className="py-4 px-6">Original Amount</th>
+                    <th className="py-4 px-6">Paid</th>
+                    <th className="py-4 px-6">Outstanding</th>
+                    <th className="py-4 px-6">Days Overdue</th>
+                    <th className="py-4 px-6">Fine / Interest</th>
+                    <th className="py-4 px-6">Total Due</th>
+                    <th className="py-4 px-6 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {arrears.length > 0 ? (
+                    arrears.map((item, idx) => (
+                      <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 text-sm whitespace-nowrap">
+                        <td className="py-4 px-6 font-bold text-gray-900">{String(item.flat || '').replace(/^(Block|Flat)[-\s]*/i, '')}</td>
+                        <td className="py-4 px-6 text-gray-700 font-semibold">
+                          {item.wing || (
+                            String(item.flat || '').match(/^([A-Za-z]+)[-\s]?/)
+                              ? `Wing ${String(item.flat || '').match(/^([A-Za-z]+)[-\s]?/)[1].toUpperCase()}`
+                              : 'Wing A'
+                          )}
+                        </td>
+                        <td className="py-4 px-6 text-gray-700">{item.resident}</td>
+                        <td className="py-4 px-6 font-mono text-xs text-gray-600">{item.previousInvoice}</td>
+                        <td className="py-4 px-6 text-xs text-gray-500">{item.billingCycle}</td>
+                        <td className="py-4 px-6 text-gray-700">₹{(item.originalAmount || 0).toLocaleString()}</td>
+                        <td className="py-4 px-6 text-emerald-600 font-semibold">₹{(item.paid || 0).toLocaleString()}</td>
+                        <td className="py-4 px-6 text-red-600 font-bold">₹{(item.outstanding || 0).toLocaleString()}</td>
+                        <td className="py-4 px-6 text-xs font-bold text-amber-600">{item.daysOverdue} Days</td>
+                        <td className="py-4 px-6 text-purple-600 font-semibold">₹{item.fine || 0}</td>
+                        <td className="py-4 px-6 text-gray-900 font-extrabold">₹{(item.totalDue || 0).toLocaleString()}</td>
+                        <td className="py-4 px-6 text-right">
+                          <button
+                            onClick={() => setSelectedArrearsDetail(item)}
+                            className="text-xs font-bold text-orange-600 hover:underline"
+                          >
+                            View Details
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="12" className="py-8 text-center text-xs text-gray-500 font-medium">
+                        No unpaid carried-forward arrears found.
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="11" className="py-8 text-center text-xs text-gray-500 font-medium">
-                      No unpaid carried-forward arrears found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -519,9 +535,65 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-            <h3 className="text-sm font-bold text-gray-900 mb-3">Ageing Analysis Breakdown</h3>
-            <p className="text-xs text-gray-500">Track overdue balances across ageing brackets to target high-priority collection follow-ups.</p>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-4 border-b border-gray-100 bg-gray-50/50">
+              <h3 className="text-sm font-bold text-gray-900">Ageing Analysis Breakdown</h3>
+              <p className="text-xs text-gray-500">Track overdue balances across ageing brackets to target high-priority collection follow-ups.</p>
+            </div>
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full text-left border-collapse min-w-[1000px]">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-500 text-xs font-semibold uppercase border-b border-gray-100 whitespace-nowrap">
+                    <th className="py-4 px-6">Flat</th>
+                    <th className="py-4 px-6">Wing</th>
+                    <th className="py-4 px-6">Resident</th>
+                    <th className="py-4 px-6">Invoice Ref</th>
+                    <th className="py-4 px-6">Days Overdue</th>
+                    <th className="py-4 px-6">Ageing Bucket</th>
+                    <th className="py-4 px-6">Outstanding</th>
+                    <th className="py-4 px-6">Fine / Interest</th>
+                    <th className="py-4 px-6 text-right">Total Due</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ageingTable.length > 0 ? (
+                    ageingTable.map((item, idx) => (
+                      <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 text-sm whitespace-nowrap">
+                        <td className="py-4 px-6 font-bold text-gray-900">{String(item.flat || '').replace(/^(Block|Flat)[-\s]*/i, '')}</td>
+                        <td className="py-4 px-6 text-gray-700 font-semibold">
+                          {item.wing || (
+                            String(item.flat || '').match(/^([A-Za-z]+)[-\s]?/)
+                              ? `Wing ${String(item.flat || '').match(/^([A-Za-z]+)[-\s]?/)[1].toUpperCase()}`
+                              : 'Wing A'
+                          )}
+                        </td>
+                        <td className="py-4 px-6 text-gray-700">{item.resident}</td>
+                        <td className="py-4 px-6 font-mono text-xs text-gray-600">{item.previousInvoice}</td>
+                        <td className="py-4 px-6 text-xs font-bold text-amber-600">{item.daysOverdue} Days</td>
+                        <td className="py-4 px-6">
+                          <span className={`text-xs font-bold px-3 py-1 rounded-full border ${item.ageingBucket === '90+ Days' ? 'bg-red-50 text-red-600 border-red-200' :
+                            item.ageingBucket === '61–90 Days' ? 'bg-orange-50 text-orange-600 border-orange-200' :
+                              item.ageingBucket === '31–60 Days' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                                'bg-emerald-50 text-emerald-600 border-emerald-200'
+                            }`}>
+                            {item.ageingBucket}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 text-red-600 font-bold">₹{(item.outstanding || 0).toLocaleString()}</td>
+                        <td className="py-4 px-6 text-purple-600 font-semibold">₹{item.fine || 0}</td>
+                        <td className="py-4 px-6 text-right text-gray-900 font-extrabold">₹{(item.totalDue || 0).toLocaleString()}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="9" className="py-8 text-center text-xs text-gray-500 font-medium">
+                        No active ageing records found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -549,59 +621,69 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 text-gray-500 text-xs font-semibold uppercase border-b border-gray-100">
-                  <th className="py-4 px-6">Flat</th>
-                  <th className="py-4 px-6">Resident</th>
-                  <th className="py-4 px-6">Unpaid Cycles</th>
-                  <th className="py-4 px-6">Outstanding</th>
-                  <th className="py-4 px-6">Oldest Due Date</th>
-                  <th className="py-4 px-6">Days Overdue</th>
-                  <th className="py-4 px-6">Fine / Interest</th>
-                  <th className="py-4 px-6">Last Reminder</th>
-                  <th className="py-4 px-6">Defaulter Since</th>
-                  <th className="py-4 px-6">Status</th>
-                  <th className="py-4 px-6 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {defaultersList.length > 0 ? (
-                  defaultersList.map((def, idx) => (
-                    <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 text-sm">
-                      <td className="py-4 px-6 font-bold text-gray-900">{def.flat || def.flatNumber}</td>
-                      <td className="py-4 px-6 text-gray-700">{def.resident || def.residentName}</td>
-                      <td className="py-4 px-6 text-red-600 font-extrabold">{def.unpaidCyclesCount || def.unpaidCycles} Cycles</td>
-                      <td className="py-4 px-6 text-gray-900 font-bold">₹{(def.totalOutstanding || def.outstanding || 0).toLocaleString()}</td>
-                      <td className="py-4 px-6 text-xs text-gray-500">{def.oldestDueDate ? new Date(def.oldestDueDate).toLocaleDateString() : 'N/A'}</td>
-                      <td className="py-4 px-6 text-xs font-bold text-amber-600">{def.daysOverdue} Days</td>
-                      <td className="py-4 px-6 text-purple-600 font-semibold">₹{def.totalFineAmount || def.fine || 0}</td>
-                      <td className="py-4 px-6 text-xs text-gray-500">{def.lastReminderSentAt ? new Date(def.lastReminderSentAt).toLocaleDateString() : 'N/A'}</td>
-                      <td className="py-4 px-6 text-xs text-gray-500">{def.defaulterSince ? new Date(def.defaulterSince).toLocaleDateString() : 'N/A'}</td>
-                      <td className="py-4 px-6">
-                        <span className="text-xs font-bold px-3 py-1 rounded-full bg-red-100 text-red-700 border border-red-200">
-                          {def.status}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6 text-right">
-                        <button
-                          onClick={() => handleSendReminder(def)}
-                          className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg shadow-sm"
-                        >
-                          Send Reminder
-                        </button>
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full text-left border-collapse min-w-[1200px]">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-500 text-xs font-semibold uppercase border-b border-gray-100 whitespace-nowrap">
+                    <th className="py-4 px-6">Flat</th>
+                    <th className="py-4 px-6">Wing</th>
+                    <th className="py-4 px-6">Resident</th>
+                    <th className="py-4 px-6">Unpaid Cycles</th>
+                    <th className="py-4 px-6">Outstanding</th>
+                    <th className="py-4 px-6">Oldest Due Date</th>
+                    <th className="py-4 px-6">Days Overdue</th>
+                    <th className="py-4 px-6">Fine / Interest</th>
+                    <th className="py-4 px-6">Last Reminder</th>
+                    <th className="py-4 px-6">Defaulter Since</th>
+                    <th className="py-4 px-6">Status</th>
+                    <th className="py-4 px-6 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {defaultersList.length > 0 ? (
+                    defaultersList.map((def, idx) => (
+                      <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 text-sm whitespace-nowrap">
+                        <td className="py-4 px-6 font-bold text-gray-900">{String(def.flat || def.flatNumber || '').replace(/^(Block|Flat)[-\s]*/i, '')}</td>
+                        <td className="py-4 px-6 text-gray-700 font-semibold">
+                          {def.wingName || def.wing || (
+                            String(def.flat || def.flatNumber || '').match(/^([A-Za-z]+)[-\s]?/)
+                              ? `Wing ${String(def.flat || def.flatNumber || '').match(/^([A-Za-z]+)[-\s]?/)[1].toUpperCase()}`
+                              : 'Wing A'
+                          )}
+                        </td>
+                        <td className="py-4 px-6 text-gray-700">{def.resident || def.residentName}</td>
+                        <td className="py-4 px-6 text-red-600 font-extrabold">{def.unpaidCyclesCount || def.unpaidCycles} Cycles</td>
+                        <td className="py-4 px-6 text-gray-900 font-bold">₹{(def.totalOutstanding || def.outstanding || 0).toLocaleString()}</td>
+                        <td className="py-4 px-6 text-xs text-gray-500">{def.oldestDueDate ? new Date(def.oldestDueDate).toLocaleDateString() : 'N/A'}</td>
+                        <td className="py-4 px-6 text-xs font-bold text-amber-600">{def.daysOverdue} Days</td>
+                        <td className="py-4 px-6 text-purple-600 font-semibold">₹{def.totalFineAmount || def.fine || 0}</td>
+                        <td className="py-4 px-6 text-xs text-gray-500">{def.lastReminderSentAt ? new Date(def.lastReminderSentAt).toLocaleDateString() : 'N/A'}</td>
+                        <td className="py-4 px-6 text-xs text-gray-500">{def.defaulterSince ? new Date(def.defaulterSince).toLocaleDateString() : 'N/A'}</td>
+                        <td className="py-4 px-6">
+                          <span className="text-xs font-bold px-3 py-1 rounded-full bg-red-100 text-red-700 border border-red-200">
+                            {def.status}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 text-right">
+                          <button
+                            onClick={() => handleSendReminder(def)}
+                            className="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg shadow-sm"
+                          >
+                            Send Reminder
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="12" className="py-8 text-center text-xs text-gray-500 font-medium">
+                        No defaulters found for the current billing cycles.
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="11" className="py-8 text-center text-xs text-gray-500 font-medium">
-                      No defaulters found for the current billing cycles.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -672,44 +754,46 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
             <div className="p-4 border-b border-gray-100 bg-gray-50/50">
               <h3 className="text-sm font-bold text-gray-900">Reminder Delivery History</h3>
             </div>
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 text-gray-500 text-xs font-semibold uppercase border-b border-gray-100">
-                  <th className="py-4 px-6">Flat</th>
-                  <th className="py-4 px-6">Resident</th>
-                  <th className="py-4 px-6">Invoice</th>
-                  <th className="py-4 px-6">Reminder Type</th>
-                  <th className="py-4 px-6">Channel</th>
-                  <th className="py-4 px-6">Sent At</th>
-                  <th className="py-4 px-6">Delivery Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {reminderHistory.length > 0 ? (
-                  reminderHistory.map((rem, idx) => (
-                    <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 text-sm">
-                      <td className="py-4 px-6 font-bold text-gray-900">{rem.flat || rem.flatNumber}</td>
-                      <td className="py-4 px-6 text-gray-700">{rem.resident || rem.residentName}</td>
-                      <td className="py-4 px-6 font-mono text-xs text-gray-600">{rem.invoice || 'N/A'}</td>
-                      <td className="py-4 px-6 text-xs text-gray-700 font-semibold">{rem.reminderType}</td>
-                      <td className="py-4 px-6 text-xs font-bold text-blue-600">{rem.channel}</td>
-                      <td className="py-4 px-6 text-xs text-gray-500">{rem.sentAt ? new Date(rem.sentAt).toLocaleString() : 'N/A'}</td>
-                      <td className="py-4 px-6">
-                        <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
-                          {rem.deliveryStatus}
-                        </span>
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full text-left border-collapse min-w-[950px]">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-500 text-xs font-semibold uppercase border-b border-gray-100 whitespace-nowrap">
+                    <th className="py-4 px-6">Flat</th>
+                    <th className="py-4 px-6">Resident</th>
+                    <th className="py-4 px-6">Invoice</th>
+                    <th className="py-4 px-6">Reminder Type</th>
+                    <th className="py-4 px-6">Channel</th>
+                    <th className="py-4 px-6">Sent At</th>
+                    <th className="py-4 px-6">Delivery Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reminderHistory.length > 0 ? (
+                    reminderHistory.map((rem, idx) => (
+                      <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 text-sm">
+                        <td className="py-4 px-6 font-bold text-gray-900">{rem.flat || rem.flatNumber}</td>
+                        <td className="py-4 px-6 text-gray-700">{rem.resident || rem.residentName}</td>
+                        <td className="py-4 px-6 font-mono text-xs text-gray-600">{rem.invoice || 'N/A'}</td>
+                        <td className="py-4 px-6 text-xs text-gray-700 font-semibold">{rem.reminderType}</td>
+                        <td className="py-4 px-6 text-xs font-bold text-blue-600">{rem.channel}</td>
+                        <td className="py-4 px-6 text-xs text-gray-500">{rem.sentAt ? new Date(rem.sentAt).toLocaleString() : 'N/A'}</td>
+                        <td className="py-4 px-6">
+                          <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
+                            {rem.deliveryStatus}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="py-8 text-center text-xs text-gray-500 font-medium">
+                        No dunning reminder dispatches logged yet.
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="py-8 text-center text-xs text-gray-500 font-medium">
-                      No dunning reminder dispatches logged yet.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -731,46 +815,48 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 text-gray-500 text-xs font-semibold uppercase border-b border-gray-100">
-                  <th className="py-4 px-6">Invoice</th>
-                  <th className="py-4 px-6">Flat</th>
-                  <th className="py-4 px-6">Original Fine</th>
-                  <th className="py-4 px-6">Waived Amount</th>
-                  <th className="py-4 px-6">Mandatory Audit Reason</th>
-                  <th className="py-4 px-6">Waived By</th>
-                  <th className="py-4 px-6">Waived At</th>
-                  <th className="py-4 px-6">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {waiversList.length > 0 ? (
-                  waiversList.map((wav, idx) => (
-                    <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 text-sm">
-                      <td className="py-4 px-6 font-mono font-bold text-gray-900">{wav.invoice || wav.invoiceNumber || 'N/A'}</td>
-                      <td className="py-4 px-6 text-gray-700 font-semibold">{wav.flat || wav.flatNumber}</td>
-                      <td className="py-4 px-6 text-gray-600">₹{wav.originalFine}</td>
-                      <td className="py-4 px-6 text-emerald-600 font-bold">₹{wav.waivedAmount}</td>
-                      <td className="py-4 px-6 text-xs text-gray-700 italic max-w-xs">{wav.reason}</td>
-                      <td className="py-4 px-6 text-xs text-gray-600 font-medium">{wav.waivedByName || wav.waivedBy}</td>
-                      <td className="py-4 px-6 text-xs text-gray-500">{wav.waivedAt ? new Date(wav.waivedAt).toLocaleDateString() : 'N/A'}</td>
-                      <td className="py-4 px-6">
-                        <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
-                          {wav.status}
-                        </span>
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full text-left border-collapse min-w-[1000px]">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-500 text-xs font-semibold uppercase border-b border-gray-100 whitespace-nowrap">
+                    <th className="py-4 px-6">Invoice</th>
+                    <th className="py-4 px-6">Flat</th>
+                    <th className="py-4 px-6">Original Fine</th>
+                    <th className="py-4 px-6">Waived Amount</th>
+                    <th className="py-4 px-6">Mandatory Audit Reason</th>
+                    <th className="py-4 px-6">Waived By</th>
+                    <th className="py-4 px-6">Waived At</th>
+                    <th className="py-4 px-6">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {waiversList.length > 0 ? (
+                    waiversList.map((wav, idx) => (
+                      <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 text-sm">
+                        <td className="py-4 px-6 font-mono font-bold text-gray-900">{wav.invoice || wav.invoiceNumber || 'N/A'}</td>
+                        <td className="py-4 px-6 text-gray-700 font-semibold">{wav.flat || wav.flatNumber}</td>
+                        <td className="py-4 px-6 text-gray-600">₹{wav.originalFine}</td>
+                        <td className="py-4 px-6 text-emerald-600 font-bold">₹{wav.waivedAmount}</td>
+                        <td className="py-4 px-6 text-xs text-gray-700 italic max-w-xs">{wav.reason}</td>
+                        <td className="py-4 px-6 text-xs text-gray-600 font-medium">{wav.waivedByName || wav.waivedBy}</td>
+                        <td className="py-4 px-6 text-xs text-gray-500">{wav.waivedAt ? new Date(wav.waivedAt).toLocaleDateString() : 'N/A'}</td>
+                        <td className="py-4 px-6">
+                          <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
+                            {wav.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="8" className="py-8 text-center text-xs text-gray-500 font-medium">
+                        No fine waivers recorded yet.
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="8" className="py-8 text-center text-xs text-gray-500 font-medium">
-                      No fine waivers recorded yet.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -987,7 +1073,7 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
           <div className="bg-white h-full max-w-lg w-full p-6 shadow-2xl overflow-y-auto animate-fade-in-left space-y-6">
             <div className="flex items-center justify-between pb-4 border-b border-gray-100">
               <div>
-                <h3 className="text-lg font-extrabold text-gray-900">{selectedArrearsDetail.flat} — {selectedArrearsDetail.resident}</h3>
+                <h3 className="text-lg font-extrabold text-gray-900">Flat {String(selectedArrearsDetail.flat || '').replace(/^(Block|Flat)[-\s]*/i, '')} ({selectedArrearsDetail.wing || 'Wing A'}) — {selectedArrearsDetail.resident}</h3>
                 <span className="text-xs font-mono text-gray-500">Invoice Ref: {selectedArrearsDetail.previousInvoice}</span>
               </div>
               <button onClick={() => setSelectedArrearsDetail(null)} className="text-gray-400 hover:text-gray-600">
@@ -1027,7 +1113,7 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
         </div>
       )}
     </div>
-  );
+  )
 };
 
 export default FinesInterestArrearsPage;
