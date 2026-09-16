@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState,useMemo } from 'react';
 import { Routes, Route, useNavigate, useParams, NavLink } from 'react-router-dom';
 import {
   FaBuilding,
@@ -85,33 +85,60 @@ const Placeholder = ({ title }) => (
   </div>
 );
 
+function readAuthSession(societyId) {
+  const token = localStorage.getItem('accessToken');
+  const userData = localStorage.getItem('user');
+  const permsData = localStorage.getItem('permissions');
+  const storedSocietyId = localStorage.getItem('societyDatabase');
+
+  if (!token || !userData || !permsData) return null;
+  if (storedSocietyId !== societyId) return null;
+
+  try {
+    return {
+      user: JSON.parse(userData),
+      roleKeys: JSON.parse(localStorage.getItem('roleKeys') || '[]'),
+      societyName: localStorage.getItem('societyName') || societyId,
+    };
+  } catch {
+    return null;
+  }
+}
+
 const DashboardLayout = () => {
   const navigate = useNavigate();
   const { societyId } = useParams();
   const { permissions } = usePermissions();
-  const [user, setUser] = useState(null);
-  const [societyName, setSocietyName] = useState('');
+  // const [user, setUser] = useState(null);
+  // const [societyName, setSocietyName] = useState('');
+  // const [sidebarOpen, setSidebarOpen] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  const auth = useMemo(() => readAuthSession(societyId), [societyId]);
+
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    const userData = localStorage.getItem('user');
-    const permsData = localStorage.getItem('permissions');
-    const storedSocietyId = localStorage.getItem('societyDatabase');
+    if (!auth) navigate('/', { replace: true });
+  }, [auth, navigate]);
 
-    if (!token || !userData || !permsData) {
-      navigate('/');
-      return;
-    }
+  // useEffect(() => {
+  //   const token = localStorage.getItem('accessToken');
+  //   const userData = localStorage.getItem('user');
+  //   const permsData = localStorage.getItem('permissions');
+  //   const storedSocietyId = localStorage.getItem('societyDatabase');
 
-    if (storedSocietyId !== societyId) {
-      navigate('/');
-      return;
-    }
+  //   if (!token || !userData || !permsData) {
+  //     navigate('/');
+  //     return;
+  //   }
 
-    setUser(JSON.parse(userData));
-    setSocietyName(localStorage.getItem('societyName') || societyId);
-  }, [navigate, societyId]);
+  //   if (storedSocietyId !== societyId) {
+  //     navigate('/');
+  //     return;
+  //   }
+
+  //   setUser(JSON.parse(userData));
+  //   setSocietyName(localStorage.getItem('societyName') || societyId);
+  // }, [navigate, societyId]);
 
   const handleLogout = () => {
     clearAuthSession();
@@ -128,9 +155,12 @@ const DashboardLayout = () => {
   // Level 0 = NO_ACCESS, 1 = VIEW, 2 = MANAGE, 3 = FULL
   const safePermissions = permissions || {};
 
-  if (!user) return null;
+  // if (!user) return null;
+  if (!auth) return null;
 
-  const roleKeys = user.roleKeys || JSON.parse(localStorage.getItem('roleKeys') || '[]');
+  const { user, societyName } = auth;
+  // const roleKeys = user.roleKeys || JSON.parse(localStorage.getItem('roleKeys') || '[]');
+  const roleKeys = user.roleKeys || auth.roleKeys;
   const roleLabel = user.displayRole
     ? user.displayRole.replace(/_/g, ' ')
     : roleKeys.length > 1
@@ -170,17 +200,16 @@ const DashboardLayout = () => {
 
       {/* Mobile Overlay */}
       {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-20 lg:hidden backdrop-blur-sm" 
+        <div
+          className="fixed inset-0 bg-black/50 z-20 lg:hidden backdrop-blur-sm"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`bg-white border-r border-gray-200 transition-all duration-300 ease-in-out z-30 flex flex-col shrink-0 h-screen overflow-hidden ${
-          sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64 lg:translate-x-0 lg:w-0'
-        } fixed inset-y-0 left-0 lg:relative`}
+        className={`bg-white border-r border-gray-200 transition-all duration-300 ease-in-out z-30 flex flex-col shrink-0 h-screen overflow-hidden ${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full w-64 lg:translate-x-0 lg:w-0'
+          } fixed inset-y-0 left-0 lg:relative`}
       >
         <div className="h-18 flex items-center px-6 border-b border-gray-100 bg-white shrink-0">
           <div className="w-35 h-35 mt-4 ml-8 rounded-full  flex items-center justify-center overflow-hidden mr-3">
@@ -358,33 +387,46 @@ const DashboardLayout = () => {
           <div className="max-w-7xl mx-auto">
             <Routes>
               {/* ── Main Dashboard Index Route ── */}
-              <Route index element={
-                isGuard
-                  ? <GuardDashboard />
-                  : isVendor
-                    ? <VendorTasksPage />
-                    : isAdmin 
-                      ? <AdminDashboard societyName={societyName} />
-                      : <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center h-[60vh]">
-                          <div className="w-20 h-20 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mb-6 shadow-inner">
-                            <FaBuilding className="text-3xl" />
-                          </div>
-                          <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to {societyName}</h2>
-                          <p className="text-gray-500 max-w-md">Select a module from the sidebar to get started.</p>
-                        </div>
-              <Route path="/" element={
-                isVendor
-                  ? <VendorTasksPage />
-                  : isAdmin
-                    ? <AdminDashboard societyName={societyName} />
-                    : <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center h-[60vh]">
+              <Route
+                index
+                element={
+                  isGuard ? (
+                    <GuardDashboard />
+                  ) : isVendor ? (
+                    <VendorTasksPage />
+                  ) : isAdmin ? (
+                    <AdminDashboard societyName={societyName} />
+                  ) : (
+                    <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center h-[60vh]">
                       <div className="w-20 h-20 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mb-6 shadow-inner">
                         <FaBuilding className="text-3xl" />
                       </div>
                       <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to {societyName}</h2>
                       <p className="text-gray-500 max-w-md">Select a module from the sidebar to get started.</p>
                     </div>
-              } />
+                  )
+                }
+              />
+
+              <Route
+                path="/"
+                element={
+                  isVendor ? (
+                    <VendorTasksPage />
+                  ) : isAdmin ? (
+                    <AdminDashboard societyName={societyName} />
+                  ) : (
+                    <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center h-[60vh]">
+                      <div className="w-20 h-20 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                        <FaBuilding className="text-3xl" />
+                      </div>
+                      <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to {societyName}</h2>
+                      <p className="text-gray-500 max-w-md">Select a module from the sidebar to get started.</p>
+                    </div>
+                  )
+                }
+              />
+
               <Route path="profile" element={<ProfilePage />} />
 
               {/* ── Vendor-specific routes ── */}
@@ -408,12 +450,12 @@ const DashboardLayout = () => {
                       </div>
                       <h2 className="text-3xl font-bold text-gray-900 mb-4">Emergency SOS</h2>
                       <p className="text-gray-500 max-w-md mb-8">Trigger an emergency alert to all residents and admins immediately.</p>
-                      <button 
+                      <button
                         onClick={() => {
-                           if(window.confirm("Are you sure you want to trigger SOS?")) {
-                               // Simulating SOS trigger for now
-                               alert("SOS Alert Triggered!");
-                           }
+                          if (window.confirm("Are you sure you want to trigger SOS?")) {
+                            // Simulating SOS trigger for now
+                            alert("SOS Alert Triggered!");
+                          }
                         }}
                         className="bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-12 rounded-full text-lg shadow-lg shadow-red-600/30 transition-all active:scale-95"
                       >
