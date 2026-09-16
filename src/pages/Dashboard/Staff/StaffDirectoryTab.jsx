@@ -6,6 +6,8 @@ const StaffDirectoryTab = ({ staffData, refresh, loading }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [roleFilter, setRoleFilter] = useState('All roles');
 
+
+  
   const filteredData = roleFilter === 'All roles'
     ? staffData
     : staffData.filter(s => s.designation.toLowerCase().replace('_', ' ') === roleFilter.toLowerCase());
