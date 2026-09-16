@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
-import { MoreVertical, Plus } from 'lucide-react';
+import { MoreVertical, Plus, Edit2, Trash2, AlertTriangle } from 'lucide-react';
 import AddStaffModal from './AddStaffModal';
+import staffApi from '../../../services/staffApi';
+import toast from 'react-hot-toast';
 
 const StaffDirectoryTab = ({ staffData, refresh, loading }) => {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editData, setEditData] = useState(null);
+  const [deleteData, setDeleteData] = useState(null);
   const [roleFilter, setRoleFilter] = useState('All roles');
 
   const filteredData = roleFilter === 'All roles'
@@ -13,6 +17,18 @@ const StaffDirectoryTab = ({ staffData, refresh, loading }) => {
   const getInitials = (name) => {
     if (!name) return 'S';
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  };
+
+  const handleDelete = async () => {
+    if (!deleteData) return;
+    try {
+      await staffApi.deleteStaff(deleteData._id);
+      toast.success('Staff member deleted successfully');
+      setDeleteData(null);
+      refresh();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete staff member');
+    }
   };
 
   return (
@@ -55,7 +71,7 @@ const StaffDirectoryTab = ({ staffData, refresh, loading }) => {
               <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200">Gate / area</th>
               <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200">Contact</th>
               <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200">Status</th>
-              <th className="px-5 py-3 border-b border-gray-200"></th>
+              <th className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-200 text-right">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -101,9 +117,25 @@ const StaffDirectoryTab = ({ staffData, refresh, loading }) => {
                     )}
                   </td>
                   <td className="px-5 py-4 text-right">
-                    <button className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      <button 
+                        onClick={() => {
+                          setEditData(staff);
+                          setShowAddModal(true);
+                        }}
+                        className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+                        title="Edit"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => setDeleteData(staff)}
+                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -112,13 +144,47 @@ const StaffDirectoryTab = ({ staffData, refresh, loading }) => {
         </table>
       </div>
 
-      {showAddModal && (
+      {(showAddModal || editData) && (
         <AddStaffModal
-          onClose={() => setShowAddModal(false)}
+          editData={editData}
+          onClose={() => {
+            setShowAddModal(false);
+            setEditData(null);
+          }}
           onAdded={() => {
             refresh();
           }}
         />
+      )}
+
+      {deleteData && (
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle className="w-8 h-8 text-red-500" strokeWidth={2} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Staff Member</h3>
+              <p className="text-gray-500 text-sm">
+                Are you sure you want to delete <span className="font-semibold text-gray-700">{deleteData.name}</span>? This action cannot be undone.
+              </p>
+            </div>
+            <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteData(null)}
+                className="px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-200 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-5 py-2.5 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-xl transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
