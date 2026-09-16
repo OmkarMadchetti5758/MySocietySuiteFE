@@ -56,6 +56,16 @@ const ParkingPage = () => {
     ...vehicles.map(v => v.flatId?.wing || v.wing).filter(Boolean)
   ])).filter(Boolean).sort();
 
+  const unwrapList = (res, key) =>
+    res?.data?.data?.[key] || res?.data?.[key] || [];
+
+  const unwrapStats = (res) => {
+    const data = res?.data?.data || res?.data || {};
+    if (data?.stats) return data.stats;
+    if (data?.overview || data?.byType || data?.recentActivities) return data;
+    return null;
+  };
+
   // Load Data on Tab Switch or Mount
   useEffect(() => {
     loadTabContent(activeTab);
@@ -70,7 +80,7 @@ const ParkingPage = () => {
       const [resRes, blockRes, slotsRes] = await Promise.allSettled([
         residentsApi.getResidents({ limit: 100 }),
         blockApi.getWings(),
-        parkingApi.getSlots({ limit: 200 }),
+        parkingApi.getSlots({ limit: 100 }),
       ]);
 
       if (resRes.status === 'fulfilled') {
@@ -89,9 +99,7 @@ const ParkingPage = () => {
       }
 
       if (slotsRes.status === 'fulfilled') {
-        const val = slotsRes.value;
-        const slotList = val?.data?.data?.slots || val?.data?.slots || [];
-        // Only pre-populate if the slots tab hasn't already loaded them
+        const slotList = unwrapList(slotsRes.value, 'slots');
         setSlots(prev => prev.length === 0 ? slotList : prev);
       }
     } catch (err) {
@@ -108,34 +116,46 @@ const ParkingPage = () => {
           parkingApi.getVehicles(),
         ]);
         if (assignRes.status === 'fulfilled') {
-          const val = assignRes.value;
-          setAssignments(val?.data?.data?.assignments || val?.data?.assignments || []);
+          setAssignments(unwrapList(assignRes.value, 'assignments'));
         }
         if (vehRes.status === 'fulfilled') {
-          const val = vehRes.value;
-          setVehicles(val?.data?.data?.vehicles || val?.data?.vehicles || []);
+          setVehicles(unwrapList(vehRes.value, 'vehicles'));
         }
       } else if (tab === 'dashboard') {
-        const res = await parkingApi.getDashboardStats();
-        setStats(res?.data?.data?.stats || res?.data?.data || res?.data);
+        const [statsRes, slotsRes, vehRes] = await Promise.allSettled([
+          parkingApi.getDashboardStats(),
+          parkingApi.getSlots({ limit: 100 }),
+          parkingApi.getVehicles({ limit: 100 }),
+        ]);
+        if (statsRes.status === 'fulfilled') {
+          setStats(unwrapStats(statsRes.value));
+        } else {
+          throw statsRes.reason;
+        }
+        if (slotsRes.status === 'fulfilled') {
+          setSlots(unwrapList(slotsRes.value, 'slots'));
+        }
+        if (vehRes.status === 'fulfilled') {
+          setVehicles(unwrapList(vehRes.value, 'vehicles'));
+        }
       } else if (tab === 'slots') {
-        const res = await parkingApi.getSlots();
-        setSlots(res?.data?.data?.slots || res?.data?.slots || []);
+        const res = await parkingApi.getSlots({ limit: 100 });
+        setSlots(unwrapList(res, 'slots'));
       } else if (tab === 'vehicles') {
-        const res = await parkingApi.getVehicles();
-        setVehicles(res?.data?.data?.vehicles || res?.data?.vehicles || []);
+        const res = await parkingApi.getVehicles({ limit: 100 });
+        setVehicles(unwrapList(res, 'vehicles'));
       } else if (tab === 'assignments') {
-        const res = await parkingApi.getAssignments();
-        setAssignments(res?.data?.data?.assignments || res?.data?.assignments || []);
+        const res = await parkingApi.getAssignments({ limit: 100 });
+        setAssignments(unwrapList(res, 'assignments'));
       } else if (tab === 'visitors') {
-        const res = await parkingApi.getVisitorParkings();
-        setVisitors(res?.data?.data?.sessions || res?.data?.sessions || []);
+        const res = await parkingApi.getVisitorParkings({ limit: 100 });
+        setVisitors(unwrapList(res, 'sessions'));
       } else if (tab === 'requests') {
-        const res = await parkingApi.getRequests();
-        setRequests(res?.data?.data?.requests || res?.data?.requests || []);
+        const res = await parkingApi.getRequests({ limit: 100 });
+        setRequests(unwrapList(res, 'requests'));
       } else if (tab === 'violations') {
-        const res = await parkingApi.getViolations();
-        setViolations(res?.data?.data?.violations || res?.data?.violations || []);
+        const res = await parkingApi.getViolations({ limit: 100 });
+        setViolations(unwrapList(res, 'violations'));
       }
     } catch (err) {
       toast.error(formatErrorMessage(err, 'Failed to load parking data'));

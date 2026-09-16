@@ -127,10 +127,6 @@ const DashboardLayout = () => {
   // Filter modules based on permissions
   // Level 0 = NO_ACCESS, 1 = VIEW, 2 = MANAGE, 3 = FULL
   const safePermissions = permissions || {};
-  const allowedModules = MODULE_DEF.filter(mod => {
-    const perm = safePermissions[mod.id];
-    return perm && perm.level >= 1;
-  });
 
   if (!user) return null;
 
@@ -144,6 +140,15 @@ const DashboardLayout = () => {
   const isAdmin = user.role === 'admin' || user.role === 'super_admin' || roleKeys.includes('admin') || roleKeys.includes('super_admin');
   const isVendor = user.role === 'vendor' || roleKeys.includes('vendor');
   const isGuard = user.role === 'security_guard' || roleKeys.includes('security_guard') || user.role === 'security';
+  const isResident = user.role === 'resident_owner' || roleKeys.includes('resident_owner');
+  const isAccountant = roleKeys.includes('accountant');
+
+  const allowedModules = MODULE_DEF.filter(mod => {
+    if (mod.id === 'billing_accounts' && (isResident || isAccountant || isAdmin)) return true;
+    const perm = safePermissions[mod.id];
+    if (!perm || perm.level < 1) return false;
+    return true;
+  });
 
   // Vendor-only nav tabs
   const VENDOR_NAV = [
@@ -367,6 +372,18 @@ const DashboardLayout = () => {
                           <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to {societyName}</h2>
                           <p className="text-gray-500 max-w-md">Select a module from the sidebar to get started.</p>
                         </div>
+              <Route path="/" element={
+                isVendor
+                  ? <VendorTasksPage />
+                  : isAdmin
+                    ? <AdminDashboard societyName={societyName} />
+                    : <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center h-[60vh]">
+                      <div className="w-20 h-20 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                        <FaBuilding className="text-3xl" />
+                      </div>
+                      <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to {societyName}</h2>
+                      <p className="text-gray-500 max-w-md">Select a module from the sidebar to get started.</p>
+                    </div>
               } />
               <Route path="profile" element={<ProfilePage />} />
 

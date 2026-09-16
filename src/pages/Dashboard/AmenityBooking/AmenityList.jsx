@@ -6,6 +6,7 @@ import { FaPlus, FaCalendarPlus, FaCog, FaCheckCircle, FaTimesCircle } from 'rea
 import AmenityModal from './AmenityModal';
 import SlotManagerModal from './SlotManagerModal';
 import BookingModal from './BookingModal';
+import { resolveMediaUrl } from '../../../utils/mediaUrl';
 
 const MODULE_ID = 'amenity_booking';
 
@@ -33,7 +34,7 @@ const ImageCarousel = ({ images, fallbackText, status }) => {
           {images.map((img, idx) => (
             <img
               key={idx}
-              src={img}
+              src={resolveMediaUrl(img)}
               alt="Amenity"
               className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
                 idx === currentIndex ? 'opacity-100 z-0' : 'opacity-0 -z-10'

@@ -6,8 +6,8 @@ const StaffDirectoryTab = ({ staffData, refresh, loading }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [roleFilter, setRoleFilter] = useState('All roles');
 
-  const filteredData = roleFilter === 'All roles' 
-    ? staffData 
+  const filteredData = roleFilter === 'All roles'
+    ? staffData
     : staffData.filter(s => s.designation.toLowerCase().replace('_', ' ') === roleFilter.toLowerCase());
 
   const getInitials = (name) => {
@@ -23,19 +23,19 @@ const StaffDirectoryTab = ({ staffData, refresh, loading }) => {
           <p className="text-xs text-gray-500 mt-1">{staffData.length} members across all roles</p>
         </div>
         <div className="flex items-center gap-3">
-          <select 
+          <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
             className="border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20"
           >
             <option>All roles</option>
             <option>Housekeeping</option>
-            <option>Security guard</option>
+            <option>Security</option>
             <option>Gardener</option>
             <option>Electrician</option>
             <option>Plumber</option>
           </select>
-          <button 
+          <button
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm"
           >
@@ -113,11 +113,11 @@ const StaffDirectoryTab = ({ staffData, refresh, loading }) => {
       </div>
 
       {showAddModal && (
-        <AddStaffModal 
-          onClose={() => setShowAddModal(false)} 
+        <AddStaffModal
+          onClose={() => setShowAddModal(false)}
           onAdded={() => {
             refresh();
-          }} 
+          }}
         />
       )}
     </div>

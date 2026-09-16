@@ -3,6 +3,7 @@ import { blockApi } from '../../../services/blockApi';
 import { societyApi } from '../../../services/societyApi';
 import { FaBuilding, FaSave, FaSpinner } from 'react-icons/fa';
 import { MdEdit } from 'react-icons/md';
+import toast from 'react-hot-toast';
 
 const WING_STATUS_OPTIONS = ['Active', 'Inactive', 'Under Maintenance'];
 
@@ -18,8 +19,6 @@ const defaultWing = (name = '') => ({
 const WingDetailsTab = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
-  const [successMsg, setSuccessMsg] = useState(null);
   const [wings, setWings] = useState([]);
   const [staffList, setStaffList] = useState([]);
 
@@ -30,7 +29,6 @@ const WingDetailsTab = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      setError(null);
 
       // Fetch society to get the wing names defined in Society Details
       const [societyRes, wingsRes, staffRes] = await Promise.allSettled([
@@ -88,7 +86,7 @@ const WingDetailsTab = () => {
       }
     } catch (err) {
       console.error(err);
-      setError('Failed to load wing details.');
+      toast.error('Failed to load wing details.');
     } finally {
       setLoading(false);
     }
@@ -103,15 +101,13 @@ const WingDetailsTab = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    setError(null);
-    setSuccessMsg(null);
 
     try {
       await blockApi.saveWings(wings);
-      setSuccessMsg('Wing details saved successfully!');
+      toast.success('Wing details saved successfully!');
     } catch (err) {
       console.error(err);
-      setError(err?.response?.data?.message || 'Failed to save wing details.');
+      toast.error(err?.response?.data?.message || 'Failed to save wing details.');
     } finally {
       setSubmitting(false);
     }
@@ -140,8 +136,6 @@ const WingDetailsTab = () => {
 
   return (
     <div className="max-w-5xl mx-auto">
-      {error && <div className="mb-4 p-4 bg-red-50 text-red-700 rounded-lg border border-red-200">{error}</div>}
-      {successMsg && <div className="mb-4 p-4 bg-green-50 text-green-700 rounded-lg border border-green-200">{successMsg}</div>}
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {wings.map((wing, index) => (

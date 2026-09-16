@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { amenityService } from '../../../services/amenityBookingService';
 import { FaTimes, FaImage, FaTrash } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import { resolveMediaUrl } from '../../../utils/mediaUrl';
 
 const AmenityModal = ({ amenity, onClose }) => {
   const isEdit = Boolean(amenity);
@@ -185,7 +186,7 @@ const AmenityModal = ({ amenity, onClose }) => {
               <div className="flex flex-wrap gap-3 mb-3">
                 {existingImages.map((url, idx) => (
                   <div key={`exist-${idx}`} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
-                    <img src={url} alt="Amenity" className="w-full h-full object-cover" />
+                    <img src={resolveMediaUrl(url)} alt="Amenity" className="w-full h-full object-cover" />
                     <button type="button" onClick={() => removeExistingImage(idx)} className="absolute top-1 right-1 p-1 bg-white/80 hover:bg-red-50 text-red-500 rounded-full transition-colors backdrop-blur-sm shadow-sm">
                       <FaTrash className="text-[10px]" />
                     </button>
