@@ -266,10 +266,10 @@ export const GenerateInvoiceModal = ({ onClose, onSuccess, flats = [] }) => {
           {/* Step 2: Calculate */}
           {step === 2 && (
             <div className="space-y-4">
-              <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-sm text-blue-700 flex gap-2">
+              {/* <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-sm text-blue-700 flex gap-2">
                 <FaInfoCircle className="shrink-0 mt-0.5" />
                 <span>Showing calculation preview for {targetFlats.length > 1 ? `first flat (${targetFlats[0]?.flatNumber})` : `${targetFlats[0]?.flatNumber}`}. All selected flats will use their own applicable charge heads.</span>
-              </div>
+              </div> */}
 
               {loadingPreview ? (
                 <div className="text-center py-12"><FaSpinner className="animate-spin text-orange-500 text-3xl mx-auto mb-3" /><div className="text-sm text-gray-500">Calculating charges...</div></div>

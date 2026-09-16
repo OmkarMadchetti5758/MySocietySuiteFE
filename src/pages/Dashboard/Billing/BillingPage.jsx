@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
-  FaMoneyCheckAlt, FaFileInvoiceDollar, FaRegCreditCard,
-  FaGift, FaTools, FaCalendarCheck, FaUsers, FaStore, FaUserTie,
-  FaArrowRight, FaChartLine, FaExclamationCircle, FaArrowLeft, FaSearch, FaFilter,
+  FaMoneyCheckAlt, FaFileInvoiceDollar, FaStore,
+  FaArrowRight, FaExclamationCircle, FaArrowLeft, FaSearch,
   FaCog, FaShieldAlt, FaPercent, FaUniversity, FaBook, FaCalculator, FaFileAlt, FaHistory,
   FaPlus, FaCheck, FaTimes, FaEdit, FaTrash, FaSpinner
 } from 'react-icons/fa';
 import apiClient from '../../../services/apiClient';
 import toast from 'react-hot-toast';
 import InvoicesPage from './InvoicesPage';
+import FinesInterestArrearsPage from './FinesInterestArrearsPage';
 
 const SUBMODULE_CONFIG = [
   {
@@ -281,7 +281,7 @@ const BillingPage = () => {
           setHubStats(prev => ({ ...prev, invoicesIssued: res.data.data.total ?? 0 }));
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     apiClient.get('/billing/charge-heads')
       .then(res => {
@@ -290,7 +290,7 @@ const BillingPage = () => {
           setHubStats(prev => ({ ...prev, activeChargeHeads: list.length }));
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [isResident]);
 
   // ── Charge Head & Billing Config State ─────────────────────────────────────
@@ -568,6 +568,13 @@ const BillingPage = () => {
           </div>
           <InvoicesPage />
         </div>
+      );
+    }
+
+    // ── Fines, Interest & Arrears (Dunning) ──────────────────────────────────
+    if (selectedModule.id === 'fines_interests_arrears') {
+      return (
+        <FinesInterestArrearsPage onBack={handleBackToHub} />
       );
     }
 
@@ -1198,7 +1205,7 @@ const BillingPage = () => {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-gray-800">Billing &amp; Accounting Sub-Modules ({visibleSubmodules.length})</h2>
-          <span className="text-xs text-gray-500">Select any sub-module to manage records</span>
+          {/* <span className="text-xs text-gray-500">Select any sub-module to manage records</span> */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

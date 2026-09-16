@@ -105,28 +105,28 @@ const SocietyDetailsTab = () => {
 
     try {
       const data = new FormData();
-      data.append('name', formData.societyName);
-      data.append('registrationNumber', formData.registrationNumber);
-      if (formData.logo) {
+      if (formData.societyName) data.append('name', formData.societyName);
+      if (formData.registrationNumber) data.append('registrationNumber', formData.registrationNumber);
+      if (formData.logo && typeof formData.logo !== 'string') {
         data.append('logo', formData.logo);
       }
-      data.append('address', formData.address);
-      data.append('city', formData.city);
-      data.append('state', formData.state);
-      data.append('country', formData.country);
-      data.append('pinCode', formData.pinCode);
-      data.append('contactPhone', formData.contactNumber);
-      data.append('contactEmail', formData.emailId);
-      data.append('societyType', formData.societyType);
-      data.append('numberOfBlocks', formData.numberOfBlocks);
-      data.append('blocks', JSON.stringify(blocks));
-      data.append('subscriptionPlan', formData.subscriptionPlan);
+      if (formData.address) data.append('address', formData.address);
+      if (formData.city) data.append('city', formData.city);
+      if (formData.state) data.append('state', formData.state);
+      if (formData.country) data.append('country', formData.country);
+      if (formData.pinCode) data.append('pinCode', formData.pinCode);
+      if (formData.contactNumber) data.append('contactPhone', formData.contactNumber);
+      if (formData.emailId) data.append('contactEmail', formData.emailId);
+      if (formData.societyType) data.append('societyType', formData.societyType);
+      if (formData.numberOfBlocks !== undefined) data.append('numberOfBlocks', formData.numberOfBlocks);
+      if (blocks && blocks.length > 0) data.append('blocks', JSON.stringify(blocks));
+      if (formData.subscriptionPlan) data.append('subscriptionPlan', formData.subscriptionPlan);
 
       await societyApi.updateCurrentSociety(data);
       setSuccessMsg("Society details updated successfully!");
     } catch (err) {
       console.error(err);
-      setError("Failed to update society details.");
+      setError(err.response?.data?.message || "Failed to update society details.");
     } finally {
       setSubmitting(false);
     }
