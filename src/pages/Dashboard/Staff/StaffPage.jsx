@@ -116,6 +116,7 @@ const StaffPage = () => {
             staffData={staffData}
             isFacilityManager={isFacilityManager}
             onAttendanceChange={fetchSummary}
+            refresh={fetchStaff}
           />
         )}
         {activeTab === 'shift'  && <ShiftGateViewTab staffData={staffData} loading={loading} />}

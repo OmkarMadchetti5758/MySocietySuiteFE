@@ -12,4 +12,14 @@ export const residentsApi = {
     const res = await apiClient.post('/residents', payload);
     return res.data;
   },
+
+  updateResident: async (userId, payload) => {
+    const res = await apiClient.put(`/residents/${userId}`, payload);
+    return res.data;
+  },
+
+  deleteResident: async (userId) => {
+    const res = await apiClient.delete(`/residents/${userId}`);
+    return res.data;
+  },
 };

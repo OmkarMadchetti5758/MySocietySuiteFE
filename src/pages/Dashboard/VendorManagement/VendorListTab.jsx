@@ -36,6 +36,17 @@ const VendorListTab = ({ vendorData, refresh, loading }) => {
     }
   };
 
+  const handleDelete = async (vendor) => {
+    if (window.confirm(`Are you sure you want to permanently delete ${vendor.name}? This action cannot be undone.`)) {
+      try {
+        await vendorApi.deleteVendor(vendor._id);
+        refresh();
+      } catch (err) {
+        console.error('Failed to delete vendor:', err);
+      }
+    }
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
       <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/50">
@@ -114,15 +125,13 @@ const VendorListTab = ({ vendorData, refresh, loading }) => {
                       >
                         <FaEdit size={14} />
                       </button>
-                      {vendor.status === 'ACTIVE' && (
-                        <button
-                          onClick={() => handleDeactivate(vendor)}
-                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Deactivate"
-                        >
-                          <FaTrash size={14} />
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleDelete(vendor)}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete"
+                      >
+                        <FaTrash size={14} />
+                      </button>
                     </div>
                   </td>
                 </tr>

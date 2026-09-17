@@ -6,6 +6,7 @@ const vendorApi = {
     getVendorById: (id) => api.get(`/vendors/${id}`),
     createVendor: (data) => api.post('/vendors', data),
     updateVendor: (id, data) => api.patch(`/vendors/${id}`, data),
+    deleteVendor: (id) => api.delete(`/vendors/${id}`),
     getVendorHistory: (id) => api.get(`/vendors/${id}/history`),
 
     // Task Assignment

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Loader2, X, Check, Copy } from 'lucide-react';
+import { Search, Plus, Loader2, X, Check, Copy, Edit, Trash2 } from 'lucide-react';
 import { residentsApi } from '../../../services/residentsApi';
 import { blockApi } from '../../../services/blockApi';
 import { flatApi } from '../../../services/flatApi';
@@ -27,6 +27,8 @@ const ResidentsPage = () => {
   const [wingFlats, setWingFlats] = useState([]);
   const [loadingFlats, setLoadingFlats] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedResidentId, setSelectedResidentId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -132,16 +134,21 @@ const ResidentsPage = () => {
         residentType: formData.residentType,
         role: formData.role,
       };
-      const response = await residentsApi.inviteResident(payload);
-
-      if (response.data?.devInviteLink) {
-        setInviteLink(response.data.devInviteLink);
-      } else {
+      
+      if (isEditMode) {
+        await residentsApi.updateResident(selectedResidentId, payload);
         closeModal();
+      } else {
+        const response = await residentsApi.inviteResident(payload);
+        if (response.data?.devInviteLink) {
+          setInviteLink(response.data.devInviteLink);
+        } else {
+          closeModal();
+        }
       }
       fetchResidents(pagination.page, searchTerm);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create resident');
+      setError(err.response?.data?.message || `Failed to ${isEditMode ? 'update' : 'create'} resident`);
     } finally {
       setSubmitting(false);
     }
@@ -155,6 +162,8 @@ const ResidentsPage = () => {
 
   const closeModal = () => {
     setIsModalOpen(false);
+    setIsEditMode(false);
+    setSelectedResidentId(null);
     setInviteLink(null);
     setError('');
     setFormData({
@@ -169,6 +178,34 @@ const ResidentsPage = () => {
       role: 'resident_owner',
     });
     setWingFlats([]);
+  };
+
+  const handleEdit = (resident) => {
+    setIsEditMode(true);
+    setSelectedResidentId(resident._id);
+    setFormData({
+      name: resident.name || '',
+      email: resident.email || '',
+      phone: resident.mobile || '',
+      flatId: 'dummy',
+      flatNumber: resident.flatNumber || '',
+      blockId: 'dummy',
+      wingCode: resident.wingCode || '',
+      residentType: resident.residentType || 'owner',
+      role: resident.role || 'resident_owner',
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (resident) => {
+    if (window.confirm(`Are you sure you want to delete ${resident.name}?`)) {
+      try {
+        await residentsApi.deleteResident(resident._id);
+        fetchResidents(pagination.page, searchTerm);
+      } catch (err) {
+        alert(err.response?.data?.message || 'Failed to delete resident');
+      }
+    }
   };
 
   return (
@@ -217,12 +254,13 @@ const ResidentsPage = () => {
                 <th className="px-6 py-4 font-semibold">Type</th>
                 <th className="px-6 py-4 font-semibold">Role</th>
                 <th className="px-6 py-4 font-semibold">Status</th>
+                <th className="px-6 py-4 font-semibold text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 relative">
               {loading && (
                 <tr>
-                  <td colSpan="7">
+                  <td colSpan="8">
                     <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-10 min-h-[200px]">
                       <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
                     </div>
@@ -232,7 +270,7 @@ const ResidentsPage = () => {
 
               {!loading && residents.length === 0 && (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
                     No residents found. Add your first resident to get started.
                   </td>
                 </tr>
@@ -273,6 +311,24 @@ const ResidentsPage = () => {
                       {resident.status || 'unknown'}
                     </span>
                   </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => handleEdit(resident)}
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Edit"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(resident)}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -308,7 +364,7 @@ const ResidentsPage = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-gray-800">Add New Resident</h3>
+              <h3 className="text-lg font-bold text-gray-800">{isEditMode ? 'Edit Resident' : 'Add New Resident'}</h3>
               <button
                 onClick={closeModal}
                 className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
@@ -369,6 +425,7 @@ const ResidentsPage = () => {
                     </div>
                   )}
 
+                  {!isEditMode && (
                   <div>
                     <h4 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
                       <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs">
@@ -459,8 +516,9 @@ const ResidentsPage = () => {
                       </div>
                     </div>
                   </div>
+                  )}
 
-                  <div className="w-full h-px bg-gray-100" />
+                  {!isEditMode && <div className="w-full h-px bg-gray-100" />}
 
                   <div>
                     <h4 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -504,6 +562,27 @@ const ResidentsPage = () => {
                             placeholder="+91 9876543210"
                           />
                         </div>
+                        {isEditMode && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1.5">Resident Type</label>
+                          <select
+                            value={formData.residentType}
+                            onChange={(e) => {
+                              const type = e.target.value;
+                              setFormData({
+                                ...formData,
+                                residentType: type,
+                                role: type === 'tenant' ? 'resident_tenant' : 'resident_owner',
+                              });
+                            }}
+                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="owner">Owner</option>
+                            <option value="tenant">Tenant</option>
+                            <option value="family_member">Family Member</option>
+                          </select>
+                        </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -522,7 +601,7 @@ const ResidentsPage = () => {
                     disabled={submitting || loadingFlats || !formData.flatId}
                     className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-medium transition-all shadow-sm disabled:opacity-70"
                   >
-                    {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create & Invite Resident'}
+                    {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (isEditMode ? 'Save Changes' : 'Create & Invite Resident')}
                   </button>
                 </div>
               </form>
