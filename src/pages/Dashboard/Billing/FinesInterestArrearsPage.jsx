@@ -1,11 +1,146 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   FaExclamationCircle, FaShieldAlt, FaPlus, FaTimes,
   FaFileExport, FaPlay, FaBell, FaHistory, FaUserSlash, FaHandHoldingUsd,
-  FaArrowLeft, FaRegClock,
+  FaArrowLeft, FaRegClock, FaSearch, FaRegCalendarAlt, FaChevronLeft, FaChevronRight,
 } from 'react-icons/fa';
 import apiClient from '../../../services/apiClient';
 import toast from 'react-hot-toast';
+
+const MonthPicker = ({ value, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [pickerYear, setPickerYear] = useState(2026);
+  const dropdownRef = useRef(null);
+
+  const MONTH_NAMES = [
+    { short: 'Jan', full: 'January', val: '01' },
+    { short: 'Feb', full: 'February', val: '02' },
+    { short: 'Mar', full: 'March', val: '03' },
+    { short: 'Apr', full: 'April', val: '04' },
+    { short: 'May', full: 'May', val: '05' },
+    { short: 'Jun', full: 'June', val: '06' },
+    { short: 'Jul', full: 'July', val: '07' },
+    { short: 'Aug', full: 'August', val: '08' },
+    { short: 'Sep', full: 'September', val: '09' },
+    { short: 'Oct', full: 'October', val: '10' },
+    { short: 'Nov', full: 'November', val: '11' },
+    { short: 'Dec', full: 'December', val: '12' },
+  ];
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const getDisplayText = () => {
+    if (!value || value === 'ALL') return 'Select Month';
+    const [y, m] = value.split('-');
+    const mObj = MONTH_NAMES.find(item => item.val === m);
+    return mObj ? `${mObj.full}, ${y}` : value;
+  };
+
+  const handleSelectMonth = (mVal) => {
+    const selected = `${pickerYear}-${mVal}`;
+    onChange(selected);
+    setIsOpen(false);
+  };
+
+  const handleClear = () => {
+    onChange('ALL');
+    setIsOpen(false);
+  };
+
+  const handleThisMonth = () => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    setPickerYear(y);
+    onChange(`${y}-${m}`);
+    setIsOpen(false);
+  };
+
+  const selectedYear = value && value !== 'ALL' ? parseInt(value.split('-')[0]) : null;
+  const selectedMonthVal = value && value !== 'ALL' ? value.split('-')[1] : null;
+
+  return (
+    <div className="relative inline-block text-left z-30" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-3 px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-700 shadow-sm hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 min-w-[170px] justify-between"
+      >
+        <span>{getDisplayText()}</span>
+        <FaRegCalendarAlt className="text-gray-400 text-sm" />
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-2xl border border-gray-200 z-[9999] p-3 animate-in fade-in zoom-in-95 duration-100">
+          {/* Header Year selector */}
+          <div className="flex items-center justify-between bg-gray-100/80 px-3 py-1.5 rounded-lg mb-3">
+            <button
+              type="button"
+              onClick={() => setPickerYear(prev => prev - 1)}
+              className="text-gray-500 hover:text-gray-800 p-1 text-xs"
+            >
+              <FaChevronLeft />
+            </button>
+            <span className="text-xs font-bold text-gray-800">{pickerYear}</span>
+            <button
+              type="button"
+              onClick={() => setPickerYear(prev => prev + 1)}
+              className="text-gray-500 hover:text-gray-800 p-1 text-xs"
+            >
+              <FaChevronRight />
+            </button>
+          </div>
+
+          {/* Month grid */}
+          <div className="grid grid-cols-4 gap-2 mb-3">
+            {MONTH_NAMES.map((m) => {
+              const isSelected = selectedYear === pickerYear && selectedMonthVal === m.val;
+              return (
+                <button
+                  key={m.val}
+                  type="button"
+                  onClick={() => handleSelectMonth(m.val)}
+                  className={`py-2 text-xs font-semibold rounded-md transition-all ${isSelected
+                    ? 'bg-blue-600 text-white shadow-sm ring-2 ring-blue-600 ring-offset-1 font-bold'
+                    : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                >
+                  {m.short}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Footer Actions */}
+          <div className="flex items-center justify-between pt-2 border-t border-gray-100 text-xs">
+            <button
+              type="button"
+              onClick={handleClear}
+              className="text-blue-500 hover:text-blue-700 font-semibold px-1"
+            >
+              Clear
+            </button>
+            <button
+              type="button"
+              onClick={handleThisMonth}
+              className="text-blue-500 hover:text-blue-700 font-semibold px-1"
+            >
+              This month
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -40,6 +175,7 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
   // Arrears State (Dynamic from Backend)
   const [arrears, setArrears] = useState([]);
   const [selectedArrearsDetail, setSelectedArrearsDetail] = useState(null);
+  const [selectedArrearsMonth, setSelectedArrearsMonth] = useState('ALL');
 
   // Ageing State (Initialized to 0)
   const [ageingSummary, setAgeingSummary] = useState({
@@ -49,6 +185,7 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
     bucket90Plus: 0
   });
   const [ageingTable, setAgeingTable] = useState([]);
+  const [selectedAgeingMonth, setSelectedAgeingMonth] = useState('ALL');
 
   // Defaulters State (Dynamic from Backend)
   const [defaulterCyclesThreshold, setDefaulterCyclesThreshold] = useState(2);
@@ -66,13 +203,49 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
   // Waivers State (Dynamic from Backend)
   const [waiversList, setWaiversList] = useState([]);
   const [isWaiverModalOpen, setIsWaiverModalOpen] = useState(false);
+  const [searchInvoiceInput, setSearchInvoiceInput] = useState('');
+  const [isInvoiceFound, setIsInvoiceFound] = useState(false);
   const [waiverForm, setWaiverForm] = useState({
     invoiceNumber: '',
     flatNumber: '',
     residentName: '',
-    fineAmount: 0,
+    totalPendingAmount: 0,
+    waivedAmount: '',
     reason: ''
   });
+
+  // Handle Search Invoice for Waiver
+  const handleSearchInvoiceForWaiver = (searchKey) => {
+    const term = (searchKey || searchInvoiceInput).trim().toLowerCase();
+    if (!term) {
+      toast.error("Please enter an Invoice Number or Flat Number to search");
+      return;
+    }
+
+    const matched = arrears.find(item =>
+      String(item.previousInvoice || '').toLowerCase().includes(term) ||
+      String(item.flat || '').toLowerCase() === term ||
+      String(item.flat || '').toLowerCase().includes(term)
+    );
+
+    if (matched) {
+      setIsInvoiceFound(true);
+      setWaiverForm(prev => ({
+        ...prev,
+        invoiceId: matched.id || null,
+        invoiceNumber: matched.previousInvoice || searchKey,
+        flatNumber: String(matched.flat || '').replace(/^(Block|Flat)[-\s]*/i, ''),
+        residentName: matched.resident || 'Resident',
+        fineAmount: matched.fine || 0,
+        totalPendingAmount: matched.totalDue || matched.outstanding || 0,
+        waivedAmount: matched.fine || matched.totalDue || 0,
+      }));
+      toast.success(`Invoice details retrieved for Flat ${matched.flat}`);
+    } else {
+      setIsInvoiceFound(false);
+      toast.error("No matching pending invoice found for this search");
+    }
+  };
 
   // Fetch backend data
   useEffect(() => {
@@ -187,19 +360,25 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
       toast.error("Reason is mandatory for fine waiver");
       return;
     }
+    if (!waiverForm.waivedAmount || Number(waiverForm.waivedAmount) <= 0) {
+      toast.error("Please enter a valid deduction/waiver amount");
+      return;
+    }
 
     try {
       const res = await apiClient.post('/billing/dunning/waivers', {
+        invoiceId: waiverForm.invoiceId || null,
         invoiceNumber: waiverForm.invoiceNumber,
         flatNumber: waiverForm.flatNumber,
         residentName: waiverForm.residentName,
-        originalFine: waiverForm.fineAmount,
-        waivedAmount: waiverForm.fineAmount,
+        originalFine: waiverForm.fineAmount || 0,
+        pendingAmount: waiverForm.totalPendingAmount || 0,
+        waivedAmount: Number(waiverForm.waivedAmount),
         reason: waiverForm.reason.trim()
       });
-      toast.success(res.data.message || "Fine waived successfully");
+      toast.success(res.data.message || "Fine/Deduction waived successfully");
       setIsWaiverModalOpen(false);
-      setWaiverForm({ invoiceNumber: '', flatNumber: '', residentName: '', fineAmount: 0, reason: '' });
+      setWaiverForm({ invoiceNumber: '', flatNumber: '', residentName: '', fineAmount: 0, waivedAmount: 0, totalPendingAmount: 0, reason: '' });
       fetchDunningData();
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to process waiver");
@@ -211,16 +390,23 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
     try {
       const targetFlat = item.flat || item.flatNumber || 'A-101';
       const targetResident = item.resident || item.residentName || 'Resident';
+      const outstanding = item.totalOutstanding || item.outstanding || item.totalDue || 0;
+      const fine = item.totalFineAmount || item.fine || 0;
+
       const res = await apiClient.post('/billing/dunning/reminders/send', {
         flat: targetFlat,
         resident: targetResident,
-        channel: 'SMS',
+        invoiceId: item.id || item.invoiceId || null,
+        invoiceNumber: item.previousInvoice || item.invoiceNumber || item.invoice || '',
+        totalOutstanding: outstanding,
+        fineAmount: fine,
+        channel: 'EMAIL',
         reminderType: 'DEFAULTER_FOLLOWUP'
       });
-      toast.success(res?.data?.message || "Reminder dispatched via SMS");
+      toast.success(res?.data?.message || "Reminder email sent to resident");
       fetchDunningData();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to send reminder");
+      toast.error(err.response?.data?.message || "Failed to send reminder email");
     }
   };
 
@@ -441,9 +627,19 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
       {/* ── TAB 3: ARREARS ───────────────────────────────────────────────────── */}
       {activeTab === 'arrears' && (
         <div className="space-y-6 animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-              <h3 className="text-sm font-bold text-gray-900">Unpaid Arrears Carried Forward</h3>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-t-2xl">
+              <div>
+                <h3 className="text-sm font-bold text-gray-900">Unpaid Arrears Carried Forward</h3>
+                <p className="text-xs text-gray-500">Filter overdue carried-forward invoices by billing cycle month.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-gray-600 uppercase">Filter Month:</span>
+                <MonthPicker
+                  value={selectedArrearsMonth}
+                  onChange={(val) => setSelectedArrearsMonth(val)}
+                />
+              </div>
             </div>
 
             <div className="overflow-x-auto custom-scrollbar">
@@ -465,43 +661,52 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {arrears.length > 0 ? (
-                    arrears.map((item, idx) => (
-                      <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 text-sm whitespace-nowrap">
-                        <td className="py-4 px-6 font-bold text-gray-900">{String(item.flat || '').replace(/^(Block|Flat)[-\s]*/i, '')}</td>
-                        <td className="py-4 px-6 text-gray-700 font-semibold">
-                          {item.wing || (
-                            String(item.flat || '').match(/^([A-Za-z]+)[-\s]?/)
-                              ? `Wing ${String(item.flat || '').match(/^([A-Za-z]+)[-\s]?/)[1].toUpperCase()}`
-                              : 'Wing A'
-                          )}
-                        </td>
-                        <td className="py-4 px-6 text-gray-700">{item.resident}</td>
-                        <td className="py-4 px-6 font-mono text-xs text-gray-600">{item.previousInvoice}</td>
-                        <td className="py-4 px-6 text-xs text-gray-500">{item.billingCycle}</td>
-                        <td className="py-4 px-6 text-gray-700">₹{(item.originalAmount || 0).toLocaleString()}</td>
-                        <td className="py-4 px-6 text-emerald-600 font-semibold">₹{(item.paid || 0).toLocaleString()}</td>
-                        <td className="py-4 px-6 text-red-600 font-bold">₹{(item.outstanding || 0).toLocaleString()}</td>
-                        <td className="py-4 px-6 text-xs font-bold text-amber-600">{item.daysOverdue} Days</td>
-                        <td className="py-4 px-6 text-purple-600 font-semibold">₹{item.fine || 0}</td>
-                        <td className="py-4 px-6 text-gray-900 font-extrabold">₹{(item.totalDue || 0).toLocaleString()}</td>
-                        <td className="py-4 px-6 text-right">
-                          <button
-                            onClick={() => setSelectedArrearsDetail(item)}
-                            className="text-xs font-bold text-orange-600 hover:underline"
-                          >
-                            View Details
-                          </button>
+                  {(() => {
+                    const filteredArrears = arrears.filter(item => {
+                      if (selectedArrearsMonth === 'ALL') return true;
+                      const cycle = String(item.billingCycle || '').toLowerCase();
+                      const dateStr = item.dueDate ? new Date(item.dueDate).toISOString().slice(0, 7) : '';
+                      return cycle.includes(selectedArrearsMonth.toLowerCase()) || dateStr === selectedArrearsMonth;
+                    });
+
+                    return filteredArrears.length > 0 ? (
+                      filteredArrears.map((item, idx) => (
+                        <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 text-sm whitespace-nowrap">
+                          <td className="py-4 px-6 font-bold text-gray-900">{String(item.flat || '').replace(/^(Block|Flat)[-\s]*/i, '')}</td>
+                          <td className="py-4 px-6 text-gray-700 font-semibold">
+                            {item.wing || (
+                              String(item.flat || '').match(/^([A-Za-z]+)[-\s]?/)
+                                ? `Wing ${String(item.flat || '').match(/^([A-Za-z]+)[-\s]?/)[1].toUpperCase()}`
+                                : 'Wing A'
+                            )}
+                          </td>
+                          <td className="py-4 px-6 text-gray-700">{item.resident}</td>
+                          <td className="py-4 px-6 font-mono text-xs text-gray-600">{item.previousInvoice}</td>
+                          <td className="py-4 px-6 text-xs text-gray-500">{item.billingCycle}</td>
+                          <td className="py-4 px-6 text-gray-700">₹{(item.originalAmount || 0).toLocaleString()}</td>
+                          <td className="py-4 px-6 text-emerald-600 font-semibold">₹{(item.paid || 0).toLocaleString()}</td>
+                          <td className="py-4 px-6 text-red-600 font-bold">₹{(item.outstanding || 0).toLocaleString()}</td>
+                          <td className="py-4 px-6 text-xs font-bold text-amber-600">{item.daysOverdue} Days</td>
+                          <td className="py-4 px-6 text-purple-600 font-semibold">₹{item.fine || 0}</td>
+                          <td className="py-4 px-6 text-gray-900 font-extrabold">₹{(item.totalDue || 0).toLocaleString()}</td>
+                          <td className="py-4 px-6 text-right">
+                            <button
+                              onClick={() => setSelectedArrearsDetail(item)}
+                              className="text-xs font-bold text-orange-600 hover:underline"
+                            >
+                              View Details
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="12" className="py-8 text-center text-xs text-gray-500 font-medium">
+                          No unpaid carried-forward arrears found for month ({selectedArrearsMonth}).
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="12" className="py-8 text-center text-xs text-gray-500 font-medium">
-                        No unpaid carried-forward arrears found.
-                      </td>
-                    </tr>
-                  )}
+                    );
+                  })()}
                 </tbody>
               </table>
             </div>
@@ -535,10 +740,19 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-4 border-b border-gray-100 bg-gray-50/50">
-              <h3 className="text-sm font-bold text-gray-900">Ageing Analysis Breakdown</h3>
-              <p className="text-xs text-gray-500">Track overdue balances across ageing brackets to target high-priority collection follow-ups.</p>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-t-2xl">
+              <div>
+                <h3 className="text-sm font-bold text-gray-900">Ageing Analysis Breakdown</h3>
+                <p className="text-xs text-gray-500">Track overdue balances across ageing brackets to target high-priority collection follow-ups.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-gray-600 uppercase">Filter Month:</span>
+                <MonthPicker
+                  value={selectedAgeingMonth}
+                  onChange={(val) => setSelectedAgeingMonth(val)}
+                />
+              </div>
             </div>
             <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full text-left border-collapse min-w-[1000px]">
@@ -556,41 +770,50 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {ageingTable.length > 0 ? (
-                    ageingTable.map((item, idx) => (
-                      <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 text-sm whitespace-nowrap">
-                        <td className="py-4 px-6 font-bold text-gray-900">{String(item.flat || '').replace(/^(Block|Flat)[-\s]*/i, '')}</td>
-                        <td className="py-4 px-6 text-gray-700 font-semibold">
-                          {item.wing || (
-                            String(item.flat || '').match(/^([A-Za-z]+)[-\s]?/)
-                              ? `Wing ${String(item.flat || '').match(/^([A-Za-z]+)[-\s]?/)[1].toUpperCase()}`
-                              : 'Wing A'
-                          )}
+                  {(() => {
+                    const filteredAgeing = ageingTable.filter(item => {
+                      if (selectedAgeingMonth === 'ALL') return true;
+                      const cycle = String(item.billingCycle || '').toLowerCase();
+                      const dateStr = item.dueDate ? new Date(item.dueDate).toISOString().slice(0, 7) : '';
+                      return cycle.includes(selectedAgeingMonth.toLowerCase()) || dateStr === selectedAgeingMonth;
+                    });
+
+                    return filteredAgeing.length > 0 ? (
+                      filteredAgeing.map((item, idx) => (
+                        <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 text-sm whitespace-nowrap">
+                          <td className="py-4 px-6 font-bold text-gray-900">{String(item.flat || '').replace(/^(Block|Flat)[-\s]*/i, '')}</td>
+                          <td className="py-4 px-6 text-gray-700 font-semibold">
+                            {item.wing || (
+                              String(item.flat || '').match(/^([A-Za-z]+)[-\s]?/)
+                                ? `Wing ${String(item.flat || '').match(/^([A-Za-z]+)[-\s]?/)[1].toUpperCase()}`
+                                : 'Wing A'
+                            )}
+                          </td>
+                          <td className="py-4 px-6 text-gray-700">{item.resident}</td>
+                          <td className="py-4 px-6 font-mono text-xs text-gray-600">{item.previousInvoice}</td>
+                          <td className="py-4 px-6 text-xs font-bold text-amber-600">{item.daysOverdue} Days</td>
+                          <td className="py-4 px-6">
+                            <span className={`text-xs font-bold px-3 py-1 rounded-full border ${item.ageingBucket === '90+ Days' ? 'bg-red-50 text-red-600 border-red-200' :
+                              item.ageingBucket === '61–90 Days' ? 'bg-orange-50 text-orange-600 border-orange-200' :
+                                item.ageingBucket === '31–60 Days' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                                  'bg-emerald-50 text-emerald-600 border-emerald-200'
+                              }`}>
+                              {item.ageingBucket}
+                            </span>
+                          </td>
+                          <td className="py-4 px-6 text-red-600 font-bold">₹{(item.outstanding || 0).toLocaleString()}</td>
+                          <td className="py-4 px-6 text-purple-600 font-semibold">₹{item.fine || 0}</td>
+                          <td className="py-4 px-6 text-right text-gray-900 font-extrabold">₹{(item.totalDue || 0).toLocaleString()}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="9" className="py-8 text-center text-xs text-gray-500 font-medium">
+                          No active ageing records found for month ({selectedAgeingMonth}).
                         </td>
-                        <td className="py-4 px-6 text-gray-700">{item.resident}</td>
-                        <td className="py-4 px-6 font-mono text-xs text-gray-600">{item.previousInvoice}</td>
-                        <td className="py-4 px-6 text-xs font-bold text-amber-600">{item.daysOverdue} Days</td>
-                        <td className="py-4 px-6">
-                          <span className={`text-xs font-bold px-3 py-1 rounded-full border ${item.ageingBucket === '90+ Days' ? 'bg-red-50 text-red-600 border-red-200' :
-                            item.ageingBucket === '61–90 Days' ? 'bg-orange-50 text-orange-600 border-orange-200' :
-                              item.ageingBucket === '31–60 Days' ? 'bg-amber-50 text-amber-600 border-amber-200' :
-                                'bg-emerald-50 text-emerald-600 border-emerald-200'
-                            }`}>
-                            {item.ageingBucket}
-                          </span>
-                        </td>
-                        <td className="py-4 px-6 text-red-600 font-bold">₹{(item.outstanding || 0).toLocaleString()}</td>
-                        <td className="py-4 px-6 text-purple-600 font-semibold">₹{item.fine || 0}</td>
-                        <td className="py-4 px-6 text-right text-gray-900 font-extrabold">₹{(item.totalDue || 0).toLocaleString()}</td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="9" className="py-8 text-center text-xs text-gray-500 font-medium">
-                        No active ageing records found.
-                      </td>
-                    </tr>
-                  )}
+                    );
+                  })()}
                 </tbody>
               </table>
             </div>
@@ -775,7 +998,11 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
                         <td className="py-4 px-6 text-gray-700">{rem.resident || rem.residentName}</td>
                         <td className="py-4 px-6 font-mono text-xs text-gray-600">{rem.invoice || 'N/A'}</td>
                         <td className="py-4 px-6 text-xs text-gray-700 font-semibold">{rem.reminderType}</td>
-                        <td className="py-4 px-6 text-xs font-bold text-blue-600">{rem.channel}</td>
+                        <td className="py-4 px-6 text-xs font-bold">
+                          <span className={`px-2.5 py-1 rounded-lg ${rem.channel === 'EMAIL' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                            {rem.channel || 'EMAIL'}
+                          </span>
+                        </td>
                         <td className="py-4 px-6 text-xs text-gray-500">{rem.sentAt ? new Date(rem.sentAt).toLocaleString() : 'N/A'}</td>
                         <td className="py-4 px-6">
                           <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
@@ -821,9 +1048,11 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
                   <tr className="bg-gray-50 text-gray-500 text-xs font-semibold uppercase border-b border-gray-100 whitespace-nowrap">
                     <th className="py-4 px-6">Invoice</th>
                     <th className="py-4 px-6">Flat</th>
+                    <th className="py-4 px-6">Total Dues</th>
                     <th className="py-4 px-6">Original Fine</th>
-                    <th className="py-4 px-6">Waived Amount</th>
-                    <th className="py-4 px-6">Mandatory Audit Reason</th>
+                    <th className="py-4 px-6">Waived</th>
+                    <th className="py-4 px-6">Remaining Balance</th>
+                    <th className="py-4 px-6">Reason</th>
                     <th className="py-4 px-6">Waived By</th>
                     <th className="py-4 px-6">Waived At</th>
                     <th className="py-4 px-6">Status</th>
@@ -831,25 +1060,33 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
                 </thead>
                 <tbody>
                   {waiversList.length > 0 ? (
-                    waiversList.map((wav, idx) => (
-                      <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 text-sm">
-                        <td className="py-4 px-6 font-mono font-bold text-gray-900">{wav.invoice || wav.invoiceNumber || 'N/A'}</td>
-                        <td className="py-4 px-6 text-gray-700 font-semibold">{wav.flat || wav.flatNumber}</td>
-                        <td className="py-4 px-6 text-gray-600">₹{wav.originalFine}</td>
-                        <td className="py-4 px-6 text-emerald-600 font-bold">₹{wav.waivedAmount}</td>
-                        <td className="py-4 px-6 text-xs text-gray-700 italic max-w-xs">{wav.reason}</td>
-                        <td className="py-4 px-6 text-xs text-gray-600 font-medium">{wav.waivedByName || wav.waivedBy}</td>
-                        <td className="py-4 px-6 text-xs text-gray-500">{wav.waivedAt ? new Date(wav.waivedAt).toLocaleDateString() : 'N/A'}</td>
-                        <td className="py-4 px-6">
-                          <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
-                            {wav.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
+                    waiversList.map((wav, idx) => {
+                      const displayPending = wav.pendingAmount !== undefined && wav.pendingAmount !== null ? wav.pendingAmount : (wav.totalPendingAmount || 0);
+                      const displayFine = wav.originalFine !== undefined && wav.originalFine !== null ? wav.originalFine : (wav.fine || 0);
+                      const waived = wav.waivedAmount || 0;
+                      const remainingBalance = Math.max(0, displayPending - waived);
+                      return (
+                        <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 text-sm whitespace-nowrap">
+                          <td className="py-4 px-6 font-mono font-bold text-gray-900">{wav.invoice || wav.invoiceNumber || 'N/A'}</td>
+                          <td className="py-4 px-6 text-gray-700 font-semibold">{wav.flat || wav.flatNumber}</td>
+                          <td className="py-4 px-6 text-red-600 font-extrabold">₹{displayPending.toLocaleString()}</td>
+                          <td className="py-4 px-6 text-purple-600 font-semibold">₹{displayFine.toLocaleString()}</td>
+                          <td className="py-4 px-6 text-emerald-600 font-bold">₹{waived.toLocaleString()}</td>
+                          <td className="py-4 px-6 text-amber-600 font-extrabold">₹{remainingBalance.toLocaleString()}</td>
+                          <td className="py-4 px-6 text-xs text-gray-700 italic max-w-xs">{wav.reason}</td>
+                          <td className="py-4 px-6 text-xs text-gray-600 font-medium">{wav.waivedByName || wav.waivedBy}</td>
+                          <td className="py-4 px-6 text-xs text-gray-500">{wav.waivedAt ? new Date(wav.waivedAt).toLocaleDateString() : 'N/A'}</td>
+                          <td className="py-4 px-6">
+                            <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
+                              {wav.status}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr>
-                      <td colSpan="8" className="py-8 text-center text-xs text-gray-500 font-medium">
+                      <td colSpan="10" className="py-8 text-center text-xs text-gray-500 font-medium">
                         No fine waivers recorded yet.
                       </td>
                     </tr>
@@ -988,78 +1225,164 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
       {/* ── WAIVE FINE MODAL (MANDATORY REASON PROMPT) ──────────────────────── */}
       {isWaiverModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 border border-gray-100 animate-fade-in-up">
-            <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-4">
-              <h3 className="text-lg font-bold text-gray-900">Waive Fine / Penalty</h3>
-              <button onClick={() => setIsWaiverModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 border border-gray-100 animate-fade-in-up space-y-4">
+            <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Waive Fine / Penalty</h3>
+                <p className="text-xs text-gray-500">Search invoice to pull flat dues and deduct fine/penalty amounts.</p>
+              </div>
+              <button
+                onClick={() => {
+                  setIsWaiverModalOpen(false);
+                  setIsInvoiceFound(false);
+                  setSearchInvoiceInput('');
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
                 <FaTimes />
               </button>
             </div>
 
-            <form onSubmit={handleWaiverSubmit} className="space-y-4">
-              <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs space-y-2">
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-500 uppercase mb-0.5">Flat / Unit Number *</label>
+            {/* SEARCH BAR FOR INVOICE NUMBER */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-gray-700 uppercase">Search Invoice Number / Flat Number *</label>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <FaSearch className="absolute left-3 top-3 text-gray-400 text-xs" />
                   <input
                     type="text"
-                    required
-                    value={waiverForm.flatNumber}
-                    onChange={e => setWaiverForm({ ...waiverForm, flatNumber: e.target.value })}
-                    placeholder="e.g. A-101"
-                    className="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs font-bold"
+                    value={searchInvoiceInput}
+                    onChange={e => setSearchInvoiceInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSearchInvoiceForWaiver();
+                      }
+                    }}
+                    placeholder="Enter Invoice No (e.g. INV/2026-27/000001) or Flat..."
+                    className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-orange-500"
                   />
                 </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-500 uppercase mb-0.5">Invoice Number (Optional)</label>
-                  <input
-                    type="text"
-                    value={waiverForm.invoiceNumber}
-                    onChange={e => setWaiverForm({ ...waiverForm, invoiceNumber: e.target.value })}
-                    placeholder="e.g. INV-2026-0045"
-                    className="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs font-semibold"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-500 uppercase mb-0.5">Fine Amount (₹) *</label>
-                  <input
-                    type="number"
-                    min="1"
-                    required
-                    value={waiverForm.fineAmount}
-                    onChange={e => setWaiverForm({ ...waiverForm, fineAmount: Number(e.target.value) })}
-                    placeholder="250"
-                    className="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-purple-700"
-                  />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => handleSearchInvoiceForWaiver()}
+                  className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl shadow-sm transition-all"
+                >
+                  Search
+                </button>
               </div>
+            </div>
 
+            <form onSubmit={handleWaiverSubmit} className="space-y-4 pt-1">
+              {/* DETAILS CARD ON SUCCESSFUL SEARCH */}
+              {isInvoiceFound ? (
+                <div className="p-4 bg-orange-50/60 rounded-2xl border border-orange-200/80 space-y-3 animate-fade-in">
+                  <div className="flex items-center justify-between border-b border-orange-200/50 pb-2">
+                    <span className="text-xs font-extrabold text-orange-950 uppercase">Invoice Match Details</span>
+                    <span className="text-xs font-mono font-bold text-orange-700">{waiverForm.invoiceNumber}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <span className="text-[10px] font-bold text-gray-500 uppercase block">Flat / Unit</span>
+                      <span className="font-extrabold text-gray-900">{waiverForm.flatNumber}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-gray-500 uppercase block">Resident</span>
+                      <span className="font-semibold text-gray-800">{waiverForm.residentName}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-gray-500 uppercase block">Total Pending</span>
+                      <span className="font-extrabold text-red-600">₹{(waiverForm.totalPendingAmount || 0).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 bg-gray-50 rounded-xl border border-dashed border-gray-200 text-center text-xs text-gray-400">
+                  Search an invoice above or enter details manually below
+                </div>
+              )}
+
+              {/* MANUAL INPUT FALLBACKS IF NOT SEARCHED */}
+              {!isInvoiceFound && (
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase mb-0.5">Flat / Unit Number *</label>
+                    <input
+                      type="text"
+                      required
+                      value={waiverForm.flatNumber}
+                      onChange={e => setWaiverForm({ ...waiverForm, flatNumber: e.target.value })}
+                      placeholder="e.g. 101"
+                      className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-500 uppercase mb-0.5">Invoice Number</label>
+                    <input
+                      type="text"
+                      value={waiverForm.invoiceNumber}
+                      onChange={e => setWaiverForm({ ...waiverForm, invoiceNumber: e.target.value })}
+                      placeholder="e.g. INV/2026-27/000001"
+                      className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-semibold"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* DEDUCTION AMOUNT INPUT */}
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase mb-1">
-                  Reason for Waiver (Mandatory Audit Log) *
+                  Amount to be Deducted / Waived (₹) *
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max={waiverForm.totalPendingAmount > 0 ? waiverForm.totalPendingAmount : undefined}
+                  required
+                  value={waiverForm.waivedAmount}
+                  onChange={e => setWaiverForm({ ...waiverForm, waivedAmount: e.target.value })}
+                  placeholder="Enter amount to deduct from total pending dues"
+                  className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-purple-700 focus:outline-none focus:border-orange-500"
+                />
+                {waiverForm.totalPendingAmount > 0 && Number(waiverForm.waivedAmount) > 0 && (
+                  <p className="text-[11px] text-emerald-600 font-semibold mt-1">
+                    New Pending Dues After Deduction: ₹{Math.max(0, waiverForm.totalPendingAmount - Number(waiverForm.waivedAmount)).toLocaleString()}
+                  </p>
+                )}
+              </div>
+
+              {/* MANDATORY AUDIT REASON */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">
+                  Reason for Waiver / Deduction (Mandatory Audit Log) *
                 </label>
                 <textarea
                   required
                   rows="3"
                   value={waiverForm.reason}
                   onChange={e => setWaiverForm({ ...waiverForm, reason: e.target.value })}
-                  placeholder="Specify mandatory reason for fine waiver (e.g. Payment delay due to bank server issue)..."
+                  placeholder="Specify mandatory reason for fine waiver (e.g. Technical banking error resolution approved by Secretary)..."
                   className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-orange-500"
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-2">
+              <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
                 <button
                   type="button"
-                  onClick={() => setIsWaiverModalOpen(false)}
+                  onClick={() => {
+                    setIsWaiverModalOpen(false);
+                    setIsInvoiceFound(false);
+                    setSearchInvoiceInput('');
+                  }}
                   className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-md"
+                  className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-md transition-all"
                 >
-                  Confirm Waiver
+                  Confirm Waiver / Deduction
                 </button>
               </div>
             </form>
