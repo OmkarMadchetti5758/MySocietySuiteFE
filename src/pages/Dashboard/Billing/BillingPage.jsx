@@ -10,6 +10,7 @@ import apiClient from '../../../services/apiClient';
 import toast from 'react-hot-toast';
 import InvoicesPage from './InvoicesPage';
 import FinesInterestArrearsPage from './FinesInterestArrearsPage';
+import PaymentsContainer from './Payments/PaymentsContainer';
 
 const SUBMODULE_CONFIG = [
   {
@@ -190,6 +191,8 @@ const SUBMODULE_CONFIG = [
   }
 ];
 
+const formatINR = (n) => '₹' + (Number(n) || 0).toLocaleString('en-IN');
+
 const getStatusColor = (status) => {
   switch (status) {
     case 'APPROVED':
@@ -271,6 +274,8 @@ const BillingPage = () => {
   const [hubStats, setHubStats] = useState({
     invoicesIssued: null,
     activeChargeHeads: null,
+    totalArrears: null,
+    collectedThisMonth: null,
   });
 
   useEffect(() => {
@@ -288,6 +293,26 @@ const BillingPage = () => {
         if (res.data?.data) {
           const list = Array.isArray(res.data.data) ? res.data.data : [];
           setHubStats(prev => ({ ...prev, activeChargeHeads: list.length }));
+        }
+      })
+      .catch(() => { });
+
+    apiClient.get('/payments/overview')
+      .then(res => {
+        if (res.data?.data) {
+          setHubStats(prev => ({ ...prev, totalArrears: res.data.data.outstandingAmount ?? 0 }));
+        }
+      })
+      .catch(() => { });
+
+    const now = new Date();
+    const start = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+    const end = now.toISOString().split('T')[0];
+    apiClient.get(`/payments/collections-analytics?startDate=${start}&endDate=${end}`)
+      .then(res => {
+        if (res.data?.data?.byMode) {
+          const monthTotal = res.data.data.byMode.reduce((sum, item) => sum + (item.total || 0), 0);
+          setHubStats(prev => ({ ...prev, collectedThisMonth: monthTotal }));
         }
       })
       .catch(() => { });
@@ -575,6 +600,23 @@ const BillingPage = () => {
     if (selectedModule.id === 'fines_interests_arrears') {
       return (
         <FinesInterestArrearsPage onBack={handleBackToHub} />
+      );
+    }
+
+    // ── Payments & Collections ────────────────────────────────────────────────
+    if (selectedModule.id === 'payments_collection') {
+      return (
+        <div className="animate-fade-in-up pb-12">
+          <div className="flex items-center px-4 sm:px-6 pt-4 mb-0">
+            <button
+              onClick={handleBackToHub}
+              className="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-orange-600 transition-colors"
+            >
+              <FaArrowLeft /> Back to Billing Hub
+            </button>
+          </div>
+          <PaymentsContainer />
+        </div>
       );
     }
 
@@ -1215,6 +1257,10 @@ const BillingPage = () => {
               dynamicStats = { ...mod.stats, value: String(hubStats.invoicesIssued) };
             } else if (mod.id === 'billing_config_charge_head' && hubStats.activeChargeHeads !== null) {
               dynamicStats = { ...mod.stats, value: String(hubStats.activeChargeHeads) };
+            } else if (mod.id === 'fines_interests_arrears' && hubStats.totalArrears !== null) {
+              dynamicStats = { ...mod.stats, value: formatINR(hubStats.totalArrears) };
+            } else if (mod.id === 'payments_collection' && hubStats.collectedThisMonth !== null) {
+              dynamicStats = { ...mod.stats, value: formatINR(hubStats.collectedThisMonth) };
             }
             return (
               <SectionCard
