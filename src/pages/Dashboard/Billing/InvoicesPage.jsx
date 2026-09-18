@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 import GenerateInvoiceModal from './GenerateInvoiceModal';
 import OneTimeChargeModal from './OneTimeChargeModal';
 import { InvoiceDetailModal, RecordPaymentModal } from './InvoiceModals';
+import ResidentPayNowModal from './Payments/ResidentPayNowModal';
 
 // ── Helpers & Constants ──────────────────────────────────────────────────────
 
@@ -122,6 +123,7 @@ const InvoicesPage = () => {
   const [showOneTimeModal, setShowOneTimeModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [paymentTargetInvoice, setPaymentTargetInvoice] = useState(null);
+  const [residentPaymentTarget, setResidentPaymentTarget] = useState(null);
   const [activeStatFilter, setActiveStatFilter] = useState(null);
 
   // Load stats
@@ -428,6 +430,14 @@ const InvoicesPage = () => {
                                   <FaMoneyBillWave />
                                 </button>
                               )}
+                              {isResident && !['PAID', 'paid', 'CANCELLED'].includes(inv.status) && balance > 0 && (
+                                <button
+                                  onClick={() => setResidentPaymentTarget(inv)}
+                                  className="px-3 py-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition-colors shadow-sm ml-2"
+                                >
+                                  Pay Now
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -645,6 +655,18 @@ const InvoicesPage = () => {
           invoice={paymentTargetInvoice}
           onClose={() => setPaymentTargetInvoice(null)}
           onSuccess={handleRefresh}
+        />
+      )}
+
+      {residentPaymentTarget && (
+        <ResidentPayNowModal
+          isOpen={true}
+          invoice={residentPaymentTarget}
+          onClose={() => setResidentPaymentTarget(null)}
+          onSuccess={() => {
+            setResidentPaymentTarget(null);
+            handleRefresh();
+          }}
         />
       )}
     </div>
