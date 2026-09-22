@@ -46,6 +46,7 @@ import BillingPage from './Billing/BillingPage';
 import FlatsSetupPage from './FlatsSetup/FlatsSetupPage';
 import FlatDetailsPage from './FlatsSetup/FlatDetailsPage';
 import ParkingPage from './Parking/ParkingPage';
+import DocumentsPage from './Documents/DocumentsPage';
 
 import GuardDashboard from '../GuardApp/GuardDashboard';
 import WalkInVisitor from '../GuardApp/WalkInVisitor';
@@ -509,6 +510,9 @@ const DashboardLayout = () => {
                 }
                 if (mod.path === 'visitors') {
                   return <Route key={mod.routeKey || mod.path} path={mod.path} element={<VisitorApprovalPage />} />;
+                }
+                if (mod.path === 'documents') {
+                  return <Route key={mod.routeKey || mod.path} path={mod.path} element={<DocumentsPage />} />;
                 }
                 return <Route key={mod.routeKey || mod.path} path={mod.path} element={<Placeholder title={mod.label} />} />;
               })}
