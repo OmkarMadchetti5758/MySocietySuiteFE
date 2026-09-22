@@ -390,8 +390,11 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
     try {
       const targetFlat = item.flat || item.flatNumber || 'A-101';
       const targetResident = item.resident || item.residentName || 'Resident';
-      const outstanding = item.totalOutstanding || item.outstanding || item.totalDue || 0;
       const fine = item.totalFineAmount || item.fine || 0;
+      let outstanding = item.totalOutstanding || item.outstanding || 0;
+      if (!outstanding && item.totalDue) {
+        outstanding = Math.max(0, item.totalDue - fine);
+      }
 
       const res = await apiClient.post('/billing/dunning/reminders/send', {
         flat: targetFlat,
