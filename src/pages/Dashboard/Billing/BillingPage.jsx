@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import InvoicesPage from './InvoicesPage';
 import FinesInterestArrearsPage from './FinesInterestArrearsPage';
 import PaymentsContainer from './Payments/PaymentsContainer';
+import BankCashReconciliationContainer from './BankCashReconciliation/BankCashReconciliationContainer';
 
 const SUBMODULE_CONFIG = [
   {
@@ -616,6 +617,15 @@ const BillingPage = () => {
             </button>
           </div>
           <PaymentsContainer />
+        </div>
+      );
+    }
+
+    // ── Bank & Cash Reconciliation ──────────────────────────────────────────
+    if (selectedModule.id === 'bank_cash_reconciliation') {
+      return (
+        <div className="animate-fade-in-up pb-12">
+          <BankCashReconciliationContainer onBack={handleBackToHub} />
         </div>
       );
     }
