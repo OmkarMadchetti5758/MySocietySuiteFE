@@ -18,6 +18,7 @@ const complaintApi = {
     updateComplaintStatus: (id, data) => api.patch(`/complaints/${id}/status`, data),
     getComplaintHistory: (id) => api.get(`/complaints/${id}/history`),
     getComplaintSummary: () => api.get('/complaints/summary'),
+    getAssignableStaff: () => api.get('/complaints/assignable-staff'),
 
     // ── Utility ──
     getCategories: () => api.get('/complaints/categories'),

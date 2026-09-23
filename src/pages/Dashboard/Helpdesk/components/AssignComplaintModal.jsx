@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaTimes, FaUserTie, FaStore } from 'react-icons/fa';
 import complaintApi from '../../../../services/complaintApi';
-import api from '../../../../services/apiClient'; // for fetching staff/vendors
+import api from '../../../../services/apiClient';
 import { toast } from 'react-toastify';
 
 const AssignComplaintModal = ({ complaint, onClose }) => {
@@ -22,11 +22,10 @@ const AssignComplaintModal = ({ complaint, onClose }) => {
     try {
       setLoadingAssignees(true);
       const [staffRes, vendorRes] = await Promise.all([
-        api.get('/staff'),
+        complaintApi.getAssignableStaff(),  // scoped to COMPLAINTS_HELPDESK → MANAGE
         api.get('/vendors')
       ]);
-      // Only show active assignees
-      setStaffList(staffRes.data.data.filter(s => s.status === 'active' || s.isActive));
+      setStaffList(staffRes.data.data);   // already filtered to active staff by the endpoint
       setVendorList(vendorRes.data.data.filter(v => v.status === 'ACTIVE'));
     } catch (error) {
       toast.error('Failed to load assignees');
