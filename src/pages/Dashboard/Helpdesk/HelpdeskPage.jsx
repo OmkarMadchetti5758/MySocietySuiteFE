@@ -12,8 +12,8 @@ import ReopenComplaintModal from './components/ReopenComplaintModal';
 import HelpdeskDashboard from './components/HelpdeskDashboard';
 
 const HelpdeskPage = () => {
-  const { hasModuleAccess } = usePermissions();
-  const isAdminOrManager = hasModuleAccess('complaints_helpdesk', 'MANAGE'); // Adjust as per your exact logic if needed
+  const { hasModuleScope, PERMISSION_LEVELS } = usePermissions();
+  const isAdminOrManager = hasModuleScope('complaints_helpdesk', PERMISSION_LEVELS.MANAGE);
 
   const [activeTab, setActiveTab] = useState('list'); // 'list' | 'dashboard'
   const [complaints, setComplaints] = useState([]);
@@ -72,6 +72,16 @@ const HelpdeskPage = () => {
   const closeActionModal = (shouldRefresh = false) => {
     setActionModal({ type: null, complaint: null });
     if (shouldRefresh) fetchComplaints();
+  };
+
+  const handleStartWork = async (complaintId) => {
+    try {
+      await complaintApi.updateComplaintStatus(complaintId, { status: 'in_progress' });
+      toast.success("Ticket status updated to In Progress");
+      fetchComplaints();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update status");
+    }
   };
 
   const handleConfirmResolution = async (complaintId) => {
@@ -141,6 +151,7 @@ const HelpdeskPage = () => {
               >
                 <option value="">All Statuses</option>
                 <option value="open">Open</option>
+                <option value="assigned">Assigned</option>
                 <option value="in_progress">In Progress</option>
                 <option value="resolved">Resolved</option>
                 <option value="closed">Closed</option>
@@ -173,6 +184,7 @@ const HelpdeskPage = () => {
             loading={loading}
             isAdmin={isAdminOrManager}
             onAction={handleAction}
+            onStartWork={handleStartWork}
             onConfirmResolution={handleConfirmResolution}
           />
 
@@ -216,6 +228,8 @@ const HelpdeskPage = () => {
         <ComplaintDetailsModal 
           complaintId={actionModal.complaint._id} 
           onClose={() => closeActionModal()} 
+          onAssign={(complaint) => setActionModal({ type: 'assign', complaint })}
+          onResolve={(complaint) => setActionModal({ type: 'resolve', complaint })}
         />
       )}
 

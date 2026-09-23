@@ -1,11 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { FaTimes, FaHistory, FaImage, FaUser, FaBuilding, FaUserEdit, FaCheckCircle } from 'react-icons/fa';
+import { FaTimes, FaHistory, FaImage, FaUser, FaBuilding, FaUserEdit, FaCheckCircle, FaPlay } from 'react-icons/fa';
 import complaintApi from '../../../../services/complaintApi';
+import { usePermissions } from '../../../../context/PermissionsContext';
 import { toast } from 'react-toastify';
 import dayjs from 'dayjs';
 import { resolveMediaUrl } from '../../../../utils/mediaUrl';
 
-const ComplaintDetailsModal = ({ complaintId, onClose }) => {
+const ComplaintDetailsModal = ({ complaintId, onClose, onAssign, onResolve }) => {
+  const { hasModuleScope, PERMISSION_LEVELS } = usePermissions();
+  const isAdminOrManager = hasModuleScope('complaints_helpdesk', PERMISSION_LEVELS.MANAGE);
+
+  const getCurrentUser = () => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}');
+    } catch {
+      return {};
+    }
+  };
+
+  const currentUser = getCurrentUser();
+  const residentRoleKeys = ['resident_owner', 'resident_tenant', 'resident'];
+  const isResidentOnly = residentRoleKeys.includes(currentUser.role) && !isAdminOrManager;
+
   const [complaint, setComplaint] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,9 +48,20 @@ const ComplaintDetailsModal = ({ complaintId, onClose }) => {
     }
   };
 
+  const handleStartWork = async () => {
+    try {
+      await complaintApi.updateComplaintStatus(complaint._id, { status: 'in_progress' });
+      toast.success("Ticket status updated to In Progress");
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update status");
+    }
+  };
+
   const getStatusColor = (status) => {
     const styles = {
       open: 'text-blue-600 bg-blue-50 border-blue-200',
+      assigned: 'text-purple-600 bg-purple-50 border-purple-200',
       in_progress: 'text-yellow-600 bg-yellow-50 border-yellow-200',
       resolved: 'text-green-600 bg-green-50 border-green-200',
       closed: 'text-gray-600 bg-gray-50 border-gray-200'
@@ -67,8 +94,46 @@ const ComplaintDetailsModal = ({ complaintId, onClose }) => {
               <span className="px-2.5 py-0.5 text-xs font-medium rounded-full border border-gray-200 bg-gray-50 text-gray-600">
                 {complaint.priority.toUpperCase()}
               </span>
+              {!isResidentOnly && complaint.status === 'assigned' && (
+                <button
+                  onClick={handleStartWork}
+                  className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm ml-2"
+                >
+                  <FaPlay className="text-[10px]" />
+                  <span>Start Work</span>
+                </button>
+              )}
+              {!isResidentOnly && complaint.status === 'in_progress' && onResolve && (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onResolve(complaint);
+                  }}
+                  className="px-3 py-1 bg-green-600 text-white hover:bg-green-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm ml-2"
+                >
+                  <FaCheckCircle />
+                  <span>Resolve Ticket</span>
+                </button>
+              )}
             </div>
-            <p className="text-sm text-gray-500">{complaint.category}</p>
+            <div className="flex items-center gap-2 flex-wrap mt-1">
+              <p className="text-sm text-gray-500">{complaint.category}</p>
+              {complaint.areaType && (
+                <>
+                  <span className="text-gray-300">·</span>
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full border ${
+                    complaint.areaType === 'Common Area'
+                      ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                      : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  }`}>
+                    {complaint.areaType}
+                  </span>
+                  {complaint.areaLocation && (
+                    <span className="text-xs text-gray-500">{complaint.areaLocation}</span>
+                  )}
+                </>
+              )}
+            </div>
           </div>
           <button
             onClick={() => onClose()}
@@ -115,7 +180,7 @@ const ComplaintDetailsModal = ({ complaintId, onClose }) => {
                     if (status === 'closed') return 5;
                     if (status === 'resolved') return 4;
                     if (status === 'in_progress') return 3;
-                    if (status === 'open' && isAssigned) return 2;
+                    if (status === 'assigned' || (status === 'open' && isAssigned)) return 2;
                     return 1; // open, unassigned
                   };
 
@@ -171,6 +236,29 @@ const ComplaintDetailsModal = ({ complaintId, onClose }) => {
                 </div>
               </div>
 
+              {/* Area of Complaint */}
+              {complaint.areaType && complaint.areaLocation && (
+                <div className={`rounded-xl p-4 border flex items-start gap-3 ${
+                  complaint.areaType === 'Common Area'
+                    ? 'bg-indigo-50/60 border-indigo-100'
+                    : 'bg-emerald-50/60 border-emerald-100'
+                }`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm ${
+                    complaint.areaType === 'Common Area'
+                      ? 'bg-indigo-100 text-indigo-600'
+                      : 'bg-emerald-100 text-emerald-600'
+                  }`}>
+                    {complaint.areaType === 'Common Area' ? '🏢' : '🏠'}
+                  </div>
+                  <div>
+                    <p className={`text-xs font-semibold uppercase tracking-wider mb-0.5 ${
+                      complaint.areaType === 'Common Area' ? 'text-indigo-600' : 'text-emerald-600'
+                    }`}>{complaint.areaType}</p>
+                    <p className="text-sm font-medium text-gray-800">{complaint.areaLocation}</p>
+                  </div>
+                </div>
+              )}
+
               {/* Attachments */}
               {complaint.attachments && complaint.attachments.length > 0 && (
                 <div>
@@ -211,7 +299,21 @@ const ComplaintDetailsModal = ({ complaintId, onClose }) => {
 
                 {/* Assigned To */}
                 <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                  <h3 className="text-xs font-bold tracking-wider text-gray-400 uppercase mb-3">Assigned To</h3>
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-xs font-bold tracking-wider text-gray-400 uppercase">Assigned To</h3>
+                    {isAdminOrManager && complaint.status !== 'closed' && onAssign && (
+                      <button
+                        onClick={() => {
+                          onClose();
+                          onAssign(complaint);
+                        }}
+                        className="px-2.5 py-1 bg-purple-50 text-purple-600 hover:bg-purple-100 border border-purple-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+                      >
+                        <FaUserEdit />
+                        <span>{complaint.assignedStaffId || complaint.assignedVendorId ? 'Reassign' : 'Assign'}</span>
+                      </button>
+                    )}
+                  </div>
                   {complaint.assignedStaffId || complaint.assignedVendorId ? (
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-500 flex items-center justify-center shrink-0">
