@@ -42,6 +42,7 @@ import VendorsPage from './VendorManagement/VendorsPage';
 import VendorTasksPage from '../VendorPortal/VendorTasksPage';
 import HelpdeskPage from './Helpdesk/HelpdeskPage';
 import FestivalsPage from './Festivals/FestivalsPage';
+import FestivalCollectionsPage from './FestivalCollections/FestivalCollectionsPage';
 import BillingPage from './Billing/BillingPage';
 import FlatsSetupPage from './FlatsSetup/FlatsSetupPage';
 import FlatDetailsPage from './FlatsSetup/FlatDetailsPage';
@@ -69,7 +70,7 @@ const MODULE_DEF = [
   { id: 'documents_manager', label: 'Documents', icon: FaFolderOpen, path: 'documents', group: 'ADMINISTRATION' },
   { id: 'reports_dashboard', label: 'Reports', icon: FaChartBar, path: 'reports', group: 'REPORTS' },
   { id: 'ai_assistant', label: 'AI Assistant', icon: FaRobot, path: 'ai', group: 'AI ASSISTANT' },
-  { id: 'festival_collection', label: 'Fest Collections', icon: FaGift, path: 'festivals-collection', group: 'COMMUNITY' },
+  { id: 'community_events', label: 'Fest Collections', icon: FaGift, path: 'festivals-collection', routeKey: 'festivals_collection', group: 'COMMUNITY' },
   { id: 'community_events', label: 'Festivals & Events', icon: FaCalendarAlt, path: 'festivals', group: 'COMMUNITY' },
   { id: 'settings', label: 'Settings', icon: FaCog, path: 'settings', group: 'ADMINISTRATION' }
 ];
@@ -501,6 +502,9 @@ const DashboardLayout = () => {
                 }
                 if (mod.path === 'festivals') {
                   return <Route key={mod.routeKey || mod.path} path={mod.path} element={<FestivalsPage />} />;
+                }
+                if (mod.path === 'festivals-collection') {
+                  return <Route key={mod.routeKey || mod.path} path={mod.path} element={<FestivalCollectionsPage />} />;
                 }
                 if (mod.path === 'billing') {
                   return <Route key={mod.routeKey || mod.path} path={mod.path} element={<BillingPage />} />;
