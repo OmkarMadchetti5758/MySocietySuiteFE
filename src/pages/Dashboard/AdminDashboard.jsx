@@ -104,10 +104,10 @@ const AdminDashboard = ({ societyName }) => {
             mainText="Ganesh Chaturthi on 15 Sept 2024."
             stats={[
               { label: 'Upcoming Events', value: '2' },
-              { label: 'Community Polls', value: '1' },
+              { label: 'Festival Collections', value: '1 Active' },
               { label: 'New Announcements', value: '3' }
             ]}
-            actionText="View Community"
+            actionText="View Collections"
           />
         </div>
       </div>
