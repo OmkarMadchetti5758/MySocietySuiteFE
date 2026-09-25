@@ -12,6 +12,7 @@ import InvoicesPage from './InvoicesPage';
 import FinesInterestArrearsPage from './FinesInterestArrearsPage';
 import PaymentsContainer from './Payments/PaymentsContainer';
 import BankCashReconciliationContainer from './BankCashReconciliation/BankCashReconciliationContainer';
+import AdvanceDepositsContainer from './AdvanceDeposits/AdvanceDepositsContainer';
 
 const SUBMODULE_CONFIG = [
   {
@@ -626,6 +627,15 @@ const BillingPage = () => {
       return (
         <div className="animate-fade-in-up pb-12">
           <BankCashReconciliationContainer onBack={handleBackToHub} />
+        </div>
+      );
+    }
+
+    // ── Advance Accounts & Security Deposits ────────────────────────────────
+    if (selectedModule.id === 'advance_accounts_deposits') {
+      return (
+        <div className="animate-fade-in-up pb-12">
+          <AdvanceDepositsContainer onBack={handleBackToHub} />
         </div>
       );
     }
