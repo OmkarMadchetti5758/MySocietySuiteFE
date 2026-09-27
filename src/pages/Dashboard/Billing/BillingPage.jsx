@@ -260,6 +260,9 @@ const BillingPage = () => {
   const roleKeys = currentUser.roleKeys || [];
   const isAdmin = currentUser.role === 'admin' || currentUser.role === 'super_admin' || roleKeys.includes('admin');
   const isAccountant = roleKeys.includes('accountant');
+  const canManageBillingConfig = (isAdmin || isAccountant)
+    && currentUser.role !== 'super_admin'
+    && !roleKeys.includes('super_admin');
   const isResident = currentUser.role === 'resident_owner' || roleKeys.includes('resident_owner') || (!isAdmin && !isAccountant);
 
   const RESIDENT_ALLOWED_IDS = ['invoice_billing_generation', 'fines_interests_arrears', 'payments_collection', 'advance_accounts_deposits'];
@@ -343,7 +346,8 @@ const BillingPage = () => {
     billingDay: 1,
     dueDays: 10,
     arrearsDisplayMode: 'SINGLE_TOTAL',
-    defaultTaxSettings: { taxName: 'GST', taxRate: 18 }
+    defaultTaxSettings: { taxName: 'GST', taxRate: 18 },
+    accountantApprovalThreshold: 5000,
   });
   const [savingConfig, setSavingConfig] = useState(false);
 
@@ -419,7 +423,10 @@ const BillingPage = () => {
     try {
       const res = await apiClient.get('/billing/billing-config');
       if (res.data?.status === 'success' && res.data.data) {
-        setBillingConfig(res.data.data);
+        setBillingConfig({
+          ...res.data.data,
+          accountantApprovalThreshold: res.data.data.accountantApprovalThreshold ?? 5000,
+        });
       }
     } catch (err) {
       console.error('Failed to fetch billing config:', err);
@@ -566,7 +573,13 @@ const BillingPage = () => {
     e.preventDefault();
     setSavingConfig(true);
     try {
-      await apiClient.post('/billing/billing-config', billingConfig);
+      const res = await apiClient.post('/billing/billing-config', billingConfig);
+      if (res.data?.status === 'success' && res.data.data) {
+        setBillingConfig({
+          ...res.data.data,
+          accountantApprovalThreshold: res.data.data.accountantApprovalThreshold ?? 5000,
+        });
+      }
       toast.success('Society Billing Configuration saved successfully!');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to save billing configuration');
@@ -922,6 +935,21 @@ const BillingPage = () => {
                     <span className="text-[11px] text-gray-400">Number of days after invoice issue date before bill becomes overdue</span>
                   </div>
 
+                  {/* Accountant Approval Threshold */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Accountant Approval Threshold (₹)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      required
+                      value={billingConfig.accountantApprovalThreshold ?? 5000}
+                      onChange={e => setBillingConfig({ ...billingConfig, accountantApprovalThreshold: Number(e.target.value) })}
+                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none"
+                    />
+                    <span className="text-[11px] text-gray-400">Accountant vendor payments, credit notes, and discounts above this amount require Committee Admin approval. Equal amounts do not.</span>
+                  </div>
+
                   {/* Default GST Rate */}
                   <div>
                     <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Default GST Rate (%)</label>
@@ -976,7 +1004,7 @@ const BillingPage = () => {
                   </div>
                 </div>
 
-                {!isAdmin && (
+                {canManageBillingConfig && (
                   <div className="pt-4 border-t border-gray-100 flex justify-end">
                     <button
                       type="submit"
