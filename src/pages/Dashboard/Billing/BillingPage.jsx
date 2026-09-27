@@ -379,6 +379,7 @@ const BillingPage = () => {
     setSearchParams({ submodule: slug });
   };
 
+  
   const handleBackToHub = () => {
     setSearchParams({});
     setSearchTerm('');
