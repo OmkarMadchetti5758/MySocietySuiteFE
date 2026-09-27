@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import apiClient from '../services/apiClient';
+import apiClient, { API_URL } from '../services/apiClient';
 import { otpApi } from '../services/otpApi';
 import { usePermissions } from '../context/PermissionsContext';
 import OtpVerificationStep from './OtpVerificationStep';
 
-// const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000';
-const API_BASE = 'https://api.mysocietysuite.com/';
+const API_BASE = API_URL.replace(/\/api\/v1\/?$/, "") + '/';
 
 const api = axios.create({ baseURL: API_BASE });
 
