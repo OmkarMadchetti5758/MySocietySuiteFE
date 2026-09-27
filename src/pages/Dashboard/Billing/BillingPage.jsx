@@ -637,6 +637,8 @@ const BillingPage = () => {
         <VendorPaymentsPage
           onBack={handleBackToHub}
         />
+      );
+    }
     // ── Advance Accounts & Security Deposits ────────────────────────────────
     if (selectedModule.id === 'advance_accounts_deposits') {
       return (
