@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { FaTimes, FaUpload } from 'react-icons/fa';
+import { FaTimes, FaUpload, FaBuilding, FaHome } from 'react-icons/fa';
 import complaintApi from '../../../../services/complaintApi';
 import { toast } from 'react-toastify';
+import {
+  COMPLAINT_AREA_TYPES,
+  COMMON_AREAS_CATEGORIZED,
+  INDIVIDUAL_AREAS_LIST
+} from '../constants/complaintAreaOptions';
 
 const CreateComplaintModal = ({ categories, onClose }) => {
   const [formData, setFormData] = useState({
     category: '',
+    areaType: '',
+    areaLocation: '',
     priority: 'medium',
     description: '',
     attachments: [] // Files
@@ -25,20 +32,35 @@ const CreateComplaintModal = ({ categories, onClose }) => {
     fetchResidentInfo();
   }, []);
 
+  const handleAreaTypeChange = (e) => {
+    setFormData({ ...formData, areaType: e.target.value, areaLocation: '' });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.category || !formData.description) {
-      toast.error("Category and description are required");
+    if (!formData.description) {
+      toast.error("Description is required");
       return;
     }
+    if (formData.areaType && !formData.areaLocation) {
+      toast.error("Please select a specific area location");
+      return;
+    }
+
+    // Derive category from areaType; fall back to 'Other' for Individual Area or no selection
+    const derivedCategory = formData.areaType === 'Common Area' ? 'Common Area' : 'Other';
 
     setIsSubmitting(true);
     try {
       const data = new FormData();
-      data.append('category', formData.category);
+      data.append('category', derivedCategory);
       data.append('priority', formData.priority);
       data.append('description', formData.description);
-      
+      if (formData.areaType) {
+        data.append('areaType', formData.areaType);
+        data.append('areaLocation', formData.areaLocation);
+      }
+
       formData.attachments.forEach(file => {
         data.append('attachments', file);
       });
@@ -53,14 +75,20 @@ const CreateComplaintModal = ({ categories, onClose }) => {
     }
   };
 
+  const selectClass = (disabled) =>
+    `w-full px-4 py-2 bg-gray-50 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors ${disabled
+      ? 'border-gray-100 text-gray-400 cursor-not-allowed opacity-60'
+      : 'border-gray-200 text-gray-700'
+    }`;
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
-        
+
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-gray-100">
           <h2 className="text-xl font-bold text-gray-800">Raise Ticket</h2>
-          <button 
+          <button
             onClick={() => onClose()}
             className="text-gray-400 hover:text-gray-600 transition-colors bg-gray-50 hover:bg-gray-100 p-2 rounded-full"
           >
@@ -71,7 +99,7 @@ const CreateComplaintModal = ({ categories, onClose }) => {
         {/* Body */}
         <div className="p-6 overflow-y-auto custom-scrollbar">
           <form id="create-complaint-form" onSubmit={handleSubmit} className="space-y-5">
-            
+
             {flatNumber && (
               <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
                 <label className="block text-xs font-medium text-gray-500 mb-1">Your Flat</label>
@@ -84,27 +112,110 @@ const CreateComplaintModal = ({ categories, onClose }) => {
               </div>
             )}
 
-            <div>
+            {/* Category */}
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Category <span className="text-red-500">*</span></label>
               <select
                 required
                 value={formData.category}
-                onChange={e => setFormData({...formData, category: e.target.value})}
-                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+                onChange={e => setFormData({ ...formData, category: e.target.value })}
+                className={selectClass(false)}
               >
                 <option value="" disabled>Select a category</option>
                 {categories.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
+            </div> */}
+
+            {/* Area Type + Area Location - side by side, linked */}
+            <div className="bg-blue-50/60 border border-blue-100 rounded-xl p-4 space-y-3">
+              <p className="text-xs font-semibold text-blue-700 uppercase tracking-wider">Area of Complaint (Optional)</p>
+
+              {/* Area Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-2">
+                  Area Type
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: COMPLAINT_AREA_TYPES.COMMON_AREA, label: 'Common Area', icon: <FaBuilding /> },
+                    { value: COMPLAINT_AREA_TYPES.INDIVIDUAL_AREA, label: 'Individual Area', icon: <FaHome /> }
+                  ].map(({ value, label, icon }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => handleAreaTypeChange({ target: { value } })}
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-medium transition-all duration-150 ${formData.areaType === value
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-300'
+                          : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600'
+                        }`}
+                    >
+                      <span>{icon}</span>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Area Location */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Specific Location
+                  {formData.areaType && <span className="text-red-500 ml-1">*</span>}
+                </label>
+                <select
+                  value={formData.areaLocation}
+                  onChange={e => setFormData({ ...formData, areaLocation: e.target.value })}
+                  disabled={!formData.areaType}
+                  required={!!formData.areaType}
+                  className={selectClass(!formData.areaType)}
+                >
+                  <option value="" disabled>
+                    {formData.areaType ? `Select ${formData.areaType} location` : '— Select Area Type first —'}
+                  </option>
+
+                  {/* Common Area: grouped by category */}
+                  {formData.areaType === COMPLAINT_AREA_TYPES.COMMON_AREA &&
+                    Object.entries(COMMON_AREAS_CATEGORIZED).map(([group, items]) => (
+                      <optgroup key={group} label={group}>
+                        {items.map(item => (
+                          <option key={item} value={item}>{item}</option>
+                        ))}
+                      </optgroup>
+                    ))
+                  }
+
+                  {/* Individual Area: flat list */}
+                  {formData.areaType === COMPLAINT_AREA_TYPES.INDIVIDUAL_AREA &&
+                    INDIVIDUAL_AREAS_LIST.map(item => (
+                      <option key={item} value={item}>{item}</option>
+                    ))
+                  }
+                </select>
+
+                {/* Selection preview pill */}
+                {formData.areaType && formData.areaLocation && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${formData.areaType === COMPLAINT_AREA_TYPES.COMMON_AREA
+                        ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      }`}>
+                      {formData.areaType === COMPLAINT_AREA_TYPES.COMMON_AREA ? <FaBuilding className="text-[10px]" /> : <FaHome className="text-[10px]" />}
+                      {formData.areaLocation}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
 
+            {/* Priority */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
               <select
                 value={formData.priority}
-                onChange={e => setFormData({...formData, priority: e.target.value})}
-                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+                onChange={e => setFormData({ ...formData, priority: e.target.value })}
+                className={selectClass(false)}
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -113,18 +224,20 @@ const CreateComplaintModal = ({ categories, onClose }) => {
               </select>
             </div>
 
+            {/* Description */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Description <span className="text-red-500">*</span></label>
               <textarea
                 required
                 rows={4}
                 value={formData.description}
-                onChange={e => setFormData({...formData, description: e.target.value})}
+                onChange={e => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Describe the issue in detail..."
                 className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors resize-none"
               />
             </div>
 
+            {/* Attachments */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Photos (Optional, max 3)</label>
               <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-blue-400 transition-colors bg-gray-50">
@@ -133,16 +246,16 @@ const CreateComplaintModal = ({ categories, onClose }) => {
                   <div className="flex text-sm text-gray-600 justify-center">
                     <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500 px-2 py-1 shadow-sm border border-gray-200">
                       <span>Upload files</span>
-                      <input 
-                        id="file-upload" 
-                        name="file-upload" 
-                        type="file" 
-                        className="sr-only" 
-                        multiple 
+                      <input
+                        id="file-upload"
+                        name="file-upload"
+                        type="file"
+                        className="sr-only"
+                        multiple
                         accept="image/*"
                         onChange={(e) => {
                           const files = Array.from(e.target.files).slice(0, 3);
-                          setFormData({...formData, attachments: files});
+                          setFormData({ ...formData, attachments: files });
                         }}
                       />
                     </label>

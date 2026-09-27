@@ -4,6 +4,7 @@ import {
   FaPlus, FaCloudUploadAlt, FaCheckCircle, FaExclamationTriangle, FaSearch,
   FaFilter, FaArrowLeft, FaEye, FaLock, FaCheck, FaTimes, FaCoins, FaListAlt, FaCalendarAlt
 } from 'react-icons/fa';
+import * as XLSX from 'xlsx';
 import apiClient from '../../../../services/apiClient';
 import toast from 'react-hot-toast';
 
@@ -363,16 +364,34 @@ const BankCashReconciliationContainer = ({ onBack }) => {
     return parsed;
   };
 
-  // Handle File Upload for Statement
+  // Handle File Upload for Statement (.csv, .txt, .tsv, .xlsx, .xls)
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const fileName = file.name;
+    const isExcel = /\.xlsx?$/i.test(fileName);
     const reader = new FileReader();
 
     reader.onload = (event) => {
-      const text = event.target?.result || '';
+      let text = '';
+      if (isExcel) {
+        try {
+          const data = new Uint8Array(event.target.result);
+          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          if (worksheet) {
+            text = XLSX.utils.sheet_to_csv(worksheet, { dateNF: 'yyyy-mm-dd' });
+          }
+        } catch (err) {
+          toast.error(`Failed to parse Excel file "${fileName}". Check file formatting.`);
+          return;
+        }
+      } else {
+        text = event.target?.result || '';
+      }
+
       setImportForm(prev => ({ ...prev, csvText: text, uploadedFileName: fileName }));
       const parsed = parseCsvText(text);
       if (parsed && parsed.length > 0) {
@@ -386,7 +405,11 @@ const BankCashReconciliationContainer = ({ onBack }) => {
       toast.error('Failed to read statement file');
     };
 
-    reader.readAsText(file);
+    if (isExcel) {
+      reader.readAsArrayBuffer(file);
+    } else {
+      reader.readAsText(file);
+    }
   };
 
   // Manual Parse CSV Button Handler
@@ -403,7 +426,7 @@ const BankCashReconciliationContainer = ({ onBack }) => {
   // Submit Statement Import
   const handleImportStatement = async (e) => {
     e.preventDefault();
-    if (importedRowsPreview.length === 0) return toast.error('Parse CSV statement rows before importing');
+    if (importedRowsPreview.length === 0) return toast.error('Parse statement rows before importing');
     try {
       const res = await apiClient.post('/reconciliation/bank-statements/import', {
         accountId: importForm.accountId,
@@ -413,9 +436,20 @@ const BankCashReconciliationContainer = ({ onBack }) => {
         closingBalance: importForm.closingBalance,
         rows: importedRowsPreview
       });
-      toast.success(`Statement imported! ${res.data.data.autoMatchCount} transactions auto-matched.`);
+
+      const autoMatchCount = res.data?.data?.autoMatchCount || 0;
+      const totalRows = res.data?.data?.totalRows || importedRowsPreview.length;
+
+      if (autoMatchCount > 0) {
+        toast.success(`Statement imported successfully! ${autoMatchCount} of ${totalRows} transactions auto-matched.`);
+      } else {
+        toast.success(`Statement imported (${totalRows} rows). 0 transactions auto-matched with existing system ledger entries.`, { duration: 5000 });
+      }
+
       setShowStatementImportModal(false);
       setImportedRowsPreview([]);
+      if (importForm.accountId) setSelectedAccountId(importForm.accountId);
+      setActiveTab('reconciliation');
       fetchTransactions(1);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to import bank statement');
@@ -1186,16 +1220,16 @@ const BankCashReconciliationContainer = ({ onBack }) => {
 
               {/* File Upload Dropzone */}
               <div>
-                <label className="text-xs font-bold text-gray-700 block mb-1">Upload Bank Statement File (.csv, .txt)</label>
+                <label className="text-xs font-bold text-gray-700 block mb-1">Upload Bank Statement File (.csv, .txt, .xlsx, .xls)</label>
                 <label className="border-2 border-dashed border-gray-200 hover:border-orange-400 bg-gray-50/50 hover:bg-orange-50/30 rounded-2xl p-4 flex flex-col items-center justify-center cursor-pointer transition-all">
                   <FaCloudUploadAlt className="text-3xl text-orange-500 mb-2 animate-bounce" />
                   <span className="text-xs font-bold text-gray-800">
                     {importForm.uploadedFileName ? `Attached: ${importForm.uploadedFileName}` : 'Click to Upload Bank Statement File'}
                   </span>
-                  <span className="text-[10px] text-gray-400 mt-1">Supports .csv, .txt statements from HDFC, ICICI, SBI, Axis, etc.</span>
+                  <span className="text-[10px] text-gray-400 mt-1">Supports .csv, .txt, .xlsx, .xls statements from HDFC, ICICI, SBI, Axis, etc.</span>
                   <input
                     type="file"
-                    accept=".csv, .txt, .tsv"
+                    accept=".csv, .txt, .tsv, .xlsx, .xls"
                     onChange={handleFileUpload}
                     className="hidden"
                   />

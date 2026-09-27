@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { authApi } from '../services/authApi';
 import { setPermissionsStaleHandler, setSessionExpiredHandler } from '../services/apiClient';
 import { clearAuthSession, isSessionExpiredError, redirectToLogin } from '../utils/authSession';
-import { hasModuleAccess as checkModuleAccess, loadStoredPermissions, PERMISSION_LEVELS } from '../utils/permissions';
+import { hasModuleAccess as checkModuleAccess, hasModuleScope as checkModuleScope, loadStoredPermissions, PERMISSION_LEVELS } from '../utils/permissions';
 
 const PermissionsContext = createContext(null);
 
@@ -87,6 +87,12 @@ export const PermissionsProvider = ({ children }) => {
     [permissions]
   );
 
+  const hasModuleScope = useCallback(
+    (moduleId, minLevel = PERMISSION_LEVELS.MANAGE, excludedScopes = ['own', 'assigned', 'none']) =>
+      checkModuleScope(permissions, moduleId, minLevel, excludedScopes),
+    [permissions]
+  );
+
   return (
     <PermissionsContext.Provider
       value={{
@@ -95,6 +101,7 @@ export const PermissionsProvider = ({ children }) => {
         setPermissionsFromLogin,
         refreshPermissions,
         hasModuleAccess,
+        hasModuleScope,
         PERMISSION_LEVELS,
       }}
     >

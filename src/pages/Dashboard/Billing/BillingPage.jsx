@@ -13,6 +13,8 @@ import FinesInterestArrearsPage from './FinesInterestArrearsPage';
 import PaymentsContainer from './Payments/PaymentsContainer';
 import BankCashReconciliationContainer from './BankCashReconciliation/BankCashReconciliationContainer';
 import VendorPaymentsPage from './VendorPayments/VendorPaymentsPage';
+import AdvanceDepositsContainer from './AdvanceDeposits/AdvanceDepositsContainer';
+import LedgerContainer from './Ledger/LedgerContainer';
 
 const SUBMODULE_CONFIG = [
   {
@@ -635,6 +637,21 @@ const BillingPage = () => {
         <VendorPaymentsPage
           onBack={handleBackToHub}
         />
+    // ── Advance Accounts & Security Deposits ────────────────────────────────
+    if (selectedModule.id === 'advance_accounts_deposits') {
+      return (
+        <div className="animate-fade-in-up pb-12">
+          <AdvanceDepositsContainer onBack={handleBackToHub} />
+        </div>
+      );
+    }
+
+    // ── Ledger Management ───────────────────────────────────────────────────
+    if (selectedModule.id === 'ledger_management') {
+      return (
+        <div className="animate-fade-in-up pb-12">
+          <LedgerContainer onBack={handleBackToHub} />
+        </div>
       );
     }
 

@@ -16,5 +16,15 @@ export const loadStoredPermissions = () => {
 
 export const hasModuleAccess = (permissions, moduleId, minLevel = PERMISSION_LEVELS.VIEW) => {
   const perm = permissions?.[moduleId];
-  return Boolean(perm && perm.level >= minLevel);
+  const targetLevel = typeof minLevel === 'string' ? (PERMISSION_LEVELS[minLevel] ?? PERMISSION_LEVELS.VIEW) : minLevel;
+  return Boolean(perm && perm.level >= targetLevel);
+};
+
+export const hasModuleScope = (permissions, moduleId, minLevel = PERMISSION_LEVELS.MANAGE, excludedScopes = ['own', 'assigned', 'none']) => {
+  const perm = permissions?.[moduleId];
+  if (!perm) return false;
+  const targetLevel = typeof minLevel === 'string' ? (PERMISSION_LEVELS[minLevel] ?? PERMISSION_LEVELS.MANAGE) : minLevel;
+  if (perm.level < targetLevel) return false;
+  if (perm.scope && excludedScopes.includes(perm.scope)) return false;
+  return true;
 };

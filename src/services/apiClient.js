@@ -2,6 +2,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { clearAuthSession, isSessionExpiredError, redirectToLogin } from '../utils/authSession';
 
+// export const API_URL = 'https://api.mysocietysuite.com/api/v1';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
 let permissionsStaleHandler = null;
@@ -42,6 +43,10 @@ apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('accessToken');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  const activeContext = localStorage.getItem('activeContext');
+  if (activeContext) {
+    config.headers['X-Active-Context'] = activeContext;
   }
   if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
     if (config.headers && typeof config.headers.delete === 'function') {

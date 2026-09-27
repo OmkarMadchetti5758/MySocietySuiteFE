@@ -1,6 +1,5 @@
-const API_ORIGIN = (
-  import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1"
-).replace(/\/api\/v1\/?$/, "");
+import { API_URL } from '../services/apiClient';
+const API_ORIGIN = API_URL.replace(/\/api\/v1\/?$/, "");
 
 /** Turn a stored path or Spaces URL into a URL the browser can load. */
 export function resolveMediaUrl(url) {
