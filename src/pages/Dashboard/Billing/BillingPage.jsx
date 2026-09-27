@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import {
   FaMoneyCheckAlt, FaFileInvoiceDollar, FaStore,
   FaArrowRight, FaExclamationCircle, FaArrowLeft, FaSearch,
-  FaCog, FaShieldAlt, FaPercent, FaUniversity, FaBook, FaCalculator, FaFileAlt, FaHistory,
+  FaCog, FaShieldAlt, FaPercent, FaUniversity, FaCalculator, FaFileAlt, FaHistory,
   FaPlus, FaCheck, FaTimes, FaEdit, FaTrash, FaSpinner
 } from 'react-icons/fa';
 import apiClient from '../../../services/apiClient';
@@ -12,6 +12,7 @@ import InvoicesPage from './InvoicesPage';
 import FinesInterestArrearsPage from './FinesInterestArrearsPage';
 import PaymentsContainer from './Payments/PaymentsContainer';
 import BankCashReconciliationContainer from './BankCashReconciliation/BankCashReconciliationContainer';
+import VendorPaymentsPage from './VendorPayments/VendorPaymentsPage';
 
 const SUBMODULE_CONFIG = [
   {
@@ -113,21 +114,6 @@ const SUBMODULE_CONFIG = [
       { id: 'REC-09', col1: 'HDFC Main Operating A/c', col2: '2026-08-31', col3: '₹14,20,500', col4: '₹0.00', status: 'Reconciled' },
       { id: 'REC-10', col1: 'SBI Sinking Fund A/c', col2: '2026-08-31', col3: '₹4,12,000', col4: '₹0.00', status: 'Reconciled' },
       { id: 'REC-11', col1: 'Petty Cash Book', col2: '2026-09-05', col3: '₹12,700', col4: '₹0.00', status: 'Reconciled' },
-    ]
-  },
-  {
-    id: 'ledger_management',
-    slug: 'ledger-management',
-    title: 'Ledger management',
-    desc: 'Double-entry general ledger, chart of accounts, journal entries, and account balances.',
-    icon: FaBook,
-    colorClass: 'bg-cyan-100 text-cyan-600',
-    stats: { label: 'Active Ledger Accounts', value: '34' },
-    columns: ['Account Code', 'Account Title', 'Type', 'Debit (YTD)', 'Credit (YTD)', 'Net Balance'],
-    sampleRows: [
-      { id: 'ACC-1001', col1: 'Society Maintenance Revenue', col2: 'Income', col3: '₹0.00', col4: '₹38,40,000', status: 'Cr ₹38,40,000' },
-      { id: 'ACC-2001', col1: 'Electricity & Water Expense', col2: 'Expense', col3: '₹8,20,000', col4: '₹0.00', status: 'Dr ₹8,20,000' },
-      { id: 'ACC-3001', col1: 'HDFC Operating Bank Account', col2: 'Asset', col3: '₹22,10,000', col4: '₹7,89,500', status: 'Dr ₹14,20,500' },
     ]
   },
   {
@@ -277,6 +263,7 @@ const BillingPage = () => {
     activeChargeHeads: null,
     totalArrears: null,
     collectedThisMonth: null,
+    vendorPaymentsCount: null,
   });
 
   useEffect(() => {
@@ -317,6 +304,17 @@ const BillingPage = () => {
         }
       })
       .catch(() => { });
+
+    if (!isResident) {
+      apiClient.get('/billing/vendor-payments?limit=1')
+        .then(res => {
+          const total = res.data?.data?.pagination?.total;
+          if (total !== undefined) {
+            setHubStats(prev => ({ ...prev, vendorPaymentsCount: total }));
+          }
+        })
+        .catch(() => { });
+    }
   }, [isResident]);
 
   // ── Charge Head & Billing Config State ─────────────────────────────────────
@@ -627,6 +625,15 @@ const BillingPage = () => {
         <div className="animate-fade-in-up pb-12">
           <BankCashReconciliationContainer onBack={handleBackToHub} />
         </div>
+      );
+    }
+
+    // ── Vendor Payments & Disbursal ──────────────────────────────────────────
+    if (selectedModule.id === 'vendor_payments') {
+      return (
+        <VendorPaymentsPage
+          onBack={handleBackToHub}
+        />
       );
     }
 
@@ -1271,6 +1278,8 @@ const BillingPage = () => {
               dynamicStats = { ...mod.stats, value: formatINR(hubStats.totalArrears) };
             } else if (mod.id === 'payments_collection' && hubStats.collectedThisMonth !== null) {
               dynamicStats = { ...mod.stats, value: formatINR(hubStats.collectedThisMonth) };
+            } else if (mod.id === 'vendor_payments' && hubStats.vendorPaymentsCount !== null) {
+              dynamicStats = { ...mod.stats, label: 'Total Payments', value: String(hubStats.vendorPaymentsCount) };
             }
             return (
               <SectionCard

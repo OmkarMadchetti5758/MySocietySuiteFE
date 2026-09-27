@@ -1,4 +1,4 @@
-import { useEffect, useState,useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Routes, Route, useNavigate, useParams, NavLink } from 'react-router-dom';
 import {
   FaBuilding,
@@ -53,6 +53,7 @@ import WalkInVisitor from '../GuardApp/WalkInVisitor';
 import QRScanner from '../GuardApp/QRScanner';
 import VehicleLookup from '../GuardApp/VehicleLookup';
 import VisitorApprovalPage from './Visitors/VisitorApprovalPage';
+import AIAssistantPage from './AIAssistant/AIAssistantPage';
 
 const MODULE_DEF = [
   { id: 'society_flat_setup', label: 'Society & Flats', icon: FaBuilding, path: 'setup', group: 'SOCIETY' },
@@ -467,6 +468,8 @@ const DashboardLayout = () => {
                 </>
               )}
 
+
+
               {/* ── Regular module routes (non-vendor) ── */}
               {!isVendor && allowedModules.map(mod => {
                 if (mod.path === 'setup') {
@@ -513,6 +516,15 @@ const DashboardLayout = () => {
                 }
                 if (mod.path === 'documents') {
                   return <Route key={mod.routeKey || mod.path} path={mod.path} element={<DocumentsPage />} />;
+                }
+                if (mod.path === 'ai') {
+                  return (
+                    <Route
+                      key={mod.routeKey || mod.path}
+                      path={mod.path}
+                      element={<AIAssistantPage />}
+                    />
+                  );
                 }
                 return <Route key={mod.routeKey || mod.path} path={mod.path} element={<Placeholder title={mod.label} />} />;
               })}
