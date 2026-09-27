@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import { QRCodeSVG } from 'qrcode.react';
-import api from '../../../services/apiClient';
+import api, { API_URL } from '../../../services/apiClient';
 import toast from 'react-hot-toast';
 import {
     FaUserCheck, FaUserTimes, FaUser, FaPhoneAlt, FaCar, FaClipboard,
@@ -465,7 +465,7 @@ const VisitorApprovalPage = () => {
         const userId = user._id || user.id;
         if (!userId) return;
 
-        const socketURL = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:5000';
+        const socketURL = API_URL.replace(/\/api\/v1\/?$/, "");
         const socket = io(socketURL, {
             query: { userId, role: 'resident' }
         });

@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import apiClient from '../services/apiClient';
+import apiClient, { API_URL } from '../services/apiClient';
 import { otpApi } from '../services/otpApi';
 import { usePermissions } from '../context/PermissionsContext';
 import OtpVerificationStep from './OtpVerificationStep';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE = API_URL.replace(/\/api\/v1\/?$/, "") + '/';
 
 const api = axios.create({ baseURL: API_BASE });
 
@@ -84,16 +84,16 @@ export default function ActivateAccount() {
         if (!token) { setPhase('invalid'); setErrorMsg('No invite token found in the URL.'); return; }
 
         api.get(`/api/v1/auth/invite/validate?token=${token}`)
-            .then(res => { 
+            .then(res => {
                 const data = res.data.data;
-                setInviteData(data); 
-                
+                setInviteData(data);
+
                 if (data.purpose === 'manager' && !data.otpEmailVerified && !data.otpPhoneVerified) {
                     setPhase('otp_verify');
                 } else if (data.purpose === 'resident' || data.purpose === 'staff' || data.purpose === 'vendor') {
                     setPhase('otp_verify');
                 } else {
-                    setPhase('valid'); 
+                    setPhase('valid');
                 }
             })
             .catch(err => {

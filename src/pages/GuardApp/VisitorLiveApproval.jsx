@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
-import api from '../../services/apiClient';
+import api, { API_URL } from '../../services/apiClient';
 
 const VisitorLiveApproval = () => {
     const { societyId, entryId } = useParams();
@@ -64,7 +64,7 @@ const VisitorLiveApproval = () => {
     useEffect(() => {
         if (!entryId) return;
 
-        const socketURL = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:5000';
+        const socketURL = API_URL.replace(/\/api\/v1\/?$/, "");
         const socket = io(socketURL, {
             query: {
                 entryId,
