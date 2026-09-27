@@ -119,6 +119,17 @@ const SUBMODULE_CONFIG = [
     ]
   },
   {
+    id: 'ledger_management',
+    slug: 'ledger-management',
+    title: 'Ledger management',
+    desc: 'View and manage flat-wise ledgers, track debit/credit entries, and outstanding balances.',
+    icon: FaFileAlt,
+    colorClass: 'bg-cyan-100 text-cyan-600',
+    stats: { label: 'Active Ledgers', value: '' },
+    columns: ['Flat / Member', 'Opening Balance', 'Total Debits', 'Total Credits', 'Closing Balance'],
+    sampleRows: []
+  },
+  {
     id: 'vendor_payments',
     slug: 'vendor-payments',
     title: 'Vendor payments',
@@ -381,7 +392,7 @@ const BillingPage = () => {
     setSearchParams({ submodule: slug });
   };
 
-  
+
   const handleBackToHub = () => {
     setSearchParams({});
     setSearchTerm('');
