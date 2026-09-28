@@ -71,8 +71,8 @@ const MODULE_DEF = [
   { id: 'documents_manager', label: 'Documents', icon: FaFolderOpen, path: 'documents', group: 'ADMINISTRATION' },
   { id: 'reports_dashboard', label: 'Reports', icon: FaChartBar, path: 'reports', group: 'REPORTS' },
   { id: 'ai_assistant', label: 'AI Assistant', icon: FaRobot, path: 'ai', group: 'AI ASSISTANT' },
-  { id: 'community_events', label: 'Fest Collections', icon: FaGift, path: 'festivals-collection', routeKey: 'festivals_collection', group: 'COMMUNITY' },
-  { id: 'community_events', label: 'Festivals & Events', icon: FaCalendarAlt, path: 'festivals', group: 'COMMUNITY' },
+  { id: 'community_events', label: 'Festivals', icon: FaGift, path: 'festivals-collection', routeKey: 'festivals_collection', group: 'COMMUNITY' },
+  { id: 'community_events', label: 'Events', icon: FaCalendarAlt, path: 'festivals', group: 'COMMUNITY' },
   { id: 'settings', label: 'Settings', icon: FaCog, path: 'settings', group: 'ADMINISTRATION' }
 ];
 

@@ -1,6 +1,6 @@
 import React from 'react';
 
-const PriorityCard = ({ title, statusText, statusType, icon: Icon, mainText, stats, actionText }) => {
+const PriorityCard = ({ title, statusText, statusType, icon: Icon, mainText, stats, actionText, onAction }) => {
   const statusStyles = {
     success: 'bg-green-100 text-green-700',
     warning: 'bg-orange-100 text-orange-700',
@@ -17,9 +17,11 @@ const PriorityCard = ({ title, statusText, statusType, icon: Icon, mainText, sta
           </div>
           <h3 className="font-semibold text-gray-800">{title}</h3>
         </div>
-        <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${statusStyles[statusType]}`}>
-          {statusText}
-        </span>
+        {statusText && (
+          <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${statusStyles[statusType] || statusStyles.active}`}>
+            {statusText}
+          </span>
+        )}
       </div>
       
       <p className="text-sm text-gray-600 mb-6 flex-1">{mainText}</p>
@@ -33,7 +35,10 @@ const PriorityCard = ({ title, statusText, statusType, icon: Icon, mainText, sta
         ))}
       </div>
       
-      <button className="w-full py-2.5 flex items-center justify-center gap-2 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors border border-gray-200">
+      <button
+        onClick={onAction}
+        className="w-full py-2.5 flex items-center justify-center gap-2 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors border border-gray-200 cursor-pointer active:scale-98"
+      >
         {actionText}
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
       </button>
