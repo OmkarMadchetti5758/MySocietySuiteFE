@@ -41,35 +41,35 @@ const AdminDashboard = ({ societyName: initialSocietyName }) => {
   const priority = dashboardData?.priorityOverview;
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
+    <div className="flex flex-col gap-5 sm:gap-6 w-full max-w-7xl mx-auto overflow-x-hidden min-w-0">
       {/* Greeting Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full min-w-0">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            Good Morning, Admin <span className="text-2xl">👋</span>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
+            Good Morning, Admin <span className="text-xl sm:text-2xl">👋</span>
           </h2>
-          <p className="text-gray-500 text-sm mt-1">Here's what's happening in {societyName}.</p>
+          <p className="text-gray-500 text-xs sm:text-sm mt-1">Here's what's happening in {societyName}.</p>
         </div>
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className="grid grid-cols-2 sm:flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
           <button
             onClick={() => navigate(`/${societyId}/dashboard/visitors`)}
-            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-xl text-sm font-semibold transition-colors shadow-sm whitespace-nowrap flex items-center gap-2 cursor-pointer"
+            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-semibold transition-colors shadow-sm whitespace-nowrap flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto"
           >
-            <FaShieldAlt className="w-4 h-4" />
-            Open Guard Portal
+            <FaShieldAlt className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+            <span>Open Guard Portal</span>
           </button>
           <button 
             onClick={() => navigate(`/${societyId}/dashboard/settings`)}
-            className="bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-xl text-sm font-semibold transition-colors shadow-sm whitespace-nowrap flex items-center gap-2 cursor-pointer"
+            className="bg-orange-500 hover:bg-orange-600 text-white py-2 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-semibold transition-colors shadow-sm whitespace-nowrap flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
-            Settings
+            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+            <span>Settings</span>
           </button>
         </div>
       </div>
 
       {/* Top Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3 sm:gap-4 w-full min-w-0">
         <StatCard
           title="Total Residents"
           value={loading ? "..." : String(topStats?.totalResidents ?? 0)}
@@ -130,9 +130,9 @@ const AdminDashboard = ({ societyName: initialSocietyName }) => {
       </div>
 
       {/* Priority Overview Section */}
-      <div>
-        <h3 className="text-lg font-bold text-gray-800 mb-4">Priority Overview</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="w-full min-w-0">
+        <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">Priority Overview</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full min-w-0">
           <PriorityCard
             title="Security"
             statusText={priority?.security?.statusText || "Operational"}
@@ -197,12 +197,12 @@ const AdminDashboard = ({ societyName: initialSocietyName }) => {
       </div>
 
       {/* Bottom Sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 w-full min-w-0">
         <OperationsSummary data={dashboardData?.operationsSummary} />
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 min-w-0">
           <AlertList alerts={dashboardData?.alerts} onViewAll={() => navigate(`/${societyId}/dashboard/notices`)} />
         </div>
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 min-w-0">
           <EventList events={dashboardData?.events} onViewCalendar={() => navigate(`/${societyId}/dashboard/festivals`)} />
         </div>
       </div>
