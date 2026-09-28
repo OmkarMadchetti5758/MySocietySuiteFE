@@ -14,7 +14,8 @@ const ChartOfAccountsTab = () => {
     accountType: 'ASSET',
     normalBalanceType: 'DEBIT',
     description: '',
-    openingBalance: 0
+    openingBalance: 0,
+    parentAccountId: ''
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -55,7 +56,7 @@ const ChartOfAccountsTab = () => {
       toast.success('Account created successfully');
       setShowAddModal(false);
       fetchAccounts();
-      setNewAccount({ accountCode: '', accountName: '', accountType: 'ASSET', normalBalanceType: 'DEBIT', description: '', openingBalance: 0 });
+      setNewAccount({ accountCode: '', accountName: '', accountType: 'ASSET', normalBalanceType: 'DEBIT', description: '', openingBalance: 0, parentAccountId: '' });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to create account');
     } finally {
@@ -190,7 +191,7 @@ const ChartOfAccountsTab = () => {
                   <select value={newAccount.accountType} onChange={e => {
                     const type = e.target.value;
                     const normal = ['ASSET', 'EXPENSE'].includes(type) ? 'DEBIT' : 'CREDIT';
-                    setNewAccount({...newAccount, accountType: type, normalBalanceType: normal});
+                    setNewAccount({...newAccount, accountType: type, normalBalanceType: normal, parentAccountId: ''});
                   }} className="w-full border rounded-xl px-3 py-2 text-sm focus:ring-cyan-500">
                     <option value="ASSET">Asset</option>
                     <option value="LIABILITY">Liability</option>
@@ -207,9 +208,20 @@ const ChartOfAccountsTab = () => {
                   </select>
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">Opening Balance (₹)</label>
-                <input type="number" min="0" value={newAccount.openingBalance} onChange={e => setNewAccount({...newAccount, openingBalance: e.target.value})} className="w-full border rounded-xl px-3 py-2 text-sm focus:ring-cyan-500 focus:border-cyan-500" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Parent Account (Optional)</label>
+                  <select value={newAccount.parentAccountId} onChange={e => setNewAccount({...newAccount, parentAccountId: e.target.value})} className="w-full border rounded-xl px-3 py-2 text-sm focus:ring-cyan-500">
+                    <option value="">None (Top-Level Account)</option>
+                    {accounts.filter(a => a.accountType === newAccount.accountType).map(acc => (
+                      <option key={acc._id} value={acc._id}>{acc.accountCode} - {acc.accountName}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Opening Balance (₹)</label>
+                  <input type="number" min="0" value={newAccount.openingBalance} onChange={e => setNewAccount({...newAccount, openingBalance: e.target.value})} className="w-full border rounded-xl px-3 py-2 text-sm focus:ring-cyan-500 focus:border-cyan-500" />
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">Description (Optional)</label>
