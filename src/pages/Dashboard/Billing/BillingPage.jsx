@@ -15,6 +15,7 @@ import BankCashReconciliationContainer from './BankCashReconciliation/BankCashRe
 import VendorPaymentsPage from './VendorPayments/VendorPaymentsPage';
 import AdvanceDepositsContainer from './AdvanceDeposits/AdvanceDepositsContainer';
 import LedgerContainer from './Ledger/LedgerContainer';
+import CreditNotesDiscountsContainer from './CreditNotesDiscounts/CreditNotesDiscountsContainer';
 
 const SUBMODULE_CONFIG = [
   {
@@ -678,6 +679,13 @@ const BillingPage = () => {
         <div className="animate-fade-in-up pb-12">
           <LedgerContainer onBack={handleBackToHub} />
         </div>
+      );
+    }
+
+    // ── Credit Notes & Discounts (BRD 6.6) ──────────────────────────────────
+    if (selectedModule.id === 'credit_notes_discount') {
+      return (
+        <CreditNotesDiscountsContainer onBack={handleBackToHub} />
       );
     }
 
