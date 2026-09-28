@@ -2,7 +2,8 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { clearAuthSession, isSessionExpiredError, redirectToLogin } from '../utils/authSession';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+// export const API_URL = 'https://api.mysocietysuite.com/api/v1';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 
 let permissionsStaleHandler = null;
 let permissionsRefreshPromise = null;

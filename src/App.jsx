@@ -1,32 +1,11 @@
-import { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import Home from './pages/Home';
+import LoginPage from './pages/LoginPage';
 import DashboardLayout from './pages/Dashboard/DashboardLayout';
-import WhoWeServePage from './pages/WhoWeServePage';
-import ApprovedVendorListBlog from './pages/Blog/ApprovedVendorListBlog';
 import ActivateAccount from './pages/ActivateAccount';
-import AboutUs from './pages/AboutUs';
 import VendorTasksPage from './pages/VendorPortal/VendorTasksPage';
 import GuardAppLayout from './pages/GuardApp/GuardAppLayout';
 import GuardLogin from './pages/GuardApp/GuardLogin';
-
-function ScrollToHash() {
-  const { pathname, hash } = useLocation();
-
-  useEffect(() => {
-    if (pathname !== '/' || !hash) return;
-
-    const sectionId = hash.slice(1);
-    const timer = setTimeout(() => {
-      document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [pathname, hash]);
-
-  return null;
-}
 
 function App() {
   return (
@@ -43,12 +22,8 @@ function App() {
         }}
       />
       <Router>
-        <ScrollToHash />
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/who-we-serve" element={<WhoWeServePage />} />
-          <Route path="/about" element={<AboutUs />} />
-          <Route path="/blog" element={<ApprovedVendorListBlog />} />
+          <Route path="/" element={<LoginPage />} />
           <Route path="/activate-account" element={<ActivateAccount />} />
           <Route path="/guard-login" element={<GuardLogin />} />
           <Route path="/:societyId/dashboard/*" element={<DashboardLayout />} />

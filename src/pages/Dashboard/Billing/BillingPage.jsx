@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import {
   FaMoneyCheckAlt, FaFileInvoiceDollar, FaStore,
   FaArrowRight, FaExclamationCircle, FaArrowLeft, FaSearch,
-  FaCog, FaShieldAlt, FaPercent, FaUniversity, FaBook, FaCalculator, FaFileAlt, FaHistory,
+  FaCog, FaShieldAlt, FaPercent, FaUniversity, FaCalculator, FaFileAlt, FaHistory,
   FaPlus, FaCheck, FaTimes, FaEdit, FaTrash, FaSpinner
 } from 'react-icons/fa';
 import apiClient from '../../../services/apiClient';
@@ -12,7 +12,9 @@ import InvoicesPage from './InvoicesPage';
 import FinesInterestArrearsPage from './FinesInterestArrearsPage';
 import PaymentsContainer from './Payments/PaymentsContainer';
 import BankCashReconciliationContainer from './BankCashReconciliation/BankCashReconciliationContainer';
+import VendorPaymentsPage from './VendorPayments/VendorPaymentsPage';
 import AdvanceDepositsContainer from './AdvanceDeposits/AdvanceDepositsContainer';
+import LedgerContainer from './Ledger/LedgerContainer';
 
 const SUBMODULE_CONFIG = [
   {
@@ -120,16 +122,12 @@ const SUBMODULE_CONFIG = [
     id: 'ledger_management',
     slug: 'ledger-management',
     title: 'Ledger management',
-    desc: 'Double-entry general ledger, chart of accounts, journal entries, and account balances.',
-    icon: FaBook,
+    desc: 'View and manage flat-wise ledgers, track debit/credit entries, and outstanding balances.',
+    icon: FaFileAlt,
     colorClass: 'bg-cyan-100 text-cyan-600',
-    stats: { label: 'Active Ledger Accounts', value: '34' },
-    columns: ['Account Code', 'Account Title', 'Type', 'Debit (YTD)', 'Credit (YTD)', 'Net Balance'],
-    sampleRows: [
-      { id: 'ACC-1001', col1: 'Society Maintenance Revenue', col2: 'Income', col3: '₹0.00', col4: '₹38,40,000', status: 'Cr ₹38,40,000' },
-      { id: 'ACC-2001', col1: 'Electricity & Water Expense', col2: 'Expense', col3: '₹8,20,000', col4: '₹0.00', status: 'Dr ₹8,20,000' },
-      { id: 'ACC-3001', col1: 'HDFC Operating Bank Account', col2: 'Asset', col3: '₹22,10,000', col4: '₹7,89,500', status: 'Dr ₹14,20,500' },
-    ]
+    stats: { label: 'Active Ledgers', value: '' },
+    columns: ['Flat / Member', 'Opening Balance', 'Total Debits', 'Total Credits', 'Closing Balance'],
+    sampleRows: []
   },
   {
     id: 'vendor_payments',
@@ -262,6 +260,9 @@ const BillingPage = () => {
   const roleKeys = currentUser.roleKeys || [];
   const isAdmin = currentUser.role === 'admin' || currentUser.role === 'super_admin' || roleKeys.includes('admin');
   const isAccountant = roleKeys.includes('accountant');
+  const canManageBillingConfig = (isAdmin || isAccountant)
+    && currentUser.role !== 'super_admin'
+    && !roleKeys.includes('super_admin');
   const isResident = currentUser.role === 'resident_owner' || roleKeys.includes('resident_owner') || (!isAdmin && !isAccountant);
 
   const RESIDENT_ALLOWED_IDS = ['invoice_billing_generation', 'fines_interests_arrears', 'payments_collection', 'advance_accounts_deposits'];
@@ -278,6 +279,7 @@ const BillingPage = () => {
     activeChargeHeads: null,
     totalArrears: null,
     collectedThisMonth: null,
+    vendorPaymentsCount: null,
   });
 
   useEffect(() => {
@@ -318,6 +320,17 @@ const BillingPage = () => {
         }
       })
       .catch(() => { });
+
+    if (!isResident) {
+      apiClient.get('/billing/vendor-payments?limit=1')
+        .then(res => {
+          const total = res.data?.data?.pagination?.total;
+          if (total !== undefined) {
+            setHubStats(prev => ({ ...prev, vendorPaymentsCount: total }));
+          }
+        })
+        .catch(() => { });
+    }
   }, [isResident]);
 
   // ── Charge Head & Billing Config State ─────────────────────────────────────
@@ -333,7 +346,8 @@ const BillingPage = () => {
     billingDay: 1,
     dueDays: 10,
     arrearsDisplayMode: 'SINGLE_TOTAL',
-    defaultTaxSettings: { taxName: 'GST', taxRate: 18 }
+    defaultTaxSettings: { taxName: 'GST', taxRate: 18 },
+    accountantApprovalThreshold: 5000,
   });
   const [savingConfig, setSavingConfig] = useState(false);
 
@@ -382,6 +396,7 @@ const BillingPage = () => {
     setSearchParams({ submodule: slug });
   };
 
+
   const handleBackToHub = () => {
     setSearchParams({});
     setSearchTerm('');
@@ -408,7 +423,10 @@ const BillingPage = () => {
     try {
       const res = await apiClient.get('/billing/billing-config');
       if (res.data?.status === 'success' && res.data.data) {
-        setBillingConfig(res.data.data);
+        setBillingConfig({
+          ...res.data.data,
+          accountantApprovalThreshold: res.data.data.accountantApprovalThreshold ?? 5000,
+        });
       }
     } catch (err) {
       console.error('Failed to fetch billing config:', err);
@@ -555,7 +573,13 @@ const BillingPage = () => {
     e.preventDefault();
     setSavingConfig(true);
     try {
-      await apiClient.post('/billing/billing-config', billingConfig);
+      const res = await apiClient.post('/billing/billing-config', billingConfig);
+      if (res.data?.status === 'success' && res.data.data) {
+        setBillingConfig({
+          ...res.data.data,
+          accountantApprovalThreshold: res.data.data.accountantApprovalThreshold ?? 5000,
+        });
+      }
       toast.success('Society Billing Configuration saved successfully!');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to save billing configuration');
@@ -631,11 +655,28 @@ const BillingPage = () => {
       );
     }
 
+    // ── Vendor Payments & Disbursal ──────────────────────────────────────────
+    if (selectedModule.id === 'vendor_payments') {
+      return (
+        <VendorPaymentsPage
+          onBack={handleBackToHub}
+        />
+      );
+    }
     // ── Advance Accounts & Security Deposits ────────────────────────────────
     if (selectedModule.id === 'advance_accounts_deposits') {
       return (
         <div className="animate-fade-in-up pb-12">
           <AdvanceDepositsContainer onBack={handleBackToHub} />
+        </div>
+      );
+    }
+
+    // ── Ledger Management ───────────────────────────────────────────────────
+    if (selectedModule.id === 'ledger_management') {
+      return (
+        <div className="animate-fade-in-up pb-12">
+          <LedgerContainer onBack={handleBackToHub} />
         </div>
       );
     }
@@ -894,6 +935,21 @@ const BillingPage = () => {
                     <span className="text-[11px] text-gray-400">Number of days after invoice issue date before bill becomes overdue</span>
                   </div>
 
+                  {/* Accountant Approval Threshold */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Accountant Approval Threshold (₹)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      required
+                      value={billingConfig.accountantApprovalThreshold ?? 5000}
+                      onChange={e => setBillingConfig({ ...billingConfig, accountantApprovalThreshold: Number(e.target.value) })}
+                      className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none"
+                    />
+                    <span className="text-[11px] text-gray-400">Accountant vendor payments, credit notes, and discounts above this amount require Committee Admin approval. Equal amounts do not.</span>
+                  </div>
+
                   {/* Default GST Rate */}
                   <div>
                     <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">Default GST Rate (%)</label>
@@ -948,7 +1004,7 @@ const BillingPage = () => {
                   </div>
                 </div>
 
-                {!isAdmin && (
+                {canManageBillingConfig && (
                   <div className="pt-4 border-t border-gray-100 flex justify-end">
                     <button
                       type="submit"
@@ -1281,6 +1337,8 @@ const BillingPage = () => {
               dynamicStats = { ...mod.stats, value: formatINR(hubStats.totalArrears) };
             } else if (mod.id === 'payments_collection' && hubStats.collectedThisMonth !== null) {
               dynamicStats = { ...mod.stats, value: formatINR(hubStats.collectedThisMonth) };
+            } else if (mod.id === 'vendor_payments' && hubStats.vendorPaymentsCount !== null) {
+              dynamicStats = { ...mod.stats, label: 'Total Payments', value: String(hubStats.vendorPaymentsCount) };
             }
             return (
               <SectionCard
