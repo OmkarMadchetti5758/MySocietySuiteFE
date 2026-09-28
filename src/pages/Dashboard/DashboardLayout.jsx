@@ -55,6 +55,7 @@ import QRScanner from '../GuardApp/QRScanner';
 import VehicleLookup from '../GuardApp/VehicleLookup';
 import VisitorApprovalPage from './Visitors/VisitorApprovalPage';
 import AIAssistantPage from './AIAssistant/AIAssistantPage';
+import ResidentDashboard from './ResidentDashboard';
 
 const MODULE_DEF = [
   { id: 'society_flat_setup', label: 'Society & Flats', icon: FaBuilding, path: 'setup', group: 'SOCIETY' },
@@ -400,13 +401,11 @@ const DashboardLayout = () => {
                   ) : isAdmin ? (
                     <AdminDashboard societyName={societyName} />
                   ) : (
-                    <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center h-[60vh]">
-                      <div className="w-20 h-20 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mb-6 shadow-inner">
-                        <FaBuilding className="text-3xl" />
-                      </div>
-                      <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to {societyName}</h2>
-                      <p className="text-gray-500 max-w-md">Select a module from the sidebar to get started.</p>
-                    </div>
+                    <ResidentDashboard 
+                      userName={user.name} 
+                      societyName={societyName} 
+                      flatDetails={user.flatNumber || 'Building A, Flat 101'} 
+                    />
                   )
                 }
               />
@@ -419,13 +418,11 @@ const DashboardLayout = () => {
                   ) : isAdmin ? (
                     <AdminDashboard societyName={societyName} />
                   ) : (
-                    <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center h-[60vh]">
-                      <div className="w-20 h-20 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mb-6 shadow-inner">
-                        <FaBuilding className="text-3xl" />
-                      </div>
-                      <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to {societyName}</h2>
-                      <p className="text-gray-500 max-w-md">Select a module from the sidebar to get started.</p>
-                    </div>
+                    <ResidentDashboard 
+                      userName={user.name} 
+                      societyName={societyName} 
+                      flatDetails={user.flatNumber || 'Building A, Flat 101'} 
+                    />
                   )
                 }
               />
