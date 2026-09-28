@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   FaUsers, FaBuilding, FaIdBadge, FaUserTie,
   FaExclamationCircle, FaRupeeSign, FaFileInvoiceDollar, FaCalendarAlt,
@@ -9,9 +10,35 @@ import PriorityCard from './components/PriorityCard';
 import OperationsSummary from './components/OperationsSummary';
 import AlertList from './components/AlertList';
 import EventList from './components/EventList';
+import { dashboardApi } from '../../services/dashboardApi';
 
-const AdminDashboard = ({ societyName }) => {
-  const [date, setDate] = useState('14 May 2024, Tuesday');
+const AdminDashboard = ({ societyName: initialSocietyName }) => {
+  const { societyId } = useParams();
+  const navigate = useNavigate();
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchDashboard = async () => {
+      try {
+        const response = await dashboardApi.getAdminDashboardStats();
+        if (isMounted && response?.data) {
+          setDashboardData(response.data);
+        }
+      } catch (err) {
+        console.warn("Failed to fetch dashboard stats:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+    fetchDashboard();
+    return () => { isMounted = false; };
+  }, []);
+
+  const societyName = dashboardData?.societyName || initialSocietyName || 'My Society';
+  const topStats = dashboardData?.topStats;
+  const priority = dashboardData?.priorityOverview;
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
@@ -24,33 +51,82 @@ const AdminDashboard = ({ societyName }) => {
           <p className="text-gray-500 text-sm mt-1">Here's what's happening in {societyName}.</p>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
-          {/* Quick link to Guard App for testing */}
-          <a
-            href={`/${window.location.pathname.split('/')[1]}/guard/dashboard`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-xl text-sm font-semibold transition-colors shadow-sm whitespace-nowrap flex items-center gap-2"
+          <button
+            onClick={() => navigate(`/${societyId}/dashboard/visitors`)}
+            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-xl text-sm font-semibold transition-colors shadow-sm whitespace-nowrap flex items-center gap-2 cursor-pointer"
           >
             <FaShieldAlt className="w-4 h-4" />
             Open Guard Portal
-          </a>
-          <button className="bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-xl text-sm font-semibold transition-colors shadow-sm whitespace-nowrap flex items-center gap-2">
+          </button>
+          <button 
+            onClick={() => navigate(`/${societyId}/dashboard/settings`)}
+            className="bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-xl text-sm font-semibold transition-colors shadow-sm whitespace-nowrap flex items-center gap-2 cursor-pointer"
+          >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
-            Customize Dashboard
+            Settings
           </button>
         </div>
       </div>
 
       {/* Top Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
-        <StatCard title="Total Residents" value="512" subtitle="248 Families" icon={FaUsers} colorClass="bg-orange-100 text-orange-500" />
-        <StatCard title="Flats / Units" value="428" subtitle="Occupied: 398" icon={FaBuilding} colorClass="bg-blue-100 text-blue-500" />
-        <StatCard title="Visitors Today" value="36" subtitle="Vehicles: 18" icon={FaIdBadge} colorClass="bg-green-100 text-green-500" />
-        <StatCard title="Staff Present" value="58" highlightValue="72" subtitle="81% On Duty" icon={FaUserTie} colorClass="bg-purple-100 text-purple-500" />
-        <StatCard title="Open Complaints" value="12" subtitle="8 In Progress" icon={FaExclamationCircle} colorClass="bg-red-100 text-red-500" />
-        <StatCard title="Collection (This Month)" value="₹2,45,300" subtitle="78% Collected" icon={FaRupeeSign} colorClass="bg-teal-100 text-teal-500" />
-        <StatCard title="Pending Dues" value="₹3,12,500" subtitle="From 34 Units" icon={FaFileInvoiceDollar} colorClass="bg-rose-100 text-rose-500" />
-        <StatCard title="Upcoming Events" value="2" subtitle="This Week" icon={FaCalendarAlt} colorClass="bg-indigo-100 text-indigo-500" />
+        <StatCard
+          title="Total Residents"
+          value={loading ? "..." : String(topStats?.totalResidents ?? 0)}
+          subtitle={topStats ? topStats.residentSubtitle : "0 Occupied Units"}
+          icon={FaUsers}
+          colorClass="bg-orange-100 text-orange-500"
+        />
+        <StatCard
+          title="Flats / Units"
+          value={loading ? "..." : String(topStats?.totalFlats ?? 0)}
+          subtitle={topStats ? `Occupied: ${topStats.occupiedFlats ?? 0}` : "Occupied: 0"}
+          icon={FaBuilding}
+          colorClass="bg-blue-100 text-blue-500"
+        />
+        <StatCard
+          title="Visitors Today"
+          value={loading ? "..." : String(topStats?.visitorsToday ?? 0)}
+          subtitle={topStats ? `Vehicles: ${topStats.vehiclesToday ?? 0}` : "Vehicles: 0"}
+          icon={FaIdBadge}
+          colorClass="bg-green-100 text-green-500"
+        />
+        <StatCard
+          title="Staff Present"
+          value={loading ? "..." : String(topStats?.staffPresent ?? 0)}
+          highlightValue={loading ? "..." : String(topStats?.staffTotal ?? 0)}
+          subtitle={topStats ? `${topStats.staffDutyPct ?? 0}% On Duty` : "0% On Duty"}
+          icon={FaUserTie}
+          colorClass="bg-purple-100 text-purple-500"
+        />
+        <StatCard
+          title="Open Complaints"
+          value={loading ? "..." : String(topStats?.openComplaints ?? 0)}
+          subtitle={topStats ? `${topStats.inProgressComplaints ?? 0} In Progress` : "0 In Progress"}
+          icon={FaExclamationCircle}
+          colorClass="bg-red-100 text-red-500"
+        />
+        <StatCard
+          title="Collection (This Month)"
+          value={loading ? "..." : (topStats?.collectionFormatted ?? "₹0")}
+          subtitle="Collected"
+          icon={FaRupeeSign}
+          colorClass="bg-teal-100 text-teal-500"
+        />
+        <StatCard
+          title="Pending Dues"
+          value={loading ? "..." : (topStats?.pendingDuesFormatted ?? "₹0")}
+          subtitle={topStats ? `From ${topStats.pendingUnitsCount ?? 0} Units` : "From 0 Units"}
+          icon={FaFileInvoiceDollar}
+          colorClass="bg-rose-100 text-rose-500"
+        />
+        <StatCard
+          title="Upcoming Events"
+          value={loading ? "..." : String(topStats?.upcomingEventsCount ?? 0)}
+          subtitle="Active Events"
+          icon={FaCalendarAlt}
+          colorClass="bg-indigo-100 text-indigo-500"
+        />
       </div>
 
       {/* Priority Overview Section */}
@@ -59,67 +135,75 @@ const AdminDashboard = ({ societyName }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <PriorityCard
             title="Security"
-            statusText="All Good"
-            statusType="success"
+            statusText={priority?.security?.statusText || "Operational"}
+            statusType={priority?.security?.statusType || "success"}
             icon={FaShieldAlt}
-            mainText="All gates operational and no critical alerts."
+            mainText="All security gates status and visitor entries today."
             stats={[
-              { label: 'Visitors Today', value: '36' },
-              { label: 'Vehicles Today', value: '18' },
-              { label: 'Security Staff Present', value: '16 / 18' }
+              { label: 'Visitors Today', value: String(priority?.security?.visitorsToday ?? 0) },
+              { label: 'Vehicles Today', value: String(priority?.security?.vehiclesToday ?? 0) },
+              { label: 'Security Staff Present', value: priority?.security?.staffPresent || '0 / 0' }
             ]}
             actionText="View Security"
+            onAction={() => navigate(`/${societyId}/dashboard/visitors`)}
           />
           <PriorityCard
             title="Cleaning"
-            statusText="On Track"
-            statusType="success"
+            statusText={priority?.cleaning?.statusText || "On Track"}
+            statusType={priority?.cleaning?.statusType || "success"}
             icon={FaBroom}
-            mainText="Today's cleaning is 87% completed."
+            mainText="Cleaning schedule and maintenance staff count."
             stats={[
-              { label: 'Completed Areas', value: '12 / 14' },
-              { label: 'Pending Areas', value: '2' },
-              { label: 'Staff Present', value: '22 / 28' }
+              { label: 'Staff Assigned', value: priority?.cleaning?.completedAreas || '0 / 0' },
+              { label: 'Pending Areas', value: String(priority?.cleaning?.pendingAreas ?? 0) },
+              { label: 'Staff Present', value: priority?.cleaning?.staffPresent || '0 / 0' }
             ]}
             actionText="View Cleaning"
+            onAction={() => navigate(`/${societyId}/dashboard/staff`)}
           />
           <PriorityCard
             title="Staff Attendance"
             statusText=""
-            statusType="active" // Not showing a badge here in the image, but component expects one. Let's modify PriorityCard or pass empty. Actually image doesn't show badge for Staff Attendance.
+            statusType="active"
             icon={FaUsersCog}
-            mainText="81% staff present today."
+            mainText={`${priority?.staffAttendance?.percentage ?? 0}% staff present today.`}
             stats={[
-              { label: 'Present', value: '58' },
-              { label: 'Absent', value: '7' },
-              { label: 'On Leave', value: '4' }
+              { label: 'Present', value: String(priority?.staffAttendance?.present ?? 0) },
+              { label: 'Absent', value: String(priority?.staffAttendance?.absent ?? 0) },
+              { label: 'On Leave', value: String(priority?.staffAttendance?.onLeave ?? 0) }
             ]}
             actionText="View Attendance"
+            onAction={() => navigate(`/${societyId}/dashboard/staff`)}
           />
           <PriorityCard
             title="Festivals & Community"
-            statusText="Active"
+            statusText={priority?.festivals?.title && priority?.festivals?.title !== "No Upcoming Events" ? "Active" : "Normal"}
             statusType="warning"
             icon={FaGift}
-            mainText="Ganesh Chaturthi on 15 Sept 2024."
+            mainText={
+              priority?.festivals?.title && priority?.festivals?.title !== "No Upcoming Events"
+                ? `${priority.festivals.title} on ${priority.festivals.date || '-'}.`
+                : "No upcoming festival scheduled."
+            }
             stats={[
-              { label: 'Upcoming Events', value: '2' },
-              { label: 'Festival Collections', value: '1 Active' },
-              { label: 'New Announcements', value: '3' }
+              { label: 'Upcoming Events', value: String(priority?.festivals?.upcomingEventsCount ?? 0) },
+              { label: 'Festival Collections', value: `${priority?.festivals?.activeCollectionsCount ?? 0} Active` },
+              { label: 'New Announcements', value: String(priority?.festivals?.newAnnouncements ?? 0) }
             ]}
             actionText="View Collections"
+            onAction={() => navigate(`/${societyId}/dashboard/festivals-collection`)}
           />
         </div>
       </div>
 
       {/* Bottom Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <OperationsSummary />
+        <OperationsSummary data={dashboardData?.operationsSummary} />
         <div className="lg:col-span-1">
-          <AlertList />
+          <AlertList alerts={dashboardData?.alerts} onViewAll={() => navigate(`/${societyId}/dashboard/notices`)} />
         </div>
         <div className="lg:col-span-1">
-          <EventList />
+          <EventList events={dashboardData?.events} onViewCalendar={() => navigate(`/${societyId}/dashboard/festivals`)} />
         </div>
       </div>
     </div>
