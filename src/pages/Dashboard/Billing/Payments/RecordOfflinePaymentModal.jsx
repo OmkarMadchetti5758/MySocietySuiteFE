@@ -16,8 +16,8 @@ export default function RecordOfflinePaymentModal({ isOpen, onClose, onSuccess }
     invoiceId: '',
     amount: '',
     paymentMode: 'CASH',
-    paymentAccountId: 'HDFC_COLLECTION_ACC',
-    paymentAccountName: 'HDFC Bank - Collection Account',
+    paymentAccountId: '',
+    paymentAccountName: '',
     referenceNumber: '',
     paymentDate: new Date().toISOString().split('T')[0],
     notes: '',
@@ -28,19 +28,39 @@ export default function RecordOfflinePaymentModal({ isOpen, onClose, onSuccess }
   });
 
   const [selectedInvoiceDetails, setSelectedInvoiceDetails] = useState(null);
-
-  // Accounts options
-  const PAYMENT_ACCOUNTS = [
-    { id: 'HDFC_COLLECTION_ACC', name: 'HDFC Bank - Collection Account' },
-    { id: 'SBI_SINKING_ACC', name: 'SBI Bank - Sinking Fund Account' },
-    { id: 'PRIMARY_CASH_ACC', name: 'Society Cash Account (Petty Cash)' },
-  ];
+  const [accounts, setAccounts] = useState([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       fetchFlats();
+      fetchAccounts();
     }
   }, [isOpen]);
+
+  const fetchAccounts = async () => {
+    try {
+      setLoadingAccounts(true);
+      const res = await apiClient.get('/reconciliation/accounts?status=ACTIVE');
+      const data = res.data?.data?.accounts || res.data?.data || [];
+      const list = Array.isArray(data) ? data : [];
+      setAccounts(list);
+      const cash = list.find((a) => String(a.accountType).toUpperCase() === 'CASH');
+      const bank = list.find((a) => String(a.accountType).toUpperCase() === 'BANK');
+      const pick = cash || bank || list[0];
+      if (pick) {
+        setFormData((prev) => ({
+          ...prev,
+          paymentAccountId: prev.paymentAccountId || pick._id,
+          paymentAccountName: prev.paymentAccountName || pick.accountName,
+        }));
+      }
+    } catch {
+      toast.error('Failed to load bank/cash accounts.');
+    } finally {
+      setLoadingAccounts(false);
+    }
+  };
 
   const fetchFlats = async () => {
     try {
@@ -120,6 +140,10 @@ export default function RecordOfflinePaymentModal({ isOpen, onClose, onSuccess }
       toast.error('Transaction reference number is required.');
       return;
     }
+    if (!formData.paymentAccountId) {
+      toast.error('Please select the receiving bank or cash account.');
+      return;
+    }
 
     try {
       setSubmitting(true);
@@ -130,7 +154,7 @@ export default function RecordOfflinePaymentModal({ isOpen, onClose, onSuccess }
         amount: Number(formData.amount),
         paymentMode: formData.paymentMode,
         paymentAccountId: formData.paymentAccountId,
-        paymentAccountName: PAYMENT_ACCOUNTS.find(a => a.id === formData.paymentAccountId)?.name || formData.paymentAccountName,
+        paymentAccountName: accounts.find(a => String(a._id) === String(formData.paymentAccountId))?.accountName || formData.paymentAccountName,
         referenceNumber: formData.referenceNumber,
         paymentDate: formData.paymentDate,
         notes: formData.notes,
@@ -332,15 +356,35 @@ export default function RecordOfflinePaymentModal({ isOpen, onClose, onSuccess }
             <label className="block text-xs font-semibold text-gray-700 mb-1">
               Receiving Account <span className="text-red-500">*</span>
             </label>
-            <select
-              value={formData.paymentAccountId}
-              onChange={e => setFormData({ ...formData, paymentAccountId: e.target.value })}
-              className="w-full text-sm border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-            >
-              {PAYMENT_ACCOUNTS.map(acc => (
-                <option key={acc.id} value={acc.id}>{acc.name}</option>
-              ))}
-            </select>
+            {loadingAccounts ? (
+              <div className="flex items-center gap-2 text-xs text-gray-500 p-2 border rounded-xl">
+                <FaSpinner className="animate-spin text-emerald-500" /> Loading accounts...
+              </div>
+            ) : (
+              <select
+                value={formData.paymentAccountId}
+                onChange={e => {
+                  const acc = accounts.find(a => String(a._id) === e.target.value);
+                  setFormData({
+                    ...formData,
+                    paymentAccountId: e.target.value,
+                    paymentAccountName: acc?.accountName || '',
+                  });
+                }}
+                required
+                className="w-full text-sm border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              >
+                <option value="">-- Select bank or cash account --</option>
+                {accounts.map(acc => (
+                  <option key={acc._id} value={acc._id}>
+                    {acc.accountName} ({acc.accountType})
+                  </option>
+                ))}
+              </select>
+            )}
+            {accounts.length === 0 && !loadingAccounts && (
+              <p className="text-[11px] text-amber-600 mt-1">No active bank/cash accounts. Add one under Bank &amp; Cash Reconciliation first.</p>
+            )}
           </div>
 
           {/* Payment Date & Notes */}

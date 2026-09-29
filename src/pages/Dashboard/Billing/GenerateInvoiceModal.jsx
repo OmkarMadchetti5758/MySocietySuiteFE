@@ -304,6 +304,8 @@ export const GenerateInvoiceModal = ({ onClose, onSuccess, flats = [] }) => {
                       {preview.fineAmount > 0 && <div className="flex justify-between text-red-600"><span>Fine</span><span className="font-semibold">{fmt(preview.fineAmount)}</span></div>}
                       {preview.discountAmount > 0 && <div className="flex justify-between text-emerald-700"><span>Discount</span><span className="font-semibold">-{fmt(preview.discountAmount)}</span></div>}
                       {preview.creditNoteAmount > 0 && <div className="flex justify-between text-emerald-700"><span>Credit Note</span><span className="font-semibold">-{fmt(preview.creditNoteAmount)}</span></div>}
+                      {preview.advanceAdjustment > 0 && <div className="flex justify-between text-cyan-700"><span>Advance applied</span><span className="font-semibold">-{fmt(preview.advanceAdjustment)}</span></div>}
+                      {preview.availableAdvance > 0 && !preview.advanceAdjustment && <div className="flex justify-between text-cyan-700"><span>Advance available</span><span className="font-semibold">{fmt(preview.availableAdvance)}</span></div>}
                       <div className="border-t border-orange-200 pt-2 flex justify-between font-black text-gray-900 text-base">
                         <span>Total Payable</span><span>{fmt(preview.totalPayable ?? preview.totalAmount)}</span>
                       </div>
@@ -323,6 +325,12 @@ export const GenerateInvoiceModal = ({ onClose, onSuccess, flats = [] }) => {
                   <div className="bg-white rounded-xl p-3"><div className="text-xs text-gray-400">Billing Period</div><div className="font-bold">{periodLabel(stepData.billingDate)}</div></div>
                   <div className="bg-white rounded-xl p-3"><div className="text-xs text-gray-400">Invoice Date</div><div className="font-bold">{fmtDate(stepData.invoiceDate)}</div></div>
                   <div className="bg-white rounded-xl p-3 col-span-2"><div className="text-xs text-gray-400">Flats to Generate</div><div className="font-bold text-orange-600 text-lg">{targetFlats.length} flat{targetFlats.length !== 1 ? 's' : ''}</div></div>
+                  {preview?.advanceAdjustment > 0 && (
+                    <div className="bg-cyan-50 rounded-xl p-3 col-span-2">
+                      <div className="text-xs text-cyan-600">Advance will be auto-applied</div>
+                      <div className="font-bold text-cyan-800">{fmt(preview.advanceAdjustment)}{preview.totalPayable === 0 ? ' — invoice will be fully settled' : ''}</div>
+                    </div>
+                  )}
                 </div>
               </div>
 
