@@ -99,6 +99,9 @@ const JournalEntriesTab = () => {
           <FaPlus /> New Manual Entry
         </button>
       </div>
+      <p className="text-xs text-gray-500 mb-4">
+        Billing, collections, deposits, vendor disbursals, and bank adjustments post automatically. Use a manual entry only for non-routine items.
+      </p>
 
       <div className="space-y-4">
         {loading ? (

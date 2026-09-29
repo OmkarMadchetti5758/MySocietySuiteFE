@@ -258,12 +258,29 @@ export const RecordPaymentModal = ({ invoice, onClose, onSuccess }) => {
     paymentDate: new Date().toISOString().split('T')[0],
   });
   const [saving, setSaving] = useState(false);
+  const [accounts, setAccounts] = useState([]);
   const totalPayable = (invoice.totalAmount || 0) + (invoice.fineAmount || 0);
   const balance = Math.max(0, totalPayable - (invoice.paidAmount || 0));
+
+  useEffect(() => {
+    apiClient.get('/reconciliation/accounts?status=ACTIVE')
+      .then((res) => {
+        const data = res.data?.data?.accounts || res.data?.data || [];
+        const list = Array.isArray(data) ? data : [];
+        setAccounts(list);
+        const cash = list.find((a) => String(a.accountType).toUpperCase() === 'CASH');
+        const pick = cash || list[0];
+        if (pick) {
+          setForm((prev) => ({ ...prev, paymentAccount: prev.paymentAccount || pick._id }));
+        }
+      })
+      .catch(() => toast.error('Failed to load bank/cash accounts.'));
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.amountPaid || Number(form.amountPaid) <= 0) return toast.error('Enter a valid amount');
+    if (!form.paymentAccount) return toast.error('Select the receiving bank or cash account');
     setSaving(true);
     try {
       await apiClient.post(`/billing/invoices/${invoice._id}/payments`, {
@@ -329,14 +346,20 @@ export const RecordPaymentModal = ({ invoice, onClose, onSuccess }) => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Payment Account</label>
-            <input
-              type="text"
+            <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Receiving Account *</label>
+            <select
+              required
               value={form.paymentAccount}
               onChange={e => setForm({ ...form, paymentAccount: e.target.value })}
-              placeholder="e.g. HDFC — Collection Account"
-              className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-orange-500"
-            />
+              className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:border-orange-500"
+            >
+              <option value="">-- Select bank or cash account --</option>
+              {accounts.map((acc) => (
+                <option key={acc._id} value={acc._id}>
+                  {acc.accountName} ({acc.accountType})
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
