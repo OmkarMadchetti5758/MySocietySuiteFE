@@ -13,7 +13,7 @@ const STATUS_STYLES = {
 };
 
 const formatRole = (role) => {
-  if (!role) return '—';
+  if (!role) return '-';
   return role.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 };
 
@@ -134,7 +134,7 @@ const ResidentsPage = () => {
         residentType: formData.residentType,
         role: formData.role,
       };
-      
+
       if (isEditMode) {
         await residentsApi.updateResident(selectedResidentId, payload);
         closeModal();
@@ -282,18 +282,18 @@ const ResidentsPage = () => {
                     <div className="font-semibold text-gray-900">{resident.name}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">{resident.email || '—'}</div>
-                    <div className="text-xs text-gray-500 mt-0.5">{resident.mobile || '—'}</div>
+                    <div className="text-sm text-gray-900">{resident.email || '-'}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">{resident.mobile || '-'}</div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">
-                    {resident.wingName || resident.wingCode || '—'}
+                    {resident.wingName || resident.wingCode || '-'}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">
-                    {resident.flatNumber || '—'}
+                    {resident.flatNumber || '-'}
                   </td>
                   <td className="px-6 py-4">
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 capitalize">
-                      {resident.residentType || '—'}
+                      {resident.residentType || '-'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700 capitalize">
@@ -426,96 +426,96 @@ const ResidentsPage = () => {
                   )}
 
                   {!isEditMode && (
-                  <div>
-                    <h4 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs">
-                        1
-                      </span>
-                      Flat Details
-                    </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Wing / Block *</label>
-                        <select
-                          required
-                          value={formData.blockId}
-                          onChange={(e) => {
-                            const blockId = e.target.value;
-                            const wing = wings.find((w) => w._id === blockId);
-                            setFormData({
-                              ...formData,
-                              blockId,
-                              wingCode: wing?.code || '',
-                              flatId: '',
-                              flatNumber: '',
-                            });
-                          }}
-                          className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="">Select Wing</option>
-                          {wings.map((wing) => (
-                            <option key={wing._id || wing.code} value={wing._id}>
-                              {wing.name} ({wing.code})
+                    <div>
+                      <h4 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs">
+                          1
+                        </span>
+                        Flat Details
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1.5">Wing / Block *</label>
+                          <select
+                            required
+                            value={formData.blockId}
+                            onChange={(e) => {
+                              const blockId = e.target.value;
+                              const wing = wings.find((w) => w._id === blockId);
+                              setFormData({
+                                ...formData,
+                                blockId,
+                                wingCode: wing?.code || '',
+                                flatId: '',
+                                flatNumber: '',
+                              });
+                            }}
+                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="">Select Wing</option>
+                            {wings.map((wing) => (
+                              <option key={wing._id || wing.code} value={wing._id}>
+                                {wing.name} ({wing.code})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1.5">Flat Number *</label>
+                          <select
+                            required
+                            value={formData.flatId}
+                            disabled={!formData.blockId || loadingFlats}
+                            onChange={(e) => {
+                              const flatId = e.target.value;
+                              const flat = wingFlats.find((f) => f._id === flatId);
+                              setFormData({
+                                ...formData,
+                                flatId,
+                                flatNumber: flat?.flatNumber || '',
+                              });
+                            }}
+                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
+                          >
+                            <option value="">
+                              {!formData.blockId
+                                ? 'Select Wing first'
+                                : loadingFlats
+                                  ? 'Loading flats...'
+                                  : wingFlats.length === 0
+                                    ? 'No flats in this wing'
+                                    : 'Select Flat'}
                             </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Flat Number *</label>
-                        <select
-                          required
-                          value={formData.flatId}
-                          disabled={!formData.blockId || loadingFlats}
-                          onChange={(e) => {
-                            const flatId = e.target.value;
-                            const flat = wingFlats.find((f) => f._id === flatId);
-                            setFormData({
-                              ...formData,
-                              flatId,
-                              flatNumber: flat?.flatNumber || '',
-                            });
-                          }}
-                          className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400"
-                        >
-                          <option value="">
-                            {!formData.blockId
-                              ? 'Select Wing first'
-                              : loadingFlats
-                                ? 'Loading flats...'
-                                : wingFlats.length === 0
-                                  ? 'No flats in this wing'
-                                  : 'Select Flat'}
-                          </option>
-                          {wingFlats.map((flat) => (
-                            <option key={flat._id} value={flat._id}>
-                              {flat.flatNumber}
-                              {flat.floor ? ` · Floor ${flat.floor}` : ''}
-                              {flat.occupancyStatus ? ` · ${flat.occupancyStatus}` : ''}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Resident Type</label>
-                        <select
-                          value={formData.residentType}
-                          onChange={(e) => {
-                            const type = e.target.value;
-                            setFormData({
-                              ...formData,
-                              residentType: type,
-                              role: type === 'tenant' ? 'resident_tenant' : 'resident_owner',
-                            });
-                          }}
-                          className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="owner">Owner</option>
-                          <option value="tenant">Tenant</option>
-                          <option value="family_member">Family Member</option>
-                        </select>
+                            {wingFlats.map((flat) => (
+                              <option key={flat._id} value={flat._id}>
+                                {flat.flatNumber}
+                                {flat.floor ? ` · Floor ${flat.floor}` : ''}
+                                {flat.occupancyStatus ? ` · ${flat.occupancyStatus}` : ''}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1.5">Resident Type</label>
+                          <select
+                            value={formData.residentType}
+                            onChange={(e) => {
+                              const type = e.target.value;
+                              setFormData({
+                                ...formData,
+                                residentType: type,
+                                role: type === 'tenant' ? 'resident_tenant' : 'resident_owner',
+                              });
+                            }}
+                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="owner">Owner</option>
+                            <option value="tenant">Tenant</option>
+                            <option value="family_member">Family Member</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
-                  </div>
                   )}
 
                   {!isEditMode && <div className="w-full h-px bg-gray-100" />}
@@ -563,25 +563,25 @@ const ResidentsPage = () => {
                           />
                         </div>
                         {isEditMode && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1.5">Resident Type</label>
-                          <select
-                            value={formData.residentType}
-                            onChange={(e) => {
-                              const type = e.target.value;
-                              setFormData({
-                                ...formData,
-                                residentType: type,
-                                role: type === 'tenant' ? 'resident_tenant' : 'resident_owner',
-                              });
-                            }}
-                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          >
-                            <option value="owner">Owner</option>
-                            <option value="tenant">Tenant</option>
-                            <option value="family_member">Family Member</option>
-                          </select>
-                        </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Resident Type</label>
+                            <select
+                              value={formData.residentType}
+                              onChange={(e) => {
+                                const type = e.target.value;
+                                setFormData({
+                                  ...formData,
+                                  residentType: type,
+                                  role: type === 'tenant' ? 'resident_tenant' : 'resident_owner',
+                                });
+                              }}
+                              className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              <option value="owner">Owner</option>
+                              <option value="tenant">Tenant</option>
+                              <option value="family_member">Family Member</option>
+                            </select>
+                          </div>
                         )}
                       </div>
                     </div>

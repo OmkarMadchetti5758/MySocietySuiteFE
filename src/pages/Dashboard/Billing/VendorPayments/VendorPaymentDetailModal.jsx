@@ -33,7 +33,7 @@ const InfoRow = ({ label, value }) => (
   <div className="flex justify-between items-start py-2.5 border-b border-gray-50 last:border-0">
     <span className="text-xs text-gray-400 font-medium">{label}</span>
     <span className="text-xs font-semibold text-gray-800 text-right max-w-[65%] break-words">
-      {value || '—'}
+      {value || '-'}
     </span>
   </div>
 );
@@ -82,7 +82,7 @@ export default function VendorPaymentDetailModal({
 
   const formatINR = (n) => `₹${(Number(n) || 0).toLocaleString('en-IN')}`;
   const formatDate = (d) =>
-    d ? new Date(d).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+    d ? new Date(d).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '-';
 
   const statusConfig = (payment && STATUS_BADGES[String(payment.status).toLowerCase()]) || {
     bg: 'bg-gray-100 text-gray-600 border-gray-200',

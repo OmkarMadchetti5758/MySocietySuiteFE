@@ -40,10 +40,10 @@ const ShiftGateViewTab = ({ staffData }) => {
       <div className="flex items-center justify-between p-5 border-b border-gray-200 bg-white">
         <div>
           <h2 className="text-base font-semibold text-gray-900">Staff assigned per shift and gate</h2>
-          <p className="text-xs text-gray-500 mt-1">Live view — who is deployed where, right now</p>
+          <p className="text-xs text-gray-500 mt-1">Live view - who is deployed where, right now</p>
         </div>
         <div>
-          <select 
+          <select
             value={groupBy}
             onChange={(e) => setGroupBy(e.target.value)}
             className="border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20"

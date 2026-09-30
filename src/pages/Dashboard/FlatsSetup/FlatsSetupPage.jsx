@@ -126,15 +126,15 @@ const FlatsSetupPage = () => {
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">
                     {/* blockId is populated as { _id, name, code } by the API */}
-                  {typeof flat.blockId === 'object' && flat.blockId?.name
-                    ? flat.blockId.name
-                    : wings.find(w => w._id?.toString() === flat.blockId?.toString())?.name || '—'}
+                    {typeof flat.blockId === 'object' && flat.blockId?.name
+                      ? flat.blockId.name
+                      : wings.find(w => w._id?.toString() === flat.blockId?.toString())?.name || '-'}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">
                     {flat.floor}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">
-                    {flat.area || '—'}
+                    {flat.area || '-'}
                   </td>
                   <td className="px-6 py-4">
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">

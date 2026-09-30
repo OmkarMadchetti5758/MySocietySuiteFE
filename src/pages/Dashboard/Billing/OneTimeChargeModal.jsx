@@ -64,12 +64,12 @@ export const OneTimeChargeModal = ({ onClose, onSuccess, flats = [] }) => {
             >
               <option value="">Select flat...</option>
               {flats.length === 0 && (
-                <option disabled>No flats available — check Society Configuration</option>
+                <option disabled>No flats available - check Society Configuration</option>
               )}
               {flats.map(f => (
                 <option key={f._id} value={f._id}>
                   {f.flatNumber || f._id}
-                  {f.ownerName ? ` — ${f.ownerName}` : ''}
+                  {f.ownerName ? ` - ${f.ownerName}` : ''}
                   {f.occupancyStatus ? ` (${f.occupancyStatus})` : ''}
                 </option>
               ))}

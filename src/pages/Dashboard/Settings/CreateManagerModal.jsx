@@ -122,7 +122,7 @@ const CreateManagerModal = ({ isOpen, onClose, onSubmit, role }) => {
 
         {/* Body */}
         <div className="p-6 overflow-y-auto">
-          
+
           {/* Step 1: Select Path */}
           {step === 1 && (
             <div className="space-y-4">
@@ -138,7 +138,7 @@ const CreateManagerModal = ({ isOpen, onClose, onSubmit, role }) => {
                   <p className="text-sm text-gray-500">Search from active residents in the society and assign them this role.</p>
                 </div>
               </button>
-              
+
               <button
                 onClick={() => { setPath('new'); setStep(2); }}
                 className="w-full text-left p-4 rounded-xl border border-gray-200 hover:border-blue-500 hover:bg-blue-50/50 transition-all group flex items-start gap-4"
@@ -159,9 +159,9 @@ const CreateManagerModal = ({ isOpen, onClose, onSubmit, role }) => {
             <div className="space-y-6 min-h-[250px]">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Search Resident</label>
-                <ResidentSearchInput 
-                  societyId={JSON.parse(localStorage.getItem('user'))?.societyId} 
-                  onSelect={handleResidentSelect} 
+                <ResidentSearchInput
+                  societyId={JSON.parse(localStorage.getItem('user'))?.societyId}
+                  onSelect={handleResidentSelect}
                 />
               </div>
             </div>
@@ -225,11 +225,11 @@ const CreateManagerModal = ({ isOpen, onClose, onSubmit, role }) => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <span className="block text-xs text-gray-500 mb-1">Email</span>
-                  <span className="text-sm font-medium text-gray-900">{formData.email || '—'}</span>
+                  <span className="text-sm font-medium text-gray-900">{formData.email || '-'}</span>
                 </div>
                 <div>
                   <span className="block text-xs text-gray-500 mb-1">Phone</span>
-                  <span className="text-sm font-medium text-gray-900">{formData.phone || '—'}</span>
+                  <span className="text-sm font-medium text-gray-900">{formData.phone || '-'}</span>
                 </div>
                 <div className="col-span-2">
                   <label className="block text-xs text-gray-500 mb-1">Joining Date</label>
@@ -297,7 +297,7 @@ const CreateManagerModal = ({ isOpen, onClose, onSubmit, role }) => {
               >
                 {step > 1 ? 'Back' : 'Cancel'}
               </button>
-              
+
               {step === 2 && path === 'new' ? (
                 <button
                   type="submit"

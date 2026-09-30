@@ -91,12 +91,12 @@ function ManualReconcileModal({ payment, onClose, onSuccess }) {
             <div>
               <span className="text-xs text-gray-500">Resident / Flat</span>
               <div className="font-semibold text-gray-800 text-xs">
-                {payment.userId?.name || '—'} — {payment.flatId?.flatNumber || '—'}
+                {payment.userId?.name || '-'} - {payment.flatId?.flatNumber || '-'}
               </div>
             </div>
             <div>
               <span className="text-xs text-gray-500">Gateway Txn</span>
-              <div className="font-mono text-xs text-gray-600 truncate">{payment.gatewayTransactionId || '—'}</div>
+              <div className="font-mono text-xs text-gray-600 truncate">{payment.gatewayTransactionId || '-'}</div>
             </div>
           </div>
         </div>
@@ -255,12 +255,12 @@ export default function PendingFailedTab({ isAdmin, isAccountant }) {
                   <tr key={p._id} className="hover:bg-red-50/30 transition-colors">
                     <td className="px-4 py-3 font-mono text-xs font-semibold text-blue-600">{p.paymentNumber}</td>
                     <td className="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">
-                      {p.paymentDate ? new Date(p.paymentDate).toLocaleDateString('en-IN') : '—'}
+                      {p.paymentDate ? new Date(p.paymentDate).toLocaleDateString('en-IN') : '-'}
                     </td>
                     <td className="px-4 py-3 font-bold text-sm">{formatINR(p.amount)}</td>
-                    <td className="px-4 py-3 text-xs text-gray-700">{p.userId?.name || '—'}</td>
-                    <td className="px-4 py-3 text-xs font-medium text-gray-800">{p.flatId?.flatNumber || '—'}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-gray-500 max-w-xs truncate">{p.gatewayTransactionId || p.transactionReference || '—'}</td>
+                    <td className="px-4 py-3 text-xs text-gray-700">{p.userId?.name || '-'}</td>
+                    <td className="px-4 py-3 text-xs font-medium text-gray-800">{p.flatId?.flatNumber || '-'}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-gray-500 max-w-xs truncate">{p.gatewayTransactionId || p.transactionReference || '-'}</td>
                     <td className="px-4 py-3">
                       <span className={`text-[11px] px-2 py-1 rounded-full font-semibold border ${STATUS_COLORS[p.paymentStatus] || 'bg-gray-100 text-gray-500 border-gray-200'}`}>
                         {p.paymentStatus}
@@ -268,10 +268,10 @@ export default function PendingFailedTab({ isAdmin, isAccountant }) {
                     </td>
                     <td className="px-4 py-3">
                       <span className={`text-[11px] px-2 py-1 rounded-lg font-semibold ${RECON_COLORS[p.reconciliationStatus] || 'bg-gray-100 text-gray-500'}`}>
-                        {p.reconciliationStatus?.replace('_', ' ') || '—'}
+                        {p.reconciliationStatus?.replace('_', ' ') || '-'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-red-600 max-w-xs truncate">{p.failureReason || '—'}</td>
+                    <td className="px-4 py-3 text-xs text-red-600 max-w-xs truncate">{p.failureReason || '-'}</td>
                     <td className="px-4 py-3">
                       {(isAdmin || isAccountant) && p.paymentStatus === 'SUCCESS' && p.reconciliationStatus !== 'RECONCILED' && (
                         <button

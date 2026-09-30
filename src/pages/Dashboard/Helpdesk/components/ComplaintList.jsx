@@ -80,7 +80,7 @@ const ComplaintList = ({ complaints, loading, isAdmin, onAction, onStartWork, on
                     <span className="text-xs text-gray-500 truncate max-w-[130px]" title={c.areaLocation}>{c.areaLocation}</span>
                   </div>
                 ) : (
-                  <span className="text-gray-300 text-xs italic">—</span>
+                  <span className="text-gray-300 text-xs italic">-</span>
                 )}
               </td>
               <td className="p-4 text-gray-500 truncate max-w-[200px]">{c.description}</td>

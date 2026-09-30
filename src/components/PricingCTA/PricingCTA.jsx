@@ -180,7 +180,7 @@ const PricingCTA = () => {
           ))}
         </div> */}
 
-        {/* Bottom Banner — glass card */}
+        {/* Bottom Banner - glass card */}
         <div
           className="p-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6"
           style={{

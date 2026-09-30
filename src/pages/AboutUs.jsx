@@ -40,7 +40,7 @@ const AboutUs = () => {
               A residential society is more than buildings, apartments and common spaces. It is a community of people, shared responsibilities and everyday experiences.
             </p>
             <p className="text-lg md:text-xl leading-[1.85] text-[#121212] font-medium">
-              MySocietySuite is built to bring technology into this environment in a simple and meaningful way — helping residential communities manage their everyday operations more effectively.
+              MySocietySuite is built to bring technology into this environment in a simple and meaningful way - helping residential communities manage their everyday operations more effectively.
             </p>
           </div>
         </section>
@@ -60,7 +60,7 @@ const AboutUs = () => {
                 To make every residential community <span className="text-[#fb7815]">smarter, safer and more connected.</span>
               </h2>
               <p className="text-[#c7c9cd] text-[15px] leading-[1.8] max-w-md">
-                We envision a future where technology doesn't make society management complicated. Instead, it makes everyday operations effortless — for everyone involved.
+                We envision a future where technology doesn't make society management complicated. Instead, it makes everyday operations effortless - for everyone involved.
               </p>
             </div>
             <div className="flex flex-col gap-4">

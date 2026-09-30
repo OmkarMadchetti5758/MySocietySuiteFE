@@ -48,9 +48,8 @@ export default function ApproveRejectModal({ isOpen, onClose, payment, actionTyp
         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
           <div className="flex items-center gap-3">
             <div
-              className={`w-10 h-10 rounded-2xl flex items-center justify-center text-lg ${
-                isApprove ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
-              }`}
+              className={`w-10 h-10 rounded-2xl flex items-center justify-center text-lg ${isApprove ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+                }`}
             >
               {isApprove ? <FaCheckCircle /> : <FaTimesCircle />}
             </div>
@@ -80,7 +79,7 @@ export default function ApproveRejectModal({ isOpen, onClose, payment, actionTyp
             </div>
             <div className="flex justify-between items-center">
               <span className="text-xs text-gray-500 font-medium">Bill Reference</span>
-              <span className="text-xs font-semibold text-gray-700">{payment.billReference || '—'}</span>
+              <span className="text-xs font-semibold text-gray-700">{payment.billReference || '-'}</span>
             </div>
             <div className="flex justify-between items-center pt-2 border-t border-gray-200/60">
               <span className="text-xs text-gray-500 font-medium">Amount</span>
@@ -109,11 +108,10 @@ export default function ApproveRejectModal({ isOpen, onClose, payment, actionTyp
 
           {/* Warning / Disclaimers */}
           <div
-            className={`p-3 rounded-2xl text-xs border ${
-              isApprove
+            className={`p-3 rounded-2xl text-xs border ${isApprove
                 ? 'bg-emerald-50/70 border-emerald-200 text-emerald-800'
                 : 'bg-red-50/70 border-red-200 text-red-800'
-            }`}
+              }`}
           >
             {isApprove
               ? 'Once approved, the payment will be eligible for disbursal by the society accountant or committee admin.'
@@ -133,11 +131,10 @@ export default function ApproveRejectModal({ isOpen, onClose, payment, actionTyp
             <button
               type="submit"
               disabled={submitting}
-              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-bold shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                isApprove
+              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-bold shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed ${isApprove
                   ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
                   : 'bg-red-600 hover:bg-red-700 shadow-red-600/20'
-              }`}
+                }`}
             >
               {submitting ? (
                 <>

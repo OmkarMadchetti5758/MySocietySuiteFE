@@ -8,27 +8,27 @@ import ledgerService from "../../../../services/ledger.service";
 import apiClient from "../../../../services/apiClient";
 
 const REFERENCE_TYPES = [
-  { value: "MANUAL",       label: "Manual Entry" },
-  { value: "EXPENSE",      label: "Expense / Vendor Bill" },
-  { value: "ADJUSTMENT",   label: "Adjustment / Correction" },
-  { value: "CREDIT_NOTE",  label: "Credit Note" },
-  { value: "DEBIT_NOTE",   label: "Debit Note" },
-  { value: "FINE",         label: "Fine / Penalty" },
-  { value: "INTEREST",     label: "Interest Accrual" },
-  { value: "TRANSFER",     label: "Fund Transfer" },
+  { value: "MANUAL", label: "Manual Entry" },
+  { value: "EXPENSE", label: "Expense / Vendor Bill" },
+  { value: "ADJUSTMENT", label: "Adjustment / Correction" },
+  { value: "CREDIT_NOTE", label: "Credit Note" },
+  { value: "DEBIT_NOTE", label: "Debit Note" },
+  { value: "FINE", label: "Fine / Penalty" },
+  { value: "INTEREST", label: "Interest Accrual" },
+  { value: "TRANSFER", label: "Fund Transfer" },
 ];
 
 const MEMBER_KEYWORDS = ["member", "receivable", "resident", "flat", "dues"];
-const VENDOR_KEYWORDS  = ["payable", "vendor", "supplier", "creditor"];
+const VENDOR_KEYWORDS = ["payable", "vendor", "supplier", "creditor"];
 
-const needsFlat   = (n = "") => MEMBER_KEYWORDS.some(k => n.toLowerCase().includes(k));
+const needsFlat = (n = "") => MEMBER_KEYWORDS.some(k => n.toLowerCase().includes(k));
 const needsVendor = (n = "") => VENDOR_KEYWORDS.some(k => n.toLowerCase().includes(k));
-const emptyLine   = ()       => ({ accountId: "", debit: "", credit: "", description: "", flatId: "", vendorId: "" });
+const emptyLine = () => ({ accountId: "", debit: "", credit: "", description: "", flatId: "", vendorId: "" });
 
 const NewJournalEntryModal = ({ onClose, onSuccess }) => {
-  const [accounts, setAccounts]     = useState([]);
-  const [flats, setFlats]           = useState([]);
-  const [vendors, setVendors]       = useState([]);
+  const [accounts, setAccounts] = useState([]);
+  const [flats, setFlats] = useState([]);
+  const [vendors, setVendors] = useState([]);
   const [loadingAcc, setLoadingAcc] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitMode, setSubmitMode] = useState("draft");
@@ -67,29 +67,29 @@ const NewJournalEntryModal = ({ onClose, onSuccess }) => {
 
   const changeLine = (idx, field, val) => {
     const ls = [...lines];
-    if (field === "debit")     { ls[idx].debit = val; if (val && +val > 0) ls[idx].credit = ""; }
+    if (field === "debit") { ls[idx].debit = val; if (val && +val > 0) ls[idx].credit = ""; }
     else if (field === "credit") { ls[idx].credit = val; if (val && +val > 0) ls[idx].debit = ""; }
     else if (field === "accountId") { ls[idx].accountId = val; ls[idx].flatId = ""; ls[idx].vendorId = ""; }
     else ls[idx][field] = val;
     setLines(ls);
   };
 
-  const totalDebit  = lines.reduce((s, l) => s + (+l.debit  || 0), 0);
+  const totalDebit = lines.reduce((s, l) => s + (+l.debit || 0), 0);
   const totalCredit = lines.reduce((s, l) => s + (+l.credit || 0), 0);
-  const isBalanced  = Math.abs(totalDebit - totalCredit) < 0.01 && totalDebit > 0;
-  const diff        = Math.abs(totalDebit - totalCredit);
+  const isBalanced = Math.abs(totalDebit - totalCredit) < 0.01 && totalDebit > 0;
+  const diff = Math.abs(totalDebit - totalCredit);
 
   const handleSubmit = async (mode) => {
     if (!formData.description.trim()) return toast.error("Narration is required");
-    if (!isBalanced)                  return toast.error("Entry must be balanced");
-    if (!lines.some(l => +l.debit  > 0)) return toast.error("At least one Debit line required");
+    if (!isBalanced) return toast.error("Entry must be balanced");
+    if (!lines.some(l => +l.debit > 0)) return toast.error("At least one Debit line required");
     if (!lines.some(l => +l.credit > 0)) return toast.error("At least one Credit line required");
-    if (lines.some(l => !l.accountId))   return toast.error("Select account for every line");
+    if (lines.some(l => !l.accountId)) return toast.error("Select account for every line");
 
     setSubmitting(true); setSubmitMode(mode);
     try {
-      const payload = { ...formData, lines: lines.map(l => ({ accountId: l.accountId, debit: +l.debit||0, credit: +l.credit||0, description: l.description || formData.description, flatId: l.flatId||undefined, vendorId: l.vendorId||undefined })) };
-      const res  = await ledgerService.createJournalEntry(payload);
+      const payload = { ...formData, lines: lines.map(l => ({ accountId: l.accountId, debit: +l.debit || 0, credit: +l.credit || 0, description: l.description || formData.description, flatId: l.flatId || undefined, vendorId: l.vendorId || undefined })) };
+      const res = await ledgerService.createJournalEntry(payload);
       const jeId = res.data?.data?.journalEntry?._id;
       if (mode === "submit" && jeId) { await ledgerService.submitJournalEntry(jeId); toast.success("JV submitted for approval!"); }
       else toast.success("Journal voucher saved as Draft");
@@ -169,12 +169,12 @@ const NewJournalEntryModal = ({ onClose, onSuccess }) => {
                 <div className="border border-gray-200 rounded-2xl overflow-hidden">
                   <table className="w-full text-left">
                     <colgroup>
-                      <col style={{width:"27%"}} />
-                      <col style={{width:"19%"}} />
-                      <col style={{width:"22%"}} />
-                      <col style={{width:"13%"}} />
-                      <col style={{width:"13%"}} />
-                      <col style={{width:"6%"}}  />
+                      <col style={{ width: "27%" }} />
+                      <col style={{ width: "19%" }} />
+                      <col style={{ width: "22%" }} />
+                      <col style={{ width: "13%" }} />
+                      <col style={{ width: "13%" }} />
+                      <col style={{ width: "6%" }} />
                     </colgroup>
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr className="text-[10px] text-gray-500 uppercase tracking-wider font-bold">
@@ -189,14 +189,14 @@ const NewJournalEntryModal = ({ onClose, onSuccess }) => {
                     <tbody className="divide-y divide-gray-100">
                       {lines.map((line, idx) => {
                         const acc = accountMap[line.accountId];
-                        const showFlat   = acc && needsFlat(acc.accountName);
+                        const showFlat = acc && needsFlat(acc.accountName);
                         const showVendor = acc && needsVendor(acc.accountName);
                         return (
                           <tr key={idx} className="group hover:bg-slate-50/70 transition-colors">
                             <td className="p-2 pl-4">
                               <select value={line.accountId} onChange={e => changeLine(idx, "accountId", e.target.value)} className="w-full text-sm font-medium text-gray-800 bg-transparent border-none focus:ring-0 focus:outline-none cursor-pointer">
-                                <option value="" disabled>— Select Account —</option>
-                                {["ASSET","LIABILITY","EQUITY","INCOME","EXPENSE"].map(type => {
+                                <option value="" disabled>- Select Account -</option>
+                                {["ASSET", "LIABILITY", "EQUITY", "INCOME", "EXPENSE"].map(type => {
                                   const grp = accounts.filter(a => a.accountType === type);
                                   return grp.length ? (
                                     <optgroup key={type} label={type}>
@@ -209,17 +209,17 @@ const NewJournalEntryModal = ({ onClose, onSuccess }) => {
                             <td className="p-2">
                               {showFlat && (
                                 <select value={line.flatId} onChange={e => changeLine(idx, "flatId", e.target.value)} className="w-full text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400">
-                                  <option value="">— Flat / Resident —</option>
+                                  <option value="">- Flat / Resident -</option>
                                   {flats.map(f => <option key={f._id} value={f._id}>{f.flatNumber} ({f.ownerName || f.wingName || ""})</option>)}
                                 </select>
                               )}
                               {showVendor && (
                                 <select value={line.vendorId} onChange={e => changeLine(idx, "vendorId", e.target.value)} className="w-full text-xs text-orange-700 bg-orange-50 border border-orange-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-orange-400">
-                                  <option value="">— Vendor —</option>
+                                  <option value="">- Vendor -</option>
                                   {vendors.map(v => <option key={v._id} value={v._id}>{v.name || v.vendorName}</option>)}
                                 </select>
                               )}
-                              {!showFlat && !showVendor && <span className="text-xs text-gray-300 pl-1">—</span>}
+                              {!showFlat && !showVendor && <span className="text-xs text-gray-300 pl-1">-</span>}
                             </td>
                             <td className="p-2">
                               <input type="text" value={line.description} onChange={e => changeLine(idx, "description", e.target.value)} placeholder="Narration…" className="w-full text-xs text-gray-600 bg-transparent border-none focus:ring-0 focus:outline-none placeholder-gray-300" />
@@ -256,7 +256,7 @@ const NewJournalEntryModal = ({ onClose, onSuccess }) => {
                 <FaBalanceScale className={`text-3xl ${isBalanced ? "text-emerald-500" : (totalDebit > 0 || totalCredit > 0) ? "text-red-400" : "text-gray-300"}`} />
                 <div>
                   <div className={`text-sm font-bold ${isBalanced ? "text-emerald-800" : (totalDebit > 0 || totalCredit > 0) ? "text-red-800" : "text-gray-500"}`}>
-                    {isBalanced ? "✓ Entry is Balanced — Ready to Save" : (totalDebit > 0 || totalCredit > 0) ? `Out of Balance — Difference: ₹${diff.toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "Add amounts to validate balance"}
+                    {isBalanced ? "✓ Entry is Balanced - Ready to Save" : (totalDebit > 0 || totalCredit > 0) ? `Out of Balance - Difference: ₹${diff.toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "Add amounts to validate balance"}
                   </div>
                 </div>
               </div>
@@ -326,6 +326,6 @@ const Label = ({ children, required }) => (
 // Inject a tiny CSS helper for input-field into the document if not already using tailwind directly
 const style = document.createElement("style");
 style.textContent = ".input-field { width:100%; border:1px solid #e5e7eb; border-radius:0.75rem; padding:0.625rem 1rem; font-size:0.875rem; outline:none; } .input-field:focus { ring: 2px; border-color:#06b6d4; }";
-if (!document.head.querySelector("[data-jv-style]")) { style.setAttribute("data-jv-style",""); document.head.appendChild(style); }
+if (!document.head.querySelector("[data-jv-style]")) { style.setAttribute("data-jv-style", ""); document.head.appendChild(style); }
 
 export default NewJournalEntryModal;

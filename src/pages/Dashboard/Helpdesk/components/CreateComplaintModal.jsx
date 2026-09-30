@@ -147,8 +147,8 @@ const CreateComplaintModal = ({ categories, onClose }) => {
                       type="button"
                       onClick={() => handleAreaTypeChange({ target: { value } })}
                       className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-medium transition-all duration-150 ${formData.areaType === value
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-300'
-                          : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600'
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-300'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600'
                         }`}
                     >
                       <span>{icon}</span>
@@ -172,7 +172,7 @@ const CreateComplaintModal = ({ categories, onClose }) => {
                   className={selectClass(!formData.areaType)}
                 >
                   <option value="" disabled>
-                    {formData.areaType ? `Select ${formData.areaType} location` : '— Select Area Type first —'}
+                    {formData.areaType ? `Select ${formData.areaType} location` : '- Select Area Type first -'}
                   </option>
 
                   {/* Common Area: grouped by category */}
@@ -198,8 +198,8 @@ const CreateComplaintModal = ({ categories, onClose }) => {
                 {formData.areaType && formData.areaLocation && (
                   <div className="mt-2 flex items-center gap-2">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${formData.areaType === COMPLAINT_AREA_TYPES.COMMON_AREA
-                        ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                      : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                       }`}>
                       {formData.areaType === COMPLAINT_AREA_TYPES.COMMON_AREA ? <FaBuilding className="text-[10px]" /> : <FaHome className="text-[10px]" />}
                       {formData.areaLocation}

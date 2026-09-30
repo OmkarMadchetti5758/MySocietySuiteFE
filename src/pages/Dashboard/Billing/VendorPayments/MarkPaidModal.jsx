@@ -132,7 +132,7 @@ export default function MarkPaidModal({ isOpen, onClose, payment, onSuccess }) {
                 <option value="">{loadingAccounts ? 'Loading accounts...' : '-- Select Account --'}</option>
                 {accounts.map((acc) => (
                   <option key={acc._id} value={acc._id}>
-                    {acc.accountName} ({acc.accountType}) — Bal: ₹{(acc.currentBalance || 0).toLocaleString('en-IN')}
+                    {acc.accountName} ({acc.accountType}) - Bal: ₹{(acc.currentBalance || 0).toLocaleString('en-IN')}
                   </option>
                 ))}
               </select>

@@ -19,7 +19,7 @@ const RECON_COLORS = {
 const InfoRow = ({ label, value }) => (
   <div className="flex justify-between items-start py-2.5 border-b border-gray-50">
     <span className="text-xs text-gray-400 font-medium">{label}</span>
-    <span className="text-xs font-semibold text-gray-800 text-right max-w-xs break-words">{value || '—'}</span>
+    <span className="text-xs font-semibold text-gray-800 text-right max-w-xs break-words">{value || '-'}</span>
   </div>
 );
 
@@ -34,7 +34,7 @@ export default function PaymentDetailDrawer({ payment, onClose }) {
   if (!payment) return null;
 
   const formatINR = (n) => `₹${(n || 0).toLocaleString('en-IN')}`;
-  const formatDate = (d) => d ? new Date(d).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+  const formatDate = (d) => d ? new Date(d).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '-';
 
   return (
     <div className="fixed inset-0 z-50 flex">
@@ -115,25 +115,25 @@ export default function PaymentDetailDrawer({ payment, onClose }) {
           <Section title="Resident Information">
             <InfoRow label="Flat" value={
               payment.flatId
-                ? `${payment.flatId.blockName || payment.flatId.wingName || ''} - ${payment.flatId.flatNumber || ''}`.replace(/^[\s\-]+/, '') || '—'
-                : '—'
+                ? `${payment.flatId.blockName || payment.flatId.wingName || ''} - ${payment.flatId.flatNumber || ''}`.replace(/^[\s\-]+/, '') || '-'
+                : '-'
             } />
             <InfoRow label="Resident" value={
-              payment.userId?.name || 
-              (payment.userId?.firstName ? `${payment.userId.firstName} ${payment.userId.lastName || ''}`.trim() : null) || 
-              payment.invoiceId?.residentName || 
-              payment.flatId?.tenantName || 
-              payment.flatId?.ownerName || 
-              '—'
+              payment.userId?.name ||
+              (payment.userId?.firstName ? `${payment.userId.firstName} ${payment.userId.lastName || ''}`.trim() : null) ||
+              payment.invoiceId?.residentName ||
+              payment.flatId?.tenantName ||
+              payment.flatId?.ownerName ||
+              '-'
             } />
             <InfoRow label="Contact" value={
-              payment.userId?.phone || 
-              payment.userId?.email || 
-              payment.invoiceId?.residentPhone || 
-              payment.invoiceId?.residentEmail || 
-              payment.flatId?.ownerPhone || 
-              payment.flatId?.tenantPhone || 
-              '—'
+              payment.userId?.phone ||
+              payment.userId?.email ||
+              payment.invoiceId?.residentPhone ||
+              payment.invoiceId?.residentEmail ||
+              payment.flatId?.ownerPhone ||
+              payment.flatId?.tenantPhone ||
+              '-'
             } />
           </Section>
 
@@ -141,7 +141,7 @@ export default function PaymentDetailDrawer({ payment, onClose }) {
           <Section title="Reconciliation">
             <InfoRow label="Reconciliation Status" value={
               <span className={`text-[11px] px-2 py-1 rounded-lg font-semibold ${RECON_COLORS[payment.reconciliationStatus] || 'bg-gray-100 text-gray-500'}`}>
-                {payment.reconciliationStatus?.replace('_', ' ') || '—'}
+                {payment.reconciliationStatus?.replace('_', ' ') || '-'}
               </span>
             } />
           </Section>
@@ -158,7 +158,7 @@ export default function PaymentDetailDrawer({ payment, onClose }) {
             <Section title="Cheque Details">
               <InfoRow label="Cheque Number" value={payment.chequeDetails.chequeNumber} />
               <InfoRow label="Bank Name" value={payment.chequeDetails.bankName} />
-              <InfoRow label="Cheque Date" value={payment.chequeDetails.chequeDate ? new Date(payment.chequeDetails.chequeDate).toLocaleDateString('en-IN') : '—'} />
+              <InfoRow label="Cheque Date" value={payment.chequeDetails.chequeDate ? new Date(payment.chequeDetails.chequeDate).toLocaleDateString('en-IN') : '-'} />
             </Section>
           )}
         </div>

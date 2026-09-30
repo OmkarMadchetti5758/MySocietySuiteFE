@@ -14,7 +14,7 @@ import FlatBillingHistoryModal from './FlatBillingHistoryModal';
 
 const formatINR = (n) => `₹${(Number(n) || 0).toLocaleString('en-IN')}`;
 const formatDate = (d) =>
-  d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+  d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
 
 export default function CreditNotesDiscountsContainer({ onBack }) {
   // Current user & role resolution
@@ -361,7 +361,7 @@ export default function CreditNotesDiscountsContainer({ onBack }) {
                   </tr>
                 ) : (
                   creditNotes.map((cn) => {
-                    const flatNum = cn.flatId?.flatNumber || '—';
+                    const flatNum = cn.flatId?.flatNumber || '-';
                     const wing = cn.flatId?.wing || cn.flatId?.blockName || '';
                     const isPending = cn.status === 'pending_approval';
 
@@ -478,7 +478,7 @@ export default function CreditNotesDiscountsContainer({ onBack }) {
                   </tr>
                 ) : (
                   discounts.map((disc) => {
-                    const flatNum = disc.flatId?.flatNumber || '—';
+                    const flatNum = disc.flatId?.flatNumber || '-';
                     const wing = disc.flatId?.wing || disc.flatId?.blockName || '';
                     const isPending = disc.status === 'pending_approval';
 

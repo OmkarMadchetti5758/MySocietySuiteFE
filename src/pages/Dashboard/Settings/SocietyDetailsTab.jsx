@@ -334,7 +334,7 @@ const SocietyDetailsTab = () => {
                       Block/Wing {index + 1} Name
                       {/* {isExisting && (
                         <span
-                          title="Already saved — cannot be renamed here"
+                          title="Already saved - cannot be renamed here"
                           className="ml-1 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 font-medium"
                         >
                           🔒 Saved

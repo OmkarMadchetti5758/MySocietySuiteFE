@@ -19,9 +19,9 @@ const STATUS_CONFIG = {
 const PAYMENT_MODES = ['CASH', 'CHEQUE', 'BANK_TRANSFER', 'UPI', 'OTHER'];
 
 const fmt = (n) => `₹${(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
 const periodLabel = (p) => {
-  if (!p) return '—';
+  if (!p) return '-';
   if (p.includes('-Q')) {
     const [y, q] = p.split('-');
     return `${q} ${y}`;

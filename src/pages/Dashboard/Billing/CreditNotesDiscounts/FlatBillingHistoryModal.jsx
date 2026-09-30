@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 
 const formatINR = (n) => `₹${(Number(n) || 0).toLocaleString('en-IN')}`;
 const formatDate = (d) =>
-  d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+  d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
 
 export default function FlatBillingHistoryModal({ isOpen, onClose, flatId, flatName }) {
   const [loading, setLoading] = useState(true);
@@ -65,33 +65,29 @@ export default function FlatBillingHistoryModal({ isOpen, onClose, flatId, flatN
           <div className="flex bg-white p-1 rounded-xl border border-gray-200 shadow-sm">
             <button
               onClick={() => setActiveTab('all')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                activeTab === 'all' ? 'bg-orange-500 text-white' : 'text-gray-600 hover:text-gray-900'
-              }`}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'all' ? 'bg-orange-500 text-white' : 'text-gray-600 hover:text-gray-900'
+                }`}
             >
               All Records
             </button>
             <button
               onClick={() => setActiveTab('credit_notes')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                activeTab === 'credit_notes' ? 'bg-amber-500 text-white' : 'text-gray-600 hover:text-gray-900'
-              }`}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'credit_notes' ? 'bg-amber-500 text-white' : 'text-gray-600 hover:text-gray-900'
+                }`}
             >
               Credit Notes ({creditNotes.length})
             </button>
             <button
               onClick={() => setActiveTab('discounts')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                activeTab === 'discounts' ? 'bg-blue-500 text-white' : 'text-gray-600 hover:text-gray-900'
-              }`}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'discounts' ? 'bg-blue-500 text-white' : 'text-gray-600 hover:text-gray-900'
+                }`}
             >
               Discounts ({discounts.length})
             </button>
             <button
               onClick={() => setActiveTab('invoices')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                activeTab === 'invoices' ? 'bg-gray-800 text-white' : 'text-gray-600 hover:text-gray-900'
-              }`}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${activeTab === 'invoices' ? 'bg-gray-800 text-white' : 'text-gray-600 hover:text-gray-900'
+                }`}
             >
               Invoices ({invoices.length})
             </button>
@@ -128,11 +124,10 @@ export default function FlatBillingHistoryModal({ isOpen, onClose, flatId, flatN
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="font-mono font-bold text-amber-900 text-sm">{cn.noteNumber}</span>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                              cn.status === 'approved' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
-                              cn.status === 'rejected' ? 'bg-red-100 text-red-800 border-red-300' :
-                              'bg-amber-100 text-amber-800 border-amber-300'
-                            }`}>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${cn.status === 'approved' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
+                                cn.status === 'rejected' ? 'bg-red-100 text-red-800 border-red-300' :
+                                  'bg-amber-100 text-amber-800 border-amber-300'
+                              }`}>
                               {cn.status?.toUpperCase()}
                             </span>
                           </div>
@@ -175,11 +170,10 @@ export default function FlatBillingHistoryModal({ isOpen, onClose, flatId, flatN
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="font-mono font-bold text-blue-900 text-sm">{disc.discountCode}</span>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                              disc.status === 'approved' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
-                              disc.status === 'rejected' ? 'bg-red-100 text-red-800 border-red-300' :
-                              'bg-amber-100 text-amber-800 border-amber-300'
-                            }`}>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${disc.status === 'approved' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' :
+                                disc.status === 'rejected' ? 'bg-red-100 text-red-800 border-red-300' :
+                                  'bg-amber-100 text-amber-800 border-amber-300'
+                              }`}>
                               {disc.status?.toUpperCase()}
                             </span>
                             {disc.isApplied && (
@@ -243,19 +237,18 @@ export default function FlatBillingHistoryModal({ isOpen, onClose, flatId, flatN
                               <td className="py-2.5 px-3 text-gray-600">{inv.billingPeriod}</td>
                               <td className="py-2.5 px-3 text-right">{formatINR(inv.subTotal)}</td>
                               <td className="py-2.5 px-3 text-right font-medium text-amber-600">
-                                {inv.creditNoteAmount > 0 ? `-${formatINR(inv.creditNoteAmount)}` : '—'}
+                                {inv.creditNoteAmount > 0 ? `-${formatINR(inv.creditNoteAmount)}` : '-'}
                               </td>
                               <td className="py-2.5 px-3 text-right font-medium text-blue-600">
-                                {inv.discountAmount > 0 ? `-${formatINR(inv.discountAmount)}` : '—'}
+                                {inv.discountAmount > 0 ? `-${formatINR(inv.discountAmount)}` : '-'}
                               </td>
                               <td className="py-2.5 px-3 text-right font-bold text-gray-900">{formatINR(inv.totalAmount)}</td>
                               <td className="py-2.5 px-3 text-right text-emerald-600 font-semibold">{formatINR(inv.paidAmount)}</td>
                               <td className="py-2.5 px-3 text-center">
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                  inv.status === 'PAID' ? 'bg-emerald-100 text-emerald-800' :
-                                  inv.status === 'PARTIALLY_PAID' ? 'bg-blue-100 text-blue-800' :
-                                  'bg-amber-100 text-amber-800'
-                                }`}>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${inv.status === 'PAID' ? 'bg-emerald-100 text-emerald-800' :
+                                    inv.status === 'PARTIALLY_PAID' ? 'bg-blue-100 text-blue-800' :
+                                      'bg-amber-100 text-amber-800'
+                                  }`}>
                                   {inv.status}
                                 </span>
                               </td>

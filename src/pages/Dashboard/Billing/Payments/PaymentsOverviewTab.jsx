@@ -163,7 +163,7 @@ export default function PaymentsOverviewTab({ isAdmin, isAccountant }) {
                 ? card.count
                   ? (stats[card.key] || 0).toLocaleString('en-IN')
                   : formatINR(stats[card.key])
-                : '—'
+                : '-'
             }
             color={card.color}
             icon={card.icon}

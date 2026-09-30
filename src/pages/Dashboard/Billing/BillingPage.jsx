@@ -27,12 +27,7 @@ const SUBMODULE_CONFIG = [
     colorClass: 'bg-blue-100 text-blue-600',
     stats: { label: 'Invoices Issued', value: '412', trend: '+5%' },
     columns: ['Invoice ID', 'Flat / Member', 'Billing Cycle', 'Amount', 'Status'],
-    sampleRows: [
-      { id: 'INV-2026-001', col1: 'Flat A-101 (R. Sharma)', col2: 'Sept 2026', col3: '₹4,500', status: 'Paid' },
-      { id: 'INV-2026-002', col1: 'Flat A-102 (A. Verma)', col2: 'Sept 2026', col3: '₹4,500', status: 'Pending' },
-      { id: 'INV-2026-003', col1: 'Flat B-204 (S. Patel)', col2: 'Sept 2026', col3: '₹5,200', status: 'Paid' },
-      { id: 'INV-2026-004', col1: 'Flat C-301 (M. Gupta)', col2: 'Sept 2026', col3: '₹4,800', status: 'Overdue' },
-    ]
+    sampleRows: []
   },
   {
     id: 'billing_config_charge_head',
@@ -54,11 +49,7 @@ const SUBMODULE_CONFIG = [
     colorClass: 'bg-red-100 text-red-600',
     stats: { label: 'Total Arrears', value: '₹1,12,000', trend: '-8%' },
     columns: ['Record ID', 'Member / Flat', 'Overdue Period', 'Interest / Fine', 'Total Arrears', 'Status'],
-    sampleRows: [
-      { id: 'ARR-101', col1: 'Flat B-402 (K. Mehta)', col2: '60+ Days', col3: '₹450 (18% p.a.)', col4: '₹14,450', status: 'Overdue' },
-      { id: 'ARR-102', col1: 'Flat A-203 (V. Singh)', col2: '30 Days', col3: '₹150 (Late Fee)', col4: '₹5,150', status: 'Pending' },
-      { id: 'ARR-103', col1: 'Flat D-104 (P. Nair)', col2: '90+ Days', col3: '₹1,200 (Legal Notice)', col4: '₹28,200', status: 'Escalated' },
-    ]
+    sampleRows: []
   },
   {
     id: 'payments_collection',
@@ -69,11 +60,7 @@ const SUBMODULE_CONFIG = [
     colorClass: 'bg-emerald-100 text-emerald-600',
     stats: { label: 'Collected This Month', value: '₹4,52,000', trend: '+14%' },
     columns: ['Payment Ref', 'Payer / Flat', 'Payment Mode', 'Date Received', 'Amount', 'Status'],
-    sampleRows: [
-      { id: 'PAY-8821', col1: 'Flat A-101 (R. Sharma)', col2: 'UPI (Razorpay)', col3: '2026-09-02', col4: '₹4,500', status: 'Successful' },
-      { id: 'PAY-8822', col1: 'Flat B-204 (S. Patel)', col2: 'Net Banking', col3: '2026-09-03', col4: '₹5,200', status: 'Successful' },
-      { id: 'PAY-8823', col1: 'Flat C-102 (D. Shah)', col2: 'Cheque (#40192)', col3: '2026-09-04', col4: '₹4,500', status: 'Pending Clearance' },
-    ]
+    sampleRows: []
   },
   {
     id: 'advance_accounts_deposits',
@@ -84,11 +71,7 @@ const SUBMODULE_CONFIG = [
     colorClass: 'bg-indigo-100 text-indigo-600',
     stats: { label: 'Total Held Deposits', value: '₹6,40,000' },
     columns: ['Deposit ID', 'Resident / Flat', 'Deposit Category', 'Amount Held', 'Date Received', 'Status'],
-    sampleRows: [
-      { id: 'DEP-041', col1: 'Flat A-302 (Tenant - K. Sen)', col2: 'Move-in Security', col3: '₹25,000', col4: '2026-01-15', status: 'Held' },
-      { id: 'DEP-042', col1: 'Flat B-101 (Owner - R. Rao)', col2: 'Maintenance Advance', col3: '₹12,000', col4: '2026-04-01', status: 'Active' },
-      { id: 'DEP-043', col1: 'Flat C-504 (Vendor - Security)', col2: 'EMD Security Deposit', col3: '₹50,000', col4: '2025-11-20', status: 'Held' },
-    ]
+    sampleRows: []
   },
   {
     id: 'credit_notes_discount',
@@ -99,10 +82,7 @@ const SUBMODULE_CONFIG = [
     colorClass: 'bg-amber-100 text-amber-600',
     stats: { label: 'Discounts Issued', value: '₹18,500' },
     columns: ['Note ID', 'Recipient / Flat', 'Adjustment Reason', 'Discount / Credit Amount', 'Approved By', 'Status'],
-    sampleRows: [
-      { id: 'CN-109', col1: 'Flat B-301 (A. Deshmukh)', col2: 'Early Payment Discount (5%)', col3: '₹225', col4: 'Admin (System)', status: 'Applied' },
-      { id: 'CN-110', col1: 'Flat A-404 (G. Joshi)', col2: 'Water Charge Waiver (Meter Issue)', col3: '₹1,500', col4: 'Treasurer', status: 'Approved' },
-    ]
+    sampleRows: []
   },
   {
     id: 'bank_cash_reconciliation',
@@ -113,21 +93,17 @@ const SUBMODULE_CONFIG = [
     colorClass: 'bg-teal-100 text-teal-600',
     stats: { label: 'Reconciled Balance', value: '₹18,45,200', trend: 'Balanced' },
     columns: ['Reconcile ID', 'Bank Account / Book', 'Statement Date', 'Closing Balance', 'Variance', 'Status'],
-    sampleRows: [
-      { id: 'REC-09', col1: 'HDFC Main Operating A/c', col2: '2026-08-31', col3: '₹14,20,500', col4: '₹0.00', status: 'Reconciled' },
-      { id: 'REC-10', col1: 'SBI Sinking Fund A/c', col2: '2026-08-31', col3: '₹4,12,000', col4: '₹0.00', status: 'Reconciled' },
-      { id: 'REC-11', col1: 'Petty Cash Book', col2: '2026-09-05', col3: '₹12,700', col4: '₹0.00', status: 'Reconciled' },
-    ]
+    sampleRows: []
   },
   {
     id: 'ledger_management',
     slug: 'ledger-management',
     title: 'Ledger management',
-    desc: 'View and manage flat-wise ledgers, track debit/credit entries, and outstanding balances.',
+    desc: 'Double-entry accounting, manage chart of accounts, journal entries, and trial balances.',
     icon: FaFileAlt,
     colorClass: 'bg-cyan-100 text-cyan-600',
-    stats: { label: 'Active Ledgers', value: '' },
-    columns: ['Flat / Member', 'Opening Balance', 'Total Debits', 'Total Credits', 'Closing Balance'],
+    stats: { label: 'Active Accounts (CoA)', value: '' },
+    columns: ['Account Code', 'Account Name', 'Type', 'Normal Balance', 'Current Balance'],
     sampleRows: []
   },
   {
@@ -139,11 +115,7 @@ const SUBMODULE_CONFIG = [
     colorClass: 'bg-orange-100 text-orange-600',
     stats: { label: 'Paid This Month', value: '₹1,85,000' },
     columns: ['Voucher ID', 'Vendor Name', 'Service Description', 'Bill Amount', 'TDS Deduction', 'Payment Status'],
-    sampleRows: [
-      { id: 'VNP-301', col1: 'Apex Security Services', col2: 'Aug 2026 Security Guards Payout', col3: '₹85,000', col4: '₹1,700 (2%)', status: 'Paid' },
-      { id: 'VNP-302', col1: 'CleanTech Facility Mgt', col2: 'Aug 2026 Housekeeping Staff', col3: '₹45,000', col4: '₹900 (2%)', status: 'Paid' },
-      { id: 'VNP-303', col1: 'KONE Elevator Maintenance', col2: 'Q3 AMC Charges', col3: '₹35,000', col4: '₹700 (2%)', status: 'Pending Approval' },
-    ]
+    sampleRows: []
   },
   {
     id: 'budgeting',
@@ -154,11 +126,7 @@ const SUBMODULE_CONFIG = [
     colorClass: 'bg-lime-100 text-lime-600',
     stats: { label: 'FY 2026-27 Budget', value: '₹45,00,000' },
     columns: ['Budget Head', 'Annual Allocation', 'Spent (YTD)', 'Remaining', 'Utilization %'],
-    sampleRows: [
-      { id: 'BUD-01', col1: 'Security & Housekeeping', col2: '₹18,00,000', col3: '₹7,80,000', col4: '₹10,20,000', status: '43.3%' },
-      { id: 'BUD-02', col1: 'Repairs & Capital Works', col2: '₹12,00,000', col3: '₹4,50,000', col4: '₹7,50,000', status: '37.5%' },
-      { id: 'BUD-03', col1: 'Utilities (Power/Water)', col2: '₹10,00,000', col3: '₹4,90,000', col4: '₹5,10,000', status: '49.0%' },
-    ]
+    sampleRows: []
   },
   {
     id: 'reports_compliance',
@@ -281,6 +249,11 @@ const BillingPage = () => {
     totalArrears: null,
     collectedThisMonth: null,
     vendorPaymentsCount: null,
+    // ── New dynamic card stats ─────────────────────────────────────────────
+    totalHeldDeposits: null,
+    discountsIssued: null,
+    reconciledBalance: null,
+    activeLedgers: null,
   });
 
   useEffect(() => {
@@ -329,6 +302,50 @@ const BillingPage = () => {
           if (total !== undefined) {
             setHubStats(prev => ({ ...prev, vendorPaymentsCount: total }));
           }
+        })
+        .catch(() => { });
+
+      // ── Total Held Deposits (advance accounts) ────────────────────────────
+      apiClient.get('/advance-accounts?limit=1')
+        .then(res => {
+          const list = res.data?.data?.accounts || res.data?.data || [];
+          const total = Array.isArray(list)
+            ? list.reduce((s, a) => s + (a.currentBalance || 0), 0)
+            : (res.data?.data?.totalBalance || 0);
+          setHubStats(prev => ({ ...prev, totalHeldDeposits: total }));
+        })
+        .catch(() => { });
+
+      // ── Discounts Issued (credit notes this month) ────────────────────────
+      apiClient.get('/billing/credit-notes?status=APPROVED&limit=200')
+        .then(res => {
+          const list = res.data?.data?.creditNotes || res.data?.data || [];
+          const total = Array.isArray(list)
+            ? list.reduce((s, c) => s + (c.amount || c.creditAmount || 0), 0)
+            : 0;
+          setHubStats(prev => ({ ...prev, discountsIssued: total }));
+        })
+        .catch(() => { });
+
+      // ── Reconciled Balance (sum of all bank/cash financial accounts) ──────
+      apiClient.get('/reconciliation/accounts')
+        .then(res => {
+          const list = res.data?.data?.accounts || res.data?.data || [];
+          const total = Array.isArray(list)
+            ? list.reduce((s, a) => s + (a.currentBalance || 0), 0)
+            : 0;
+          setHubStats(prev => ({ ...prev, reconciledBalance: total }));
+        })
+        .catch(() => { });
+
+      // ── Active Ledgers (chart of accounts active count) ───────────────────
+      apiClient.get('/ledger/accounts?status=ACTIVE&limit=1')
+        .then(res => {
+          const count = res.data?.data?.pagination?.total
+            ?? res.data?.data?.accounts?.length
+            ?? res.data?.data?.length
+            ?? null;
+          if (count !== null) setHubStats(prev => ({ ...prev, activeLedgers: count }));
         })
         .catch(() => { });
     }
@@ -1347,6 +1364,14 @@ const BillingPage = () => {
               dynamicStats = { ...mod.stats, value: formatINR(hubStats.collectedThisMonth) };
             } else if (mod.id === 'vendor_payments' && hubStats.vendorPaymentsCount !== null) {
               dynamicStats = { ...mod.stats, label: 'Total Payments', value: String(hubStats.vendorPaymentsCount) };
+            } else if (mod.id === 'advance_accounts_deposits' && hubStats.totalHeldDeposits !== null) {
+              dynamicStats = { ...mod.stats, value: formatINR(hubStats.totalHeldDeposits) };
+            } else if (mod.id === 'credit_notes_discount' && hubStats.discountsIssued !== null) {
+              dynamicStats = { ...mod.stats, value: formatINR(hubStats.discountsIssued) };
+            } else if (mod.id === 'bank_cash_reconciliation' && hubStats.reconciledBalance !== null) {
+              dynamicStats = { ...mod.stats, value: formatINR(hubStats.reconciledBalance) };
+            } else if (mod.id === 'ledger_management' && hubStats.activeLedgers !== null) {
+              dynamicStats = { ...mod.stats, value: String(hubStats.activeLedgers) };
             }
             return (
               <SectionCard

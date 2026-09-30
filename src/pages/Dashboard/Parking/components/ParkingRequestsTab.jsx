@@ -14,23 +14,23 @@ const formatLabel = (str) =>
     .replace(/^\w/, (c) => c.toUpperCase());
 
 const REQUEST_STATUS_STYLES = {
-  pending:  'bg-amber-100 text-amber-700 border-amber-200',
+  pending: 'bg-amber-100 text-amber-700 border-amber-200',
   approved: 'bg-emerald-100 text-emerald-700 border-emerald-200',
   rejected: 'bg-rose-100 text-rose-700 border-rose-200',
-  cancelled:'bg-gray-100 text-gray-600 border-gray-200',
+  cancelled: 'bg-gray-100 text-gray-600 border-gray-200',
 };
 
 const ParkingRequestsTab = ({ requests, loading, onCreateRequest, onApproveRequest, onRejectRequest, isResident }) => {
-  const [search, setSearch]           = useState('');
+  const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
 
   const filtered = requests.filter((r) => {
-    const res  = (r.residentId?.name || '').toLowerCase();
+    const res = (r.residentId?.name || '').toLowerCase();
     const flat = (r.flatId?.flatNumber || '').toLowerCase();
     const type = (r.requestType || '').toLowerCase();
     const matchSearch = res.includes(search.toLowerCase()) ||
-                        flat.includes(search.toLowerCase()) ||
-                        type.includes(search.toLowerCase());
+      flat.includes(search.toLowerCase()) ||
+      type.includes(search.toLowerCase());
     const matchStatus = statusFilter === 'ALL' || r.status === statusFilter;
     return matchSearch && matchStatus;
   });
@@ -125,7 +125,7 @@ const ParkingRequestsTab = ({ requests, loading, onCreateRequest, onApproveReque
     );
   }
 
-  /* ── Admin View — full table ── */
+  /* ── Admin View - full table ── */
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -203,7 +203,7 @@ const ParkingRequestsTab = ({ requests, loading, onCreateRequest, onApproveReque
                         </div>
                         <div>
                           <p className="text-xs font-bold text-gray-800">
-                            {req.residentId?.name || req.userId?.name || '—'}
+                            {req.residentId?.name || req.userId?.name || '-'}
                           </p>
                           {(req.residentId?.email || req.userId?.email) && (
                             <p className="text-[11px] text-gray-400">{req.residentId?.email || req.userId?.email}</p>
@@ -215,7 +215,7 @@ const ParkingRequestsTab = ({ requests, loading, onCreateRequest, onApproveReque
                       <div className="flex items-center gap-1 text-xs text-gray-600">
                         <FaBuilding className="text-gray-400 text-[10px]" />
                         <span className="font-semibold">
-                          {req.flatId?.flatNumber || '—'}
+                          {req.flatId?.flatNumber || '-'}
                         </span>
                         {req.flatId?.wing && (
                           <span className="text-gray-400">({formatWing(req.flatId.wing)})</span>
@@ -231,7 +231,7 @@ const ParkingRequestsTab = ({ requests, loading, onCreateRequest, onApproveReque
                       <div className="flex items-center gap-1 text-xs text-gray-600">
                         <FaCar className="text-gray-400 text-[10px]" />
                         <span className="font-semibold capitalize">
-                          {formatLabel(req.requestedSlotType || req.preferredSlotType || req.preferredType) || '—'}
+                          {formatLabel(req.requestedSlotType || req.preferredSlotType || req.preferredType) || '-'}
                         </span>
                       </div>
                     </td>
@@ -240,7 +240,7 @@ const ParkingRequestsTab = ({ requests, loading, onCreateRequest, onApproveReque
                         <p className="text-xs text-gray-500 max-w-[180px] truncate italic" title={req.notes || req.reason}>
                           "{req.notes || req.reason}"
                         </p>
-                      ) : <span className="text-gray-400 text-xs">—</span>}
+                      ) : <span className="text-gray-400 text-xs">-</span>}
                     </td>
                     <td className="px-5 py-4 text-xs text-gray-500 whitespace-nowrap">
                       {new Date(req.createdAt).toLocaleString()}
@@ -269,7 +269,7 @@ const ParkingRequestsTab = ({ requests, loading, onCreateRequest, onApproveReque
                           </button>
                         </div>
                       ) : (
-                        <span className="text-xs text-gray-400">—</span>
+                        <span className="text-xs text-gray-400">-</span>
                       )}
                     </td>
                   </tr>

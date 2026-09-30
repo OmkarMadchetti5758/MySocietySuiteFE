@@ -36,7 +36,7 @@ const REASONS = [
   },
   {
     num: '02', title: 'Better Control Over Society Vendors',
-    body: 'A society may work with dozens of vendors throughout the year. Without a central record, it becomes difficult to answer simple questions — who approved this vendor, is it currently active, and is the contract still valid.',
+    body: 'A society may work with dozens of vendors throughout the year. Without a central record, it becomes difficult to answer simple questions - who approved this vendor, is it currently active, and is the contract still valid.',
     tag: 'A single source of truth for the committee',
   },
   {
@@ -202,7 +202,7 @@ export default function ApprovedVendorListBlog() {
           {/* Introduction */}
           <section id="intro">
             <p className="text-[18px] leading-[1.7] text-[#222] font-medium pb-8 mb-4 border-b border-[#ececec]">
-              Every residential society depends on vendors and service providers. From plumbers and electricians to housekeeping agencies, pest-control companies, lift maintenance providers, security agencies and AC technicians — vendors play an important role in keeping a society running smoothly.
+              Every residential society depends on vendors and service providers. From plumbers and electricians to housekeeping agencies, pest-control companies, lift maintenance providers, security agencies and AC technicians - vendors play an important role in keeping a society running smoothly.
             </p>
             <p className="text-[15.5px] leading-[1.85] text-[#33363c] mb-5">
               But there is one common question every society management committee eventually faces:
@@ -370,7 +370,7 @@ export default function ApprovedVendorListBlog() {
                   Keep the list alive, not archived
                 </h4>
                 <p className="text-[14px] text-[#5c4632] leading-[1.7]">
-                  Treat approval as a status, not a badge. Set a recurring review date for every vendor, so quality — not habit — decides who stays on the list.
+                  Treat approval as a status, not a badge. Set a recurring review date for every vendor, so quality - not habit - decides who stays on the list.
                 </p>
               </div>
             </div>
@@ -406,7 +406,7 @@ export default function ApprovedVendorListBlog() {
                 <span className="text-[#fb7815]">Approved, Verified &amp; Visible.</span>
               </h2>
               <p className="text-[#c7c9cd] text-[15.5px] leading-[1.7] mb-8">
-                MySocietySuite lets your committee maintain a living Approved Vendor List — with documents, review dates and contract status in one place.
+                MySocietySuite lets your committee maintain a living Approved Vendor List - with documents, review dates and contract status in one place.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
                 <a

@@ -37,7 +37,7 @@ const STATUS_BADGES = {
 
 const formatINR = (n) => `₹${(Number(n) || 0).toLocaleString('en-IN')}`;
 const formatDate = (d) =>
-  d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+  d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
 
 export default function VendorPaymentsPage({ onBack }) {
   const { permissions } = usePermissions();
@@ -254,11 +254,10 @@ export default function VendorPaymentsPage({ onBack }) {
                   setStatusFilter(st);
                   setPage(1);
                 }}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold capitalize transition-all ${
-                  statusFilter === st
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold capitalize transition-all ${statusFilter === st
                     ? 'bg-orange-600 text-white shadow-sm'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+                  }`}
               >
                 {st === 'ALL' ? 'All Payments' : st.replace('_', ' ')}
               </button>
@@ -266,11 +265,10 @@ export default function VendorPaymentsPage({ onBack }) {
 
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`p-2.5 rounded-xl border text-sm transition-colors ${
-                showFilters || startDate || endDate
+              className={`p-2.5 rounded-xl border text-sm transition-colors ${showFilters || startDate || endDate
                   ? 'bg-orange-50 border-orange-200 text-orange-600'
                   : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
-              }`}
+                }`}
               title="More Filters"
             >
               <FaFilter />
@@ -366,12 +364,12 @@ export default function VendorPaymentsPage({ onBack }) {
 
                       {/* Vendor */}
                       <td className="py-4 px-6">
-                        <div className="font-semibold text-gray-900">{p.vendorName || '—'}</div>
+                        <div className="font-semibold text-gray-900">{p.vendorName || '-'}</div>
                       </td>
 
                       {/* Bill Reference */}
                       <td className="py-4 px-6 text-gray-600 font-mono text-xs">
-                        {p.billReference || '—'}
+                        {p.billReference || '-'}
                       </td>
 
                       {/* Amount */}

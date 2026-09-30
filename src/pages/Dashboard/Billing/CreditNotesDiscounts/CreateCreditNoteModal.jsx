@@ -157,7 +157,7 @@ export default function CreateCreditNoteModal({ isOpen, onClose, onSuccess, thre
       if (res.data?.status === 'success' || res.status === 201) {
         const createdCN = res.data?.data;
         if (createdCN?.status === 'pending_approval') {
-          toast.success(`Credit Note created (${createdCN.noteNumber}). Exceeds threshold — Routed to Committee Admin for approval.`);
+          toast.success(`Credit Note created (${createdCN.noteNumber}). Exceeds threshold - Routed to Committee Admin for approval.`);
         } else {
           toast.success(`Credit Note ${createdCN?.noteNumber || ''} issued and applied successfully!`);
         }
