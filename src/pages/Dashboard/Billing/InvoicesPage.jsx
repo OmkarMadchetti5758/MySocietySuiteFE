@@ -34,9 +34,9 @@ const OTC_STATUS_CONFIG = {
 };
 
 const fmt = (n) => `₹${(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
 const periodLabel = (p) => {
-  if (!p) return '—';
+  if (!p) return '-';
   if (p.includes('-Q')) {
     const [y, q] = p.split('-');
     return `${q} ${y}`;
@@ -395,20 +395,20 @@ const InvoicesPage = () => {
                             <div className="font-mono text-xs font-bold text-orange-600">{inv.invoiceNumber}</div>
                           </td>
                           <td className="py-3.5 px-5 font-semibold text-gray-700">
-                            {inv.flatNumber || '—'}
+                            {inv.flatNumber || '-'}
                           </td>
                           <td className="py-3.5 px-5 font-semibold text-gray-700">
                             {inv.wingName || inv.wing || inv.blockName || 'Wing A'}
                           </td>
                           {!isResident && (
                             <td className="py-3.5 px-5">
-                              <div className="text-gray-700">{inv.residentName || '—'}</div>
+                              <div className="text-gray-700">{inv.residentName || '-'}</div>
                             </td>
                           )}
 
                           <td className="py-3.5 px-5 text-gray-600">{fmtDate(inv.dueDate)}</td>
                           <td className="py-3.5 px-5 text-right font-bold text-gray-900">{fmt(inv.totalAmount)}</td>
-                          <td className="py-3.5 px-5 text-right font-semibold text-purple-600">{fine > 0 ? fmt(fine) : '—'}</td>
+                          <td className="py-3.5 px-5 text-right font-semibold text-purple-600">{fine > 0 ? fmt(fine) : '-'}</td>
                           <td className="py-3.5 px-5 text-right text-emerald-600 font-semibold">{fmt(inv.paidAmount)}</td>
                           <td className={`py-3.5 px-5 text-right font-bold ${balance > 0 ? 'text-red-500' : 'text-emerald-600'}`}>{fmt(balance)}</td>
                           <td className="py-3.5 px-5"><StatusBadge status={inv.status} /></td>
@@ -575,7 +575,7 @@ const InvoicesPage = () => {
                           <div className="font-semibold text-gray-900">{charge.description}</div>
                         </td>
                         <td className="py-3.5 px-5 font-semibold text-gray-900">
-                          {charge.flatNumber || '—'}
+                          {charge.flatNumber || '-'}
                         </td>
                         <td className="py-3.5 px-5 font-semibold text-gray-700">
                           {charge.wingName || charge.wing || charge.blockName || 'Wing A'}

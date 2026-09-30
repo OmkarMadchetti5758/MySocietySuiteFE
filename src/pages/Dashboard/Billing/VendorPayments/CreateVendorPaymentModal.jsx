@@ -175,9 +175,8 @@ export default function CreateVendorPaymentModal({ isOpen, onClose, onSuccess })
                 value={formData.vendorId}
                 onChange={handleVendorSelect}
                 disabled={loadingVendors || submitting}
-                className={`w-full px-4 py-2.5 bg-white border ${
-                  errors.vendorId ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:ring-orange-500/20'
-                } rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-orange-500 transition-all`}
+                className={`w-full px-4 py-2.5 bg-white border ${errors.vendorId ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:ring-orange-500/20'
+                  } rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-orange-500 transition-all`}
               >
                 <option value="">{loadingVendors ? 'Loading vendors...' : '-- Select Vendor --'}</option>
                 {vendors.map((v) => (
@@ -202,9 +201,8 @@ export default function CreateVendorPaymentModal({ isOpen, onClose, onSuccess })
               onChange={handleChange}
               placeholder="e.g. INV-2026-081 or WO-412"
               disabled={submitting}
-              className={`w-full px-4 py-2.5 bg-white border ${
-                errors.billReference ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:ring-orange-500/20'
-              } rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-orange-500 transition-all`}
+              className={`w-full px-4 py-2.5 bg-white border ${errors.billReference ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:ring-orange-500/20'
+                } rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-orange-500 transition-all`}
             />
             {errors.billReference && <p className="text-xs text-red-500 mt-1">{errors.billReference}</p>}
           </div>
@@ -227,9 +225,8 @@ export default function CreateVendorPaymentModal({ isOpen, onClose, onSuccess })
                   step="0.01"
                   placeholder="0.00"
                   disabled={submitting}
-                  className={`w-full pl-9 pr-4 py-2.5 bg-white border ${
-                    errors.amount ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:ring-orange-500/20'
-                  } rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-orange-500 transition-all font-semibold`}
+                  className={`w-full pl-9 pr-4 py-2.5 bg-white border ${errors.amount ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:ring-orange-500/20'
+                    } rounded-xl text-sm focus:outline-none focus:ring-2 focus:border-orange-500 transition-all font-semibold`}
                 />
               </div>
               {errors.amount && <p className="text-xs text-red-500 mt-1">{errors.amount}</p>}
@@ -272,7 +269,7 @@ export default function CreateVendorPaymentModal({ isOpen, onClose, onSuccess })
                 <option value="">-- Select Paying Bank / Cash Account (Optional) --</option>
                 {accounts.map((acc) => (
                   <option key={acc._id} value={acc._id}>
-                    {acc.accountName} ({acc.accountType}) — Bal: ₹{(acc.currentBalance || 0).toLocaleString('en-IN')}
+                    {acc.accountName} ({acc.accountType}) - Bal: ₹{(acc.currentBalance || 0).toLocaleString('en-IN')}
                   </option>
                 ))}
               </select>

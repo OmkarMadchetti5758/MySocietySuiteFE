@@ -37,7 +37,7 @@ const formatFlatWing = (vehicle) => {
       const numPart = parts.slice(1).join('-').trim();
       return `Wing ${wingPart} - ${numPart}`;
     }
-    // No wing prefix — just show flat number
+    // No wing prefix - just show flat number
     return flatNum;
   }
 

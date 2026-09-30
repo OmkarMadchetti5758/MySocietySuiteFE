@@ -163,7 +163,7 @@ const DashboardLayout = () => {
   if (!auth) return null;
 
   const { user, societyName } = auth;
-  console.log("Prining theuser --> ", user);
+  // console.log("Prining theuser --> ", user);
   // const roleKeys = user.roleKeys || JSON.parse(localStorage.getItem('roleKeys') || '[]');
   const roleKeys = user.roleKeys || auth.roleKeys;
   const roleLabel = user.displayRole
@@ -402,10 +402,10 @@ const DashboardLayout = () => {
                   ) : isAdmin ? (
                     <AdminDashboard societyName={societyName} />
                   ) : (
-                    <ResidentDashboard 
-                      userName={user.name} 
-                      societyName={societyName} 
-                      flatDetails={user.flatNumber || 'Building A, Flat 101'} 
+                    <ResidentDashboard
+                      userName={user.name}
+                      societyName={societyName}
+                      flatDetails={user.flatNumber || 'Building A, Flat 101'}
                     />
                   )
                 }
@@ -419,10 +419,10 @@ const DashboardLayout = () => {
                   ) : isAdmin ? (
                     <AdminDashboard societyName={societyName} />
                   ) : (
-                    <ResidentDashboard 
-                      userName={user.name} 
-                      societyName={societyName} 
-                      flatDetails={user.flatNumber || 'Building A, Flat 101'} 
+                    <ResidentDashboard
+                      userName={user.name}
+                      societyName={societyName}
+                      flatDetails={user.flatNumber || 'Building A, Flat 101'}
                     />
                   )
                 }

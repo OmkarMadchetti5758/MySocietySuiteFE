@@ -215,23 +215,23 @@ export default function PaymentsListTab({ isAdmin, isAccountant }) {
                       <span className="font-mono text-xs font-semibold text-blue-600">{p.paymentNumber}</span>
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">
-                      {p.paymentDate ? new Date(p.paymentDate).toLocaleDateString('en-IN') : '—'}
+                      {p.paymentDate ? new Date(p.paymentDate).toLocaleDateString('en-IN') : '-'}
                     </td>
                     <td className="px-4 py-3 text-xs font-medium text-gray-800">
-                      {p.flatId?.flatNumber || '—'}
+                      {p.flatId?.flatNumber || '-'}
                       {p.flatId?.blockName && <span className="text-gray-400 ml-1">({p.flatId.blockName})</span>}
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-700 font-medium">
-                      {p.userId?.name || 
-                       (p.userId?.firstName ? `${p.userId.firstName} ${p.userId.lastName || ''}`.trim() : null) || 
-                       p.invoiceId?.residentName || 
-                       p.flatId?.tenantName || 
-                       p.flatId?.ownerName || 
-                       '—'}
+                      {p.userId?.name ||
+                        (p.userId?.firstName ? `${p.userId.firstName} ${p.userId.lastName || ''}`.trim() : null) ||
+                        p.invoiceId?.residentName ||
+                        p.flatId?.tenantName ||
+                        p.flatId?.ownerName ||
+                        '-'}
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-xs font-mono text-indigo-600">
-                        {p.invoiceId?.invoiceNumber || '—'}
+                        {p.invoiceId?.invoiceNumber || '-'}
                       </span>
                     </td>
                     <td className="px-4 py-3 font-bold text-sm text-gray-900">
@@ -252,7 +252,7 @@ export default function PaymentsListTab({ isAdmin, isAccountant }) {
                     </td>
                     <td className="px-4 py-3">
                       <span className={`text-[11px] px-2 py-1 rounded-lg font-semibold ${RECON_COLORS[p.reconciliationStatus] || 'bg-gray-100 text-gray-500'}`}>
-                        {p.reconciliationStatus?.replace('_', ' ') || '—'}
+                        {p.reconciliationStatus?.replace('_', ' ') || '-'}
                       </span>
                     </td>
                     <td className="px-4 py-3">

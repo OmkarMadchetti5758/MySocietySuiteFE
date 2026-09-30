@@ -9,11 +9,11 @@ import ConfirmModal from '../../../components/common/ConfirmModal';
 const MODULE_ID = 'amenity_booking';
 
 const STATUS_CONFIG = {
-  pending:   { label: 'Pending',   cls: 'bg-amber-100 text-amber-800' },
+  pending: { label: 'Pending', cls: 'bg-amber-100 text-amber-800' },
   confirmed: { label: 'Confirmed', cls: 'bg-green-100 text-green-800' },
-  cancelled: { label: 'Cancelled', cls: 'bg-gray-100  text-gray-600'  },
-  rejected:  { label: 'Rejected',  cls: 'bg-red-100   text-red-800'   },
-  completed: { label: 'Completed', cls: 'bg-blue-100  text-blue-800'  },
+  cancelled: { label: 'Cancelled', cls: 'bg-gray-100  text-gray-600' },
+  rejected: { label: 'Rejected', cls: 'bg-red-100   text-red-800' },
+  completed: { label: 'Completed', cls: 'bg-blue-100  text-blue-800' },
 };
 
 const StatusBadge = ({ status }) => {
@@ -29,11 +29,11 @@ const BookingList = () => {
   const { hasModuleAccess } = usePermissions();
   const canManageAll = hasModuleAccess(MODULE_ID, PERMISSION_LEVELS.FULL);
 
-  const [bookings, setBookings]         = useState([]);
-  const [loading, setLoading]           = useState(true);
-  const [actionId, setActionId]         = useState(null);
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [actionId, setActionId] = useState(null);
   const [filterStatus, setFilterStatus] = useState('');
-  const [reasonModal, setReasonModal]   = useState({ open: false, type: '', bookingId: null, reason: '' });
+  const [reasonModal, setReasonModal] = useState({ open: false, type: '', bookingId: null, reason: '' });
   const [approveModal, setApproveModal] = useState({ open: false, bookingId: null });
 
   const fetchBookings = useCallback(async () => {
@@ -149,11 +149,11 @@ const BookingList = () => {
               {bookings.map(b => (
                 <tr key={b._id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-5 py-4">
-                    <p className="text-sm font-semibold text-gray-900">{b.amenityId?.name ?? '—'}</p>
+                    <p className="text-sm font-semibold text-gray-900">{b.amenityId?.name ?? '-'}</p>
                   </td>
                   {canManageAll && (
                     <td className="px-5 py-4">
-                      <p className="text-sm text-gray-800">{b.bookedBy?.name ?? '—'}</p>
+                      <p className="text-sm text-gray-800">{b.bookedBy?.name ?? '-'}</p>
                       <p className="text-xs text-gray-400">{b.bookedBy?.email}</p>
                     </td>
                   )}
@@ -236,8 +236,8 @@ const BookingList = () => {
               {reasonModal.type === 'reject' ? 'Reject Booking' : 'Cancel Booking'}
             </h3>
             <p className="text-sm text-gray-500 mb-4">
-              {reasonModal.type === 'reject' 
-                ? 'Provide a reason that will be shown to the resident.' 
+              {reasonModal.type === 'reject'
+                ? 'Provide a reason that will be shown to the resident.'
                 : 'Reason for cancellation (required):'}
             </p>
             <textarea
@@ -259,9 +259,8 @@ const BookingList = () => {
                 id="btn-submit-reason"
                 onClick={handleReasonSubmit}
                 disabled={actionId !== null}
-                className={`px-4 py-2 text-sm font-medium text-white rounded-xl disabled:opacity-40 transition-colors ${
-                  reasonModal.type === 'reject' ? 'bg-red-600 hover:bg-red-700' : 'bg-orange-600 hover:bg-orange-700'
-                }`}
+                className={`px-4 py-2 text-sm font-medium text-white rounded-xl disabled:opacity-40 transition-colors ${reasonModal.type === 'reject' ? 'bg-red-600 hover:bg-red-700' : 'bg-orange-600 hover:bg-orange-700'
+                  }`}
               >
                 {actionId ? 'Processing...' : reasonModal.type === 'reject' ? 'Reject Booking' : 'Cancel Booking'}
               </button>

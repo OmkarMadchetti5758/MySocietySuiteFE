@@ -1399,7 +1399,7 @@ const FinesInterestArrearsPage = ({ onBack, currentUserRole = 'ADMIN' }) => {
           <div className="bg-white h-full max-w-lg w-full p-6 shadow-2xl overflow-y-auto animate-fade-in-left space-y-6">
             <div className="flex items-center justify-between pb-4 border-b border-gray-100">
               <div>
-                <h3 className="text-lg font-extrabold text-gray-900">Flat {String(selectedArrearsDetail.flat || '').replace(/^(Block|Flat)[-\s]*/i, '')} ({selectedArrearsDetail.wing || 'Wing A'}) — {selectedArrearsDetail.resident}</h3>
+                <h3 className="text-lg font-extrabold text-gray-900">Flat {String(selectedArrearsDetail.flat || '').replace(/^(Block|Flat)[-\s]*/i, '')} ({selectedArrearsDetail.wing || 'Wing A'}) - {selectedArrearsDetail.resident}</h3>
                 <span className="text-xs font-mono text-gray-500">Invoice Ref: {selectedArrearsDetail.previousInvoice}</span>
               </div>
               <button onClick={() => setSelectedArrearsDetail(null)} className="text-gray-400 hover:text-gray-600">

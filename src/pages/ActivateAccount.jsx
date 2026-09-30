@@ -249,7 +249,7 @@ export default function ActivateAccount() {
                     </div>
                 )}
 
-                {/* ── VALID — Activation Form ── */}
+                {/* ── VALID - Activation Form ── */}
                 {(phase === 'valid' || phase === 'activating') && inviteData && (
                     <div className="bg-white/5 border border-white/10 rounded-3xl overflow-hidden backdrop-blur-xl shadow-2xl">
                         {/* Header */}

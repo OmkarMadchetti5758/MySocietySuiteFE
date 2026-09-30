@@ -48,7 +48,7 @@ const AccountingPeriodsTab = () => {
         <div>
           <h3 className="text-lg font-bold text-blue-900 mb-1">Accounting Periods</h3>
           <p className="text-sm text-blue-700 leading-relaxed">
-            Manage your financial periods here. Closing a period prevents any new journal entries from being posted in that date range, securing your historical financial data. 
+            Manage your financial periods here. Closing a period prevents any new journal entries from being posted in that date range, securing your historical financial data.
             Periods are automatically generated when entries are posted into a new month.
           </p>
         </div>
@@ -80,7 +80,7 @@ const AccountingPeriodsTab = () => {
                     <div className="text-[10px] text-gray-500 font-mono mt-0.5">ID: {period._id.slice(-6).toUpperCase()}</div>
                   </td>
                   <td className="py-4 px-6 text-sm text-gray-600">
-                    {formatDate(period.startDate)} — {formatDate(period.endDate)}
+                    {formatDate(period.startDate)} - {formatDate(period.endDate)}
                   </td>
                   <td className="py-4 px-6 text-center">
                     {period.status === 'OPEN' ? (
@@ -95,7 +95,7 @@ const AccountingPeriodsTab = () => {
                   </td>
                   <td className="py-4 px-6 text-right">
                     {period.status === 'OPEN' ? (
-                      <button 
+                      <button
                         onClick={() => {
                           if (window.confirm(`Are you sure you want to close the period: ${period.periodName}?`)) {
                             handleAction(period._id, 'closed', ledgerService.closePeriod);
@@ -107,7 +107,7 @@ const AccountingPeriodsTab = () => {
                         <FaLock /> Close Period
                       </button>
                     ) : (
-                      <button 
+                      <button
                         onClick={() => {
                           const reason = window.prompt("Enter reason for reopening period:");
                           if (reason) handleAction(period._id, 'reopened', ledgerService.reopenPeriod, reason);

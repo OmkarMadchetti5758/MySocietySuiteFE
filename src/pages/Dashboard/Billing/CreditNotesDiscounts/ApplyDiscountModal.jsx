@@ -123,7 +123,7 @@ export default function ApplyDiscountModal({ isOpen, onClose, onSuccess, thresho
       if (res.data?.status === 'success' || res.status === 201) {
         const createdDisc = res.data?.data;
         if (createdDisc?.status === 'pending_approval') {
-          toast.success(`Discount registered (${createdDisc.discountCode}). Exceeds threshold — Routed to Committee Admin for approval.`);
+          toast.success(`Discount registered (${createdDisc.discountCode}). Exceeds threshold - Routed to Committee Admin for approval.`);
         } else {
           toast.success(`Discount ${createdDisc?.discountCode || ''} applied for upcoming invoice!`);
         }
@@ -283,8 +283,8 @@ export default function ApplyDiscountModal({ isOpen, onClose, onSuccess, thresho
           {/* Threshold alert */}
           {numAmount > 0 && (
             <div className={`p-3 rounded-2xl border text-xs flex items-start gap-2.5 ${isAboveThreshold
-                ? 'bg-amber-50 text-amber-800 border-amber-200'
-                : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+              ? 'bg-amber-50 text-amber-800 border-amber-200'
+              : 'bg-emerald-50 text-emerald-800 border-emerald-200'
               }`}>
               {isAboveThreshold ? (
                 <>

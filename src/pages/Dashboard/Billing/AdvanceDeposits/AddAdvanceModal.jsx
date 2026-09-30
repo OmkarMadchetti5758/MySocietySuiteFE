@@ -340,7 +340,7 @@ export default function AddAdvanceModal({ isOpen, onClose, onSuccess, isResident
             </div>
           )}
 
-          {/* Reference / UTR — only for applicable offline modes */}
+          {/* Reference / UTR - only for applicable offline modes */}
           {showRefField && (
             <div>
               <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
@@ -378,8 +378,8 @@ export default function AddAdvanceModal({ isOpen, onClose, onSuccess, isResident
               type="submit"
               disabled={submitting}
               className={`px-6 py-2.5 text-sm font-bold text-white rounded-2xl transition-all shadow-lg flex items-center gap-2 disabled:opacity-50 ${isResidentView
-                  ? 'bg-violet-600 hover:bg-violet-700 active:bg-violet-800 shadow-violet-600/20'
-                  : 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 shadow-indigo-600/20'
+                ? 'bg-violet-600 hover:bg-violet-700 active:bg-violet-800 shadow-violet-600/20'
+                : 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 shadow-indigo-600/20'
                 }`}
             >
               {submitting ? (

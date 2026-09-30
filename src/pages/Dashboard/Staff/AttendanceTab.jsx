@@ -6,9 +6,9 @@ import AddStaffModal from './AddStaffModal';
 import toast from 'react-hot-toast';
 
 const STATUS_STYLES = {
-  present:    { label: 'Present',  bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
-  absent:     { label: 'Absent',   bg: 'bg-red-50',     text: 'text-red-700',     dot: 'bg-red-500'     },
-  'on-leave': { label: 'On Leave', bg: 'bg-amber-50',   text: 'text-amber-700',   dot: 'bg-amber-500'   },
+  present: { label: 'Present', bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+  absent: { label: 'Absent', bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500' },
+  'on-leave': { label: 'On Leave', bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500' },
 };
 
 const getInitials = (name) => {
@@ -37,7 +37,7 @@ const AttendanceTab = ({ staffData, isFacilityManager, onAttendanceChange, refre
       if (res.data?.status === 'success') {
         const recordsMap = {};
         res.data.data.forEach(record => {
-          // record.staff is an ObjectId — .toString() ensures consistent string key
+          // record.staff is an ObjectId - .toString() ensures consistent string key
           recordsMap[String(record.staff)] = record;
         });
         setAttendanceRecords(recordsMap);
@@ -49,7 +49,7 @@ const AttendanceTab = ({ staffData, isFacilityManager, onAttendanceChange, refre
     }
   };
 
-  // Called by AttendanceModal on save success — optimistic update + refresh parent stat cards
+  // Called by AttendanceModal on save success - optimistic update + refresh parent stat cards
   const handleAttendanceSaved = (staffId, status) => {
     fetchAttendance(); // refresh the full record to get check-in/out times
     if (onAttendanceChange) onAttendanceChange();
@@ -147,11 +147,10 @@ const AttendanceTab = ({ staffData, isFacilityManager, onAttendanceChange, refre
                     <tr
                       key={staff._id}
                       onClick={() => isFacilityManager && setSelectedStaff(staff)}
-                      className={`transition-colors group ${
-                        isFacilityManager
+                      className={`transition-colors group ${isFacilityManager
                           ? 'cursor-pointer hover:bg-orange-50/40'
                           : 'cursor-default hover:bg-gray-50/50'
-                      }`}
+                        }`}
                       title={!isFacilityManager ? 'Only facility managers can mark attendance' : ''}
                     >
                       {/* Staff Info */}
@@ -170,7 +169,7 @@ const AttendanceTab = ({ staffData, isFacilityManager, onAttendanceChange, refre
                       </td>
 
                       {/* Shift */}
-                      <td className="px-5 py-4 text-sm text-gray-600">{staff.shift || '—'}</td>
+                      <td className="px-5 py-4 text-sm text-gray-600">{staff.shift || '-'}</td>
 
                       {/* Gate / Area */}
                       <td className="px-5 py-4">
@@ -183,14 +182,14 @@ const AttendanceTab = ({ staffData, isFacilityManager, onAttendanceChange, refre
                       <td className="px-5 py-4 text-sm text-gray-600">
                         {record?.checkInTime ? (
                           <span className="inline-flex items-center gap-1.5"><Clock8 className="w-3.5 h-3.5 text-gray-400" /> {record.checkInTime}</span>
-                        ) : '—'}
+                        ) : '-'}
                       </td>
 
                       {/* Check-out */}
                       <td className="px-5 py-4 text-sm text-gray-600">
                         {record?.checkOutTime ? (
                           <span className="inline-flex items-center gap-1.5"><Clock8 className="w-3.5 h-3.5 text-gray-400" /> {record.checkOutTime}</span>
-                        ) : '—'}
+                        ) : '-'}
                       </td>
 
                       {/* Status Badge */}
@@ -208,7 +207,7 @@ const AttendanceTab = ({ staffData, isFacilityManager, onAttendanceChange, refre
                         )}
                       </td>
 
-                      {/* Chevron arrow — only for facility managers */}
+                      {/* Chevron arrow - only for facility managers */}
                       {isFacilityManager && (
                         <>
                           <td className="px-5 py-4 text-right w-12">
@@ -216,7 +215,7 @@ const AttendanceTab = ({ staffData, isFacilityManager, onAttendanceChange, refre
                           </td>
                           <td className="px-5 py-4 text-right">
                             <div className="flex items-center justify-end gap-2">
-                              <button 
+                              <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setEditData(staff);
@@ -227,7 +226,7 @@ const AttendanceTab = ({ staffData, isFacilityManager, onAttendanceChange, refre
                               >
                                 <Edit2 className="w-4 h-4" />
                               </button>
-                              <button 
+                              <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setDeleteData(staff);

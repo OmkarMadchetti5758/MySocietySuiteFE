@@ -58,7 +58,7 @@ const FlatDetailsPage = () => {
     e.preventDefault();
     setSubmitting(true);
     setError('');
-    
+
     try {
       const payload = { ...formData };
       if (payload.area) payload.area = Number(payload.area);
@@ -165,7 +165,7 @@ const FlatDetailsPage = () => {
               {isEditing ? (
                 <input type="text" name="type" value={formData.type} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500" />
               ) : (
-                <div className="text-gray-900 font-medium">{flat.type || '—'}</div>
+                <div className="text-gray-900 font-medium">{flat.type || '-'}</div>
               )}
             </div>
             <div>
@@ -173,7 +173,7 @@ const FlatDetailsPage = () => {
               {isEditing ? (
                 <input type="number" name="area" value={formData.area} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500" />
               ) : (
-                <div className="text-gray-900 font-medium">{flat.area || '—'}</div>
+                <div className="text-gray-900 font-medium">{flat.area || '-'}</div>
               )}
             </div>
             <div>
@@ -201,7 +201,7 @@ const FlatDetailsPage = () => {
                   <option value="Builder">Builder</option>
                 </select>
               ) : (
-                <div className="text-gray-900 font-medium">{flat.ownershipType || '—'}</div>
+                <div className="text-gray-900 font-medium">{flat.ownershipType || '-'}</div>
               )}
             </div>
             <div>
@@ -215,7 +215,7 @@ const FlatDetailsPage = () => {
               ) : (
                 <div className="text-gray-900 font-medium">
                   <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                    {flat.occupancyStatus || '—'}
+                    {flat.occupancyStatus || '-'}
                   </span>
                 </div>
               )}
@@ -229,7 +229,7 @@ const FlatDetailsPage = () => {
                   <option value="maintenance">Maintenance</option>
                 </select>
               ) : (
-                <div className="text-gray-900 font-medium capitalize">{flat.status || '—'}</div>
+                <div className="text-gray-900 font-medium capitalize">{flat.status || '-'}</div>
               )}
             </div>
           </div>
@@ -245,7 +245,7 @@ const FlatDetailsPage = () => {
               {isEditing ? (
                 <input type="text" name="ownerName" value={formData.ownerName} onChange={handleChange} placeholder="e.g. John Doe" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500" />
               ) : (
-                <div className="text-gray-900 font-medium">{flat.ownerName || '—'}</div>
+                <div className="text-gray-900 font-medium">{flat.ownerName || '-'}</div>
               )}
             </div>
             <div>
@@ -253,7 +253,7 @@ const FlatDetailsPage = () => {
               {isEditing ? (
                 <input type="text" name="ownerContact" value={formData.ownerContact} onChange={handleChange} placeholder="e.g. +91 9876543210" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500" />
               ) : (
-                <div className="text-gray-900 font-medium">{flat.ownerContact || '—'}</div>
+                <div className="text-gray-900 font-medium">{flat.ownerContact || '-'}</div>
               )}
             </div>
           </div>

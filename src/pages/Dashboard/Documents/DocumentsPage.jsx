@@ -89,14 +89,14 @@ const DocumentsPage = () => {
     };
 
     const formatDate = (dateStr) => {
-        if (!dateStr) return '—';
+        if (!dateStr) return '-';
         return new Date(dateStr).toLocaleDateString('en-GB', {
             day: '2-digit', month: 'short', year: 'numeric'
         });
     };
 
     const formatSize = (bytes) => {
-        if (!bytes) return '—';
+        if (!bytes) return '-';
         const mb = bytes / (1024 * 1024);
         if (mb < 1) {
             return (bytes / 1024).toFixed(1) + ' KB';
@@ -190,10 +190,10 @@ const DocumentsPage = () => {
                                                     <File className="w-5 h-5" />
                                                 </div>
                                                 <div>
-                                                    <a 
-                                                        href={doc.fileUrl} 
-                                                        target="_blank" 
-                                                        rel="noreferrer" 
+                                                    <a
+                                                        href={doc.fileUrl}
+                                                        target="_blank"
+                                                        rel="noreferrer"
                                                         className="font-medium text-gray-900 hover:text-blue-600 transition-colors"
                                                     >
                                                         {doc.title}
@@ -204,14 +204,13 @@ const DocumentsPage = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-gray-600">{doc.category}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`px-2.5 py-1 text-xs font-medium rounded-lg ${
-                                                doc.visibilityScope === 'All Residents' ? 'bg-green-100 text-green-700' :
-                                                doc.visibilityScope === 'Committee Only' ? 'bg-red-100 text-red-700' :
-                                                'bg-purple-100 text-purple-700'
-                                            }`}>
+                                            <span className={`px-2.5 py-1 text-xs font-medium rounded-lg ${doc.visibilityScope === 'All Residents' ? 'bg-green-100 text-green-700' :
+                                                    doc.visibilityScope === 'Committee Only' ? 'bg-red-100 text-red-700' :
+                                                        'bg-purple-100 text-purple-700'
+                                                }`}>
                                                 {doc.visibilityScope === 'All Residents' ? 'All Residents' :
-                                                doc.visibilityScope === 'Committee Only' ? 'Committee Only' :
-                                                `Specific Block (${doc.blockId?.name || ''})`}
+                                                    doc.visibilityScope === 'Committee Only' ? 'Committee Only' :
+                                                        `Specific Block (${doc.blockId?.name || ''})`}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-gray-600">

@@ -9,9 +9,9 @@ import toast from 'react-hot-toast';
 const STEPS = ['Billing Cycle', 'Select Flats', 'Calculate', 'Review', 'Generate'];
 
 const fmt = (n) => `₹${(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
 const periodLabel = (p) => {
-  if (!p) return '—';
+  if (!p) return '-';
   if (p.includes('-Q')) {
     const [y, q] = p.split('-');
     return `${q} ${y}`;
@@ -123,7 +123,7 @@ export const GenerateInvoiceModal = ({ onClose, onSuccess, flats = [] }) => {
         <div className="flex items-center justify-between p-6 border-b border-gray-100 shrink-0">
           <div>
             <h3 className="text-lg font-bold text-gray-900">Generate Invoice</h3>
-            <p className="text-xs text-gray-500 mt-0.5">Step {step + 1} of {STEPS.length} — {STEPS[step]}</p>
+            <p className="text-xs text-gray-500 mt-0.5">Step {step + 1} of {STEPS.length} - {STEPS[step]}</p>
           </div>
           <button onClick={onClose}><FaTimes className="text-gray-400 hover:text-gray-600" /></button>
         </div>
@@ -328,7 +328,7 @@ export const GenerateInvoiceModal = ({ onClose, onSuccess, flats = [] }) => {
                   {preview?.advanceAdjustment > 0 && (
                     <div className="bg-cyan-50 rounded-xl p-3 col-span-2">
                       <div className="text-xs text-cyan-600">Advance will be auto-applied</div>
-                      <div className="font-bold text-cyan-800">{fmt(preview.advanceAdjustment)}{preview.totalPayable === 0 ? ' — invoice will be fully settled' : ''}</div>
+                      <div className="font-bold text-cyan-800">{fmt(preview.advanceAdjustment)}{preview.totalPayable === 0 ? ' - invoice will be fully settled' : ''}</div>
                     </div>
                   )}
                 </div>
@@ -340,7 +340,7 @@ export const GenerateInvoiceModal = ({ onClose, onSuccess, flats = [] }) => {
                     <div key={f._id} className="flex items-center gap-2 text-sm text-gray-700 bg-gray-50 rounded-xl px-3 py-2">
                       <FaBuilding className="text-gray-400 text-xs" />
                       <span className="font-semibold">{f.flatNumber}</span>
-                      {f.ownerName && <span className="text-gray-400">— {f.ownerName}</span>}
+                      {f.ownerName && <span className="text-gray-400">- {f.ownerName}</span>}
                     </div>
                   ))}
                 </div>

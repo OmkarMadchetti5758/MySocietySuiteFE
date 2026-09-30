@@ -18,7 +18,7 @@ const HIGHLIGHTS = [
     imageAlt: 'Security & Staff Attendance',
     title: 'Security & Staff Attendance',
     description:
-      'Safer gates, verified visitors and accountable staff attendance — all in one connected system.',
+      'Safer gates, verified visitors and accountable staff attendance - all in one connected system.',
     features: [
       'Visitor & vehicle entry management',
       'Gate activity monitoring',

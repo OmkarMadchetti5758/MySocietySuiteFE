@@ -142,7 +142,7 @@ const MobileApps = () => {
               </div>
             </div>
 
-            {/* Floating Robot — sits completely in the white area to the right */}
+            {/* Floating Robot - sits completely in the white area to the right */}
             <div className="hidden xl:flex items-center justify-center flex-shrink-0">
               <motion.img
                 animate={{ y: [0, -10, 0] }}

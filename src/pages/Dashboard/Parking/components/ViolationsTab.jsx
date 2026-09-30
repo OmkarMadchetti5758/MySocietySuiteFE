@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { FaExclamationTriangle, FaPlus, FaSearch, FaCheckCircle, FaCar, FaClock, FaShieldAlt, FaUser } from 'react-icons/fa';
 
 const STATUS_STYLES = {
-  open:      'bg-rose-100 text-rose-700 border-rose-200',
-  reported:  'bg-rose-100 text-rose-700 border-rose-200',
-  resolved:  'bg-emerald-100 text-emerald-700 border-emerald-200',
+  open: 'bg-rose-100 text-rose-700 border-rose-200',
+  reported: 'bg-rose-100 text-rose-700 border-rose-200',
+  resolved: 'bg-emerald-100 text-emerald-700 border-emerald-200',
   dismissed: 'bg-gray-100 text-gray-600 border-gray-200',
 };
 
@@ -15,16 +15,16 @@ const formatLabel = (str) =>
     .replace(/^\w/, (c) => c.toUpperCase());
 
 const ViolationsTab = ({ violations, loading, onReportViolation, onResolveViolation, isResident }) => {
-  const [search, setSearch]       = useState('');
+  const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
 
   const filtered = violations.filter((v) => {
-    const reg  = (v.vehicleRegistrationNumber || v.unregisteredVehicleNumber || '').toLowerCase();
+    const reg = (v.vehicleRegistrationNumber || v.unregisteredVehicleNumber || '').toLowerCase();
     const type = (v.violationType || '').toLowerCase();
     const desc = (v.description || '').toLowerCase();
     const matchSearch = reg.includes(search.toLowerCase()) ||
-                        type.includes(search.toLowerCase()) ||
-                        desc.includes(search.toLowerCase());
+      type.includes(search.toLowerCase()) ||
+      desc.includes(search.toLowerCase());
     const matchStatus = statusFilter === 'ALL' || v.status === statusFilter;
     return matchSearch && matchStatus;
   });
@@ -119,7 +119,7 @@ const ViolationsTab = ({ violations, loading, onReportViolation, onResolveViolat
     );
   }
 
-  /* ── Admin View — full table ── */
+  /* ── Admin View - full table ── */
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -223,7 +223,7 @@ const ViolationsTab = ({ violations, loading, onReportViolation, onResolveViolat
                           {v.parkingSlotId.slotNumber}
                           {v.parkingSlotId.wing && <span className="text-gray-400"> · Wing {v.parkingSlotId.wing}</span>}
                         </span>
-                      ) : <span className="text-gray-400">—</span>}
+                      ) : <span className="text-gray-400">-</span>}
                     </td>
                     <td className="px-5 py-4 text-xs text-gray-500 whitespace-nowrap">
                       {new Date(v.reportedAt || v.createdAt).toLocaleString()}
@@ -243,7 +243,7 @@ const ViolationsTab = ({ violations, loading, onReportViolation, onResolveViolat
                         </button>
                       )}
                       {(v.status !== 'open' && v.status !== 'reported') && (
-                        <span className="text-xs text-gray-400">—</span>
+                        <span className="text-xs text-gray-400">-</span>
                       )}
                     </td>
                   </tr>

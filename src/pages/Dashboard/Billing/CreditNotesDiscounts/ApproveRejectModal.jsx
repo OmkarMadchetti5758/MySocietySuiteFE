@@ -85,7 +85,7 @@ export default function ApproveRejectModal({ isOpen, onClose, item, type = 'cred
             <div className="flex justify-between items-center">
               <span className="text-gray-500">Flat:</span>
               <span className="font-semibold text-gray-800">
-                {item.flatId?.flatNumber ? `Flat ${item.flatId.flatNumber}` : '—'}
+                {item.flatId?.flatNumber ? `Flat ${item.flatId.flatNumber}` : '-'}
               </span>
             </div>
             {isCreditNote && item.invoiceId && (
@@ -111,11 +111,10 @@ export default function ApproveRejectModal({ isOpen, onClose, item, type = 'cred
               <button
                 type="button"
                 onClick={() => setAction('approve')}
-                className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                  action === 'approve'
+                className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${action === 'approve'
                     ? 'bg-emerald-50 text-emerald-700 border-emerald-500 shadow-sm'
                     : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                }`}
+                  }`}
               >
                 <FaCheck /> Approve
               </button>
@@ -123,11 +122,10 @@ export default function ApproveRejectModal({ isOpen, onClose, item, type = 'cred
               <button
                 type="button"
                 onClick={() => setAction('reject')}
-                className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                  action === 'reject'
+                className={`py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${action === 'reject'
                     ? 'bg-red-50 text-red-700 border-red-500 shadow-sm'
                     : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                }`}
+                  }`}
               >
                 <FaBan /> Reject
               </button>
@@ -163,11 +161,10 @@ export default function ApproveRejectModal({ isOpen, onClose, item, type = 'cred
             <button
               type="submit"
               disabled={loading || (action === 'reject' && !rejectionReason.trim())}
-              className={`px-5 py-2.5 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-2 disabled:opacity-50 ${
-                action === 'approve'
+              className={`px-5 py-2.5 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-2 disabled:opacity-50 ${action === 'approve'
                   ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
                   : 'bg-red-600 hover:bg-red-700 shadow-red-600/20'
-              }`}
+                }`}
             >
               {loading && <FaSpinner className="animate-spin" />}
               Confirm {action === 'approve' ? 'Approval' : 'Rejection'}

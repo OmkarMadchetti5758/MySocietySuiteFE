@@ -39,17 +39,17 @@ function ReceiptModal({ receipt, onClose }) {
           <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm mb-5">
             {[
               ['Receipt No.', receipt.receiptNumber],
-              ['Payment Date', receipt.generatedAt ? new Date(receipt.generatedAt).toLocaleDateString('en-IN') : '—'],
+              ['Payment Date', receipt.generatedAt ? new Date(receipt.generatedAt).toLocaleDateString('en-IN') : '-'],
               ['Resident Name', receipt.residentName],
               ['Flat', `${receipt.blockName || ''} - ${receipt.flatNumber || ''}`.trim()],
-              ['Invoice No.', receipt.invoiceNumber || '—'],
+              ['Invoice No.', receipt.invoiceNumber || '-'],
               ['Payment Mode', receipt.paymentMode],
               ['Payment Account', receipt.paymentAccountName],
-              ['Transaction Ref.', receipt.transactionRef || '—'],
+              ['Transaction Ref.', receipt.transactionRef || '-'],
             ].map(([label, value]) => (
               <div key={label}>
                 <div className="text-[11px] text-gray-400 font-medium">{label}</div>
-                <div className="font-semibold text-gray-800 text-xs mt-0.5">{value || '—'}</div>
+                <div className="font-semibold text-gray-800 text-xs mt-0.5">{value || '-'}</div>
               </div>
             ))}
           </div>
@@ -83,7 +83,7 @@ function ReceiptModal({ receipt, onClose }) {
           </div>
 
           <div className="mt-4 text-center text-[11px] text-gray-400">
-            Generated on {receipt.generatedAt ? new Date(receipt.generatedAt).toLocaleString('en-IN') : '—'}
+            Generated on {receipt.generatedAt ? new Date(receipt.generatedAt).toLocaleString('en-IN') : '-'}
           </div>
         </div>
       </div>
@@ -177,9 +177,9 @@ export default function ReceiptsTab() {
                   <tr key={p._id} className="hover:bg-emerald-50/30 transition-colors">
                     <td className="px-4 py-3 font-mono text-xs font-bold text-emerald-700">{p.receiptNumber}</td>
                     <td className="px-4 py-3 font-mono text-xs text-blue-600">{p.paymentNumber}</td>
-                    <td className="px-4 py-3 text-xs text-gray-600">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString('en-IN') : '—'}</td>
-                    <td className="px-4 py-3 text-xs font-medium text-gray-800">{p.flatId?.flatNumber || '—'}</td>
-                    <td className="px-4 py-3 text-xs text-gray-700">{p.userId?.name || '—'}</td>
+                    <td className="px-4 py-3 text-xs text-gray-600">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString('en-IN') : '-'}</td>
+                    <td className="px-4 py-3 text-xs font-medium text-gray-800">{p.flatId?.flatNumber || '-'}</td>
+                    <td className="px-4 py-3 text-xs text-gray-700">{p.userId?.name || '-'}</td>
                     <td className="px-4 py-3 font-bold text-sm text-emerald-700">{formatINR(p.amount)}</td>
                     <td className="px-4 py-3 text-xs"><span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-lg font-medium">{p.paymentMode}</span></td>
                     <td className="px-4 py-3">

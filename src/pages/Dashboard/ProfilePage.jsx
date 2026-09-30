@@ -254,13 +254,13 @@ const ProfilePage = () => {
               <InfoRow
                 icon={FaLayerGroup}
                 label="Wing / Block"
-                value={loadingFlat ? '...' : flatDetails?.wingName || (user.flatId ? '—' : null)}
+                value={loadingFlat ? '...' : flatDetails?.wingName || (user.flatId ? '-' : null)}
               />
 
               <InfoRow
                 icon={FaHome}
                 label="Flat / Unit Number"
-                value={loadingFlat ? '...' : flatDetails?.flatNumber || (user.flatId ? '—' : null)}
+                value={loadingFlat ? '...' : flatDetails?.flatNumber || (user.flatId ? '-' : null)}
               />
 
             </div>
