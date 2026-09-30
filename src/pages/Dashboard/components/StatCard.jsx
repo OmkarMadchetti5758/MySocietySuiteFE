@@ -1,8 +1,11 @@
 import React from 'react';
 
-const StatCard = ({ title, value, subtitle, icon: Icon, colorClass, highlightValue }) => {
+const StatCard = ({ title, value, subtitle, icon: Icon, colorClass, highlightValue, onClick }) => {
   return (
-    <div className="bg-white rounded-2xl p-3.5 sm:p-5 border border-gray-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow w-full min-w-0 overflow-hidden">
+    <div 
+      onClick={onClick}
+      className={`bg-white rounded-2xl p-3.5 sm:p-5 border border-gray-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow w-full min-w-0 overflow-hidden ${onClick ? 'cursor-pointer' : ''}`}
+    >
       <div className="flex items-center gap-2.5 sm:gap-3 mb-3 sm:mb-4">
         <div className={`p-2 sm:p-2.5 rounded-lg flex items-center justify-center shrink-0 ${colorClass}`}>
           <Icon className="text-lg sm:text-xl" />

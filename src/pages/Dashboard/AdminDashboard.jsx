@@ -46,7 +46,7 @@ const AdminDashboard = ({ societyName: initialSocietyName }) => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full min-w-0">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
-            Good Morning, Admin <span className="text-xl sm:text-2xl">👋</span>
+            Welcome, Admin <span className="text-xl sm:text-2xl"></span>
           </h2>
           <p className="text-gray-500 text-xs sm:text-sm mt-1">Here's what's happening in {societyName}.</p>
         </div>
@@ -76,6 +76,7 @@ const AdminDashboard = ({ societyName: initialSocietyName }) => {
           subtitle={topStats ? topStats.residentSubtitle : "0 Occupied Units"}
           icon={FaUsers}
           colorClass="bg-orange-100 text-orange-500"
+          onClick={() => navigate(`/${societyId}/dashboard/residents`)}
         />
         <StatCard
           title="Flats / Units"
@@ -83,6 +84,7 @@ const AdminDashboard = ({ societyName: initialSocietyName }) => {
           subtitle={topStats ? `Occupied: ${topStats.occupiedFlats ?? 0}` : "Occupied: 0"}
           icon={FaBuilding}
           colorClass="bg-blue-100 text-blue-500"
+          onClick={() => navigate(`/${societyId}/dashboard/setup`)}
         />
         <StatCard
           title="Visitors Today"
@@ -90,6 +92,7 @@ const AdminDashboard = ({ societyName: initialSocietyName }) => {
           subtitle={topStats ? `Vehicles: ${topStats.vehiclesToday ?? 0}` : "Vehicles: 0"}
           icon={FaIdBadge}
           colorClass="bg-green-100 text-green-500"
+          onClick={() => navigate(`/${societyId}/dashboard/visitors`)}
         />
         <StatCard
           title="Staff Present"
@@ -98,6 +101,7 @@ const AdminDashboard = ({ societyName: initialSocietyName }) => {
           subtitle={topStats ? `${topStats.staffDutyPct ?? 0}% On Duty` : "0% On Duty"}
           icon={FaUserTie}
           colorClass="bg-purple-100 text-purple-500"
+          onClick={() => navigate(`/${societyId}/dashboard/staff`)}
         />
         <StatCard
           title="Open Complaints"
@@ -105,6 +109,7 @@ const AdminDashboard = ({ societyName: initialSocietyName }) => {
           subtitle={topStats ? `${topStats.inProgressComplaints ?? 0} In Progress` : "0 In Progress"}
           icon={FaExclamationCircle}
           colorClass="bg-red-100 text-red-500"
+          onClick={() => navigate(`/${societyId}/dashboard/helpdesk`)}
         />
         <StatCard
           title="Collection (This Month)"
@@ -112,6 +117,7 @@ const AdminDashboard = ({ societyName: initialSocietyName }) => {
           subtitle="Collected"
           icon={FaRupeeSign}
           colorClass="bg-teal-100 text-teal-500"
+          onClick={() => navigate(`/${societyId}/dashboard/billing`)}
         />
         <StatCard
           title="Pending Dues"
@@ -119,6 +125,7 @@ const AdminDashboard = ({ societyName: initialSocietyName }) => {
           subtitle={topStats ? `From ${topStats.pendingUnitsCount ?? 0} Units` : "From 0 Units"}
           icon={FaFileInvoiceDollar}
           colorClass="bg-rose-100 text-rose-500"
+          onClick={() => navigate(`/${societyId}/dashboard/billing`)}
         />
         <StatCard
           title="Upcoming Events"
@@ -126,6 +133,7 @@ const AdminDashboard = ({ societyName: initialSocietyName }) => {
           subtitle="Active Events"
           icon={FaCalendarAlt}
           colorClass="bg-indigo-100 text-indigo-500"
+          onClick={() => navigate(`/${societyId}/dashboard/festivals`)}
         />
       </div>
 
