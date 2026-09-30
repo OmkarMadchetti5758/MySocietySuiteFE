@@ -89,7 +89,7 @@ const LoginPage = () => {
             </div>
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-1.5">
-            Welcome Back, <span className="text-[#EA580C]">Admin!</span>
+            Welcome Back, <span className="text-[#EA580C]">User!</span>
           </h2>
           <p className="text-gray-500 text-sm font-medium">Login to access your society dashboard</p>
         </div>
