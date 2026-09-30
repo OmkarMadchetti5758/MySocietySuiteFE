@@ -19,7 +19,8 @@ const FlatsSetupPage = () => {
   const loadWings = async () => {
     try {
       const res = await blockApi.getWings();
-      setWings(res.data?.blockDoc?.wings || []);
+      // API response shape: { status, message, data: { blockDoc: { wings: [] } } }
+      setWings(res.data?.data?.blockDoc?.wings || res.data?.blockDoc?.wings || []);
     } catch (err) {
       console.error('Failed to load wings', err);
     }
@@ -124,7 +125,10 @@ const FlatsSetupPage = () => {
                     <div className="text-xs text-gray-500">{flat.type || 'N/A'}</div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">
-                    {wings.find(w => w._id?.toString() === flat.blockId?.toString())?.name || '—'}
+                    {/* blockId is populated as { _id, name, code } by the API */}
+                  {typeof flat.blockId === 'object' && flat.blockId?.name
+                    ? flat.blockId.name
+                    : wings.find(w => w._id?.toString() === flat.blockId?.toString())?.name || '—'}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">
                     {flat.floor}

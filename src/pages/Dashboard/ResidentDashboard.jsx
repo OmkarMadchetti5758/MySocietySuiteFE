@@ -1,11 +1,83 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CloudSun, Users, Sparkles, ShieldCheck, 
   Megaphone, Receipt, Headset, CalendarRange, 
-  MessageSquare, ChevronRight, PartyPopper
+  MessageSquare, ChevronRight, PartyPopper, Loader2, Info
 } from 'lucide-react';
+import { dashboardApi } from '../../services/dashboardApi';
 
-const ResidentDashboard = ({ userName = 'Ritesh', societyName = 'Green Valley Society', flatDetails = 'Building A, Flat 101' }) => {
+const ResidentDashboard = ({ 
+  userName: propUserName = 'Resident', 
+  societyName: propSocietyName = 'Society', 
+  flatDetails: propFlatDetails = '' 
+}) => {
+  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState(null);
+
+  useEffect(() => {
+    const fetchResidentStats = async () => {
+      try {
+        setLoading(true);
+        const res = await dashboardApi.getResidentDashboardStats();
+        if (res && res.data) {
+          setDashboardData(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to load resident dashboard stats:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchResidentStats();
+  }, []);
+
+  const userInfo = dashboardData?.userInfo || {
+    userName: propUserName,
+    societyName: propSocietyName,
+    flatDetails: propFlatDetails || 'Flat unassigned',
+    weather: { temp: '28°C', condition: 'Partly Cloudy' }
+  };
+
+  const metrics = dashboardData?.metrics || {
+    visitors: { value: '0', subtext: 'Today' },
+    cleaning: { value: '85%', subtext: 'Completed' },
+    security: { value: 'Active', subtext: 'Active' },
+    notices: { value: '0', subtext: 'New' },
+    dues: { value: '₹0', subtext: 'View', unpaidCount: 0 }
+  };
+
+  const quickActions = dashboardData?.quickActions || {
+    unpaidBillsCount: metrics.dues.unpaidCount || 0
+  };
+
+  const importantUpdates = dashboardData?.importantUpdates || [];
+  const upcomingEvent = dashboardData?.upcomingEvent || null;
+
+  const getNoticeIcon = (type) => {
+    switch (type) {
+      case 'event':
+        return { icon: PartyPopper, color: 'text-[#EA580C]', bg: 'bg-orange-50' };
+      case 'emergency':
+      case 'security':
+        return { icon: ShieldCheck, color: 'text-blue-500', bg: 'bg-blue-50' };
+      case 'maintenance':
+      case 'cleaning':
+        return { icon: Sparkles, color: 'text-green-500', bg: 'bg-green-50' };
+      default:
+        return { icon: Megaphone, color: 'text-purple-500', bg: 'bg-purple-50' };
+    }
+  };
+
+  if (loading && !dashboardData) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <Loader2 className="w-8 h-8 text-[#EA580C] animate-spin" />
+        <p className="text-sm font-medium text-gray-500">Loading Resident Dashboard...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       
@@ -13,18 +85,18 @@ const ResidentDashboard = ({ userName = 'Ritesh', societyName = 'Green Valley So
       <section className="bg-[#FFF8F3] rounded-2xl p-6 md:p-8 relative overflow-hidden border border-orange-100/50 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="relative z-10">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-            Good Morning, <span className="text-[#EA580C]">{userName}</span> 👋
+            Good Morning, <span className="text-[#EA580C]">{userInfo.userName}</span> 👋
           </h1>
-          <h2 className="text-lg font-bold text-gray-800 mt-2">{societyName}</h2>
-          <p className="text-sm text-gray-600 mt-1">{flatDetails}</p>
+          <h2 className="text-lg font-bold text-gray-800 mt-2">{userInfo.societyName}</h2>
+          <p className="text-sm text-gray-600 mt-1">{userInfo.flatDetails}</p>
         </div>
         <div className="text-right flex items-center gap-4 relative z-10">
           <CloudSun className="w-12 h-12 text-yellow-500 fill-yellow-100" strokeWidth={1.5} />
           <div className="text-left">
             <div className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tighter">
-              28°<span className="text-xl md:text-2xl font-medium text-gray-800">C</span>
+              {userInfo.weather?.temp || '28°C'}
             </div>
-            <p className="text-sm text-gray-500 font-medium mt-1">Partly Cloudy</p>
+            <p className="text-sm text-gray-500 font-medium mt-1">{userInfo.weather?.condition || 'Partly Cloudy'}</p>
           </div>
         </div>
         
@@ -36,11 +108,11 @@ const ResidentDashboard = ({ userName = 'Ritesh', societyName = 'Green Valley So
       <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 md:p-0">
         <div className="grid grid-cols-2 md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-gray-100">
           {[
-            { icon: Users, color: 'text-[#EA580C]', label: 'Visitors', value: '12', subtext: 'Today' },
-            { icon: Sparkles, color: 'text-green-500', label: 'Cleaning', value: '85%', subtext: 'Completed' },
-            { icon: ShieldCheck, color: 'text-blue-500', label: 'Security', value: 'All Good', subtext: 'Active' },
-            { icon: Megaphone, color: 'text-purple-500', label: 'Notices', value: '3', subtext: 'New' },
-            { icon: Receipt, color: 'text-red-500', label: 'Dues', value: '₹2,450', subtext: 'View', valueColor: 'text-gray-900', subtextColor: 'text-gray-400' },
+            { icon: Users, color: 'text-[#EA580C]', label: 'Visitors', value: metrics.visitors.value, subtext: metrics.visitors.subtext || 'Today' },
+            { icon: Sparkles, color: 'text-green-500', label: 'Cleaning', value: metrics.cleaning.value, subtext: metrics.cleaning.subtext || 'Completed' },
+            { icon: ShieldCheck, color: 'text-blue-500', label: 'Security', value: metrics.security.value, subtext: metrics.security.subtext || 'Active' },
+            { icon: Megaphone, color: 'text-purple-500', label: 'Notices', value: metrics.notices.value, subtext: metrics.notices.subtext || 'New' },
+            { icon: Receipt, color: 'text-red-500', label: 'Dues', value: metrics.dues.value, subtext: metrics.dues.subtext || 'View', valueColor: 'text-gray-900', subtextColor: 'text-gray-400' },
           ].map((item, idx) => (
             <div key={idx} className="p-4 md:p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50/50 transition-colors group">
               <item.icon className={`w-8 h-8 mb-3 ${item.color} group-hover:scale-110 transition-transform`} strokeWidth={1.5} />
@@ -69,17 +141,17 @@ const ResidentDashboard = ({ userName = 'Ritesh', societyName = 'Green Valley So
                 { icon: Users, color: 'text-[#EA580C]', border: 'border-orange-200', label: 'My Visitors' },
                 { icon: Headset, color: 'text-green-500', border: 'border-green-200', label: 'Raise Complaint' },
                 { icon: CalendarRange, color: 'text-blue-500', border: 'border-blue-200', label: 'Amenities Booking' },
-                { icon: Receipt, color: 'text-[#EA580C]', border: 'border-orange-200', label: 'Maintenance Bill', badge: 1 },
+                { icon: Receipt, color: 'text-[#EA580C]', border: 'border-orange-200', label: 'Maintenance Bill', badge: quickActions.unpaidBillsCount > 0 ? quickActions.unpaidBillsCount : null },
                 { icon: MessageSquare, color: 'text-purple-500', border: 'border-purple-200', label: 'Help Desk' },
               ].map((action, idx) => (
                 <button key={idx} className="bg-white rounded-2xl p-4 flex flex-col items-center justify-center shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-200 transition-all group">
                   <div className={`w-12 h-12 rounded-full border-2 ${action.border} flex items-center justify-center mb-3 ${action.color} group-hover:scale-110 transition-transform relative bg-white shadow-sm`}>
                     <action.icon className="w-5 h-5" strokeWidth={2} />
-                    {action.badge && (
+                    {action.badge ? (
                       <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#EA580C] rounded-full border-2 border-white flex items-center justify-center">
                         <span className="text-[9px] font-bold text-white leading-none">{action.badge}</span>
                       </div>
-                    )}
+                    ) : null}
                   </div>
                   <span className="text-xs font-bold text-gray-700 text-center leading-tight">
                     {action.label.split(' ').map((word, i) => <React.Fragment key={i}>{word}<br/></React.Fragment>)}
@@ -99,26 +171,33 @@ const ResidentDashboard = ({ userName = 'Ritesh', societyName = 'Green Valley So
                 <button className="text-sm font-bold text-[#EA580C] hover:underline">View All</button>
               </div>
               <div className="space-y-4 flex-1">
-                {[
-                  { icon: PartyPopper, color: 'text-[#EA580C]', bg: 'bg-orange-50', title: 'Ganesh Chaturthi Celebration', desc: 'Community event on 15th Sept. All are invited!', date: '15 Sep 2024' },
-                  { icon: ShieldCheck, color: 'text-blue-500', bg: 'bg-blue-50', title: 'Gate Security Upgrade', desc: 'New security system installation this weekend.', date: '14 Sep 2024' },
-                  { icon: Sparkles, color: 'text-green-500', bg: 'bg-green-50', title: 'Deep Cleaning Drive', desc: 'Deep cleaning of all towers on 18th Sept.', date: '18 Sep 2024' },
-                ].map((update, idx) => (
-                  <div key={idx} className="flex items-start gap-4 group cursor-pointer border-b border-gray-50 pb-4 last:border-0 last:pb-0">
-                    <div className={`w-12 h-12 rounded-xl ${update.bg} flex items-center justify-center ${update.color} shrink-0 group-hover:scale-105 transition-transform border border-white shadow-sm`}>
-                      <update.icon className="w-6 h-6" strokeWidth={1.5} />
-                    </div>
-                    <div className="flex-1 min-w-0 pt-0.5">
-                      <h4 className="text-sm font-bold text-gray-900 truncate">{update.title}</h4>
-                      <p className="text-xs text-gray-500 mt-1 truncate">{update.desc}</p>
-                      <div className={`flex items-center gap-1.5 mt-2 ${update.color}`}>
-                        <CalendarRange className="w-3.5 h-3.5" />
-                        <span className="text-[11px] font-bold">{update.date}</span>
+                {importantUpdates.length > 0 ? (
+                  importantUpdates.map((update, idx) => {
+                    const style = getNoticeIcon(update.type);
+                    const IconComp = style.icon;
+                    return (
+                      <div key={update.id || idx} className="flex items-start gap-4 group cursor-pointer border-b border-gray-50 pb-4 last:border-0 last:pb-0">
+                        <div className={`w-12 h-12 rounded-xl ${style.bg} flex items-center justify-center ${style.color} shrink-0 group-hover:scale-105 transition-transform border border-white shadow-sm`}>
+                          <IconComp className="w-6 h-6" strokeWidth={1.5} />
+                        </div>
+                        <div className="flex-1 min-w-0 pt-0.5">
+                          <h4 className="text-sm font-bold text-gray-900 truncate">{update.title}</h4>
+                          <p className="text-xs text-gray-500 mt-1 truncate">{update.desc}</p>
+                          <div className={`flex items-center gap-1.5 mt-2 ${style.color}`}>
+                            <CalendarRange className="w-3.5 h-3.5" />
+                            <span className="text-[11px] font-bold">{update.date}</span>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-gray-300 mt-3 group-hover:text-gray-500 transition-colors" />
                       </div>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-gray-300 mt-3 group-hover:text-gray-500 transition-colors" />
+                    );
+                  })
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-40 text-center text-gray-400">
+                    <Info className="w-8 h-8 mb-2 opacity-50" />
+                    <p className="text-xs font-medium">No recent updates</p>
                   </div>
-                ))}
+                )}
               </div>
             </section>
 
@@ -128,28 +207,34 @@ const ResidentDashboard = ({ userName = 'Ritesh', societyName = 'Green Valley So
                 <h3 className="text-lg font-bold text-gray-900">Upcoming Events</h3>
                 <button className="text-sm font-bold text-[#EA580C] hover:underline">View Calendar</button>
               </div>
-              <div className="bg-[#FFF8F3] rounded-2xl p-5 relative overflow-hidden border border-orange-100/50 flex flex-col shadow-inner">
-                <div className="flex gap-4 relative z-10">
-                  <div className="flex flex-col items-center justify-center shrink-0">
-                    <span className="text-xs font-black text-[#EA580C] uppercase tracking-wider">Sep</span>
-                    <span className="text-4xl font-black text-gray-900 leading-none my-1">15</span>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase">Sun</span>
-                  </div>
-                  <div className="flex-1 flex flex-col justify-center border-l-2 border-orange-100 pl-4">
-                    <h4 className="text-sm font-bold text-gray-900">Ganesh Chaturthi Celebration</h4>
-                    <p className="text-[11px] text-gray-500 mt-1 font-medium flex items-center gap-1">
-                       Community Hall, Tower A
-                    </p>
-                    <div className="flex items-center gap-1.5 mt-2.5 text-gray-600 bg-white w-fit px-2 py-1 rounded shadow-sm border border-orange-50">
-                      <CalendarRange className="w-3 h-3 text-[#EA580C]" />
-                      <span className="text-[10px] font-bold">6:00 PM Onwards</span>
+              {upcomingEvent ? (
+                <div className="bg-[#FFF8F3] rounded-2xl p-5 relative overflow-hidden border border-orange-100/50 flex flex-col shadow-inner">
+                  <div className="flex gap-4 relative z-10">
+                    <div className="flex flex-col items-center justify-center shrink-0">
+                      <span className="text-xs font-black text-[#EA580C] uppercase tracking-wider">{upcomingEvent.month}</span>
+                      <span className="text-4xl font-black text-gray-900 leading-none my-1">{upcomingEvent.day}</span>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase">{upcomingEvent.dayName}</span>
+                    </div>
+                    <div className="flex-1 flex flex-col justify-center border-l-2 border-orange-100 pl-4">
+                      <h4 className="text-sm font-bold text-gray-900">{upcomingEvent.title}</h4>
+                      <p className="text-[11px] text-gray-500 mt-1 font-medium flex items-center gap-1">
+                         {upcomingEvent.location}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-2.5 text-gray-600 bg-white w-fit px-2 py-1 rounded shadow-sm border border-orange-50">
+                        <CalendarRange className="w-3 h-3 text-[#EA580C]" />
+                        <span className="text-[10px] font-bold">{upcomingEvent.time}</span>
+                      </div>
                     </div>
                   </div>
+                  <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-orange-200/40 rounded-full blur-xl"></div>
+                  <div className="absolute bottom-2 right-2 text-5xl opacity-80 drop-shadow-lg">{upcomingEvent.icon || '🎉'}</div>
                 </div>
-                {/* Ganesh Decorative graphic placeholder */}
-                <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-orange-200/40 rounded-full blur-xl"></div>
-                <div className="absolute bottom-2 right-2 text-5xl opacity-80 drop-shadow-lg">🐘</div>
-              </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-40 text-center text-gray-400 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                  <CalendarRange className="w-8 h-8 mb-2 opacity-50 text-gray-400" />
+                  <p className="text-xs font-medium">No upcoming events scheduled</p>
+                </div>
+              )}
             </section>
 
           </div>

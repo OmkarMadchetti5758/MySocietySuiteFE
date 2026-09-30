@@ -121,8 +121,8 @@ const WalkInVisitor = () => {
         if (!selectedWingOption) return [];
         return flats
             .filter(f => {
-                const blockId = typeof f.blockId === 'object' ? f.blockId._id : f.blockId;
-                return blockId === selectedWingOption.value;
+                const blockId = typeof f.blockId === 'object' ? f.blockId?._id : f.blockId;
+                return String(blockId) === String(selectedWingOption.value);
             })
             .map(f => ({
                 value: f._id,
