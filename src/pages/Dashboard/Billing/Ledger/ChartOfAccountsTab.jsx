@@ -68,8 +68,8 @@ const ChartOfAccountsTab = () => {
   /* derived */
   const kids = useMemo(() => buildKids(accounts), [accounts]);
   const roots = useMemo(
-    () => (kids.root || []).filter((a) => tab === 'all' || a.accountType === tab),
-    [kids, tab]
+    () => accounts.filter((a) => !a.parentAccountId && !a.parentAccountId?._id && (tab === 'all' || a.accountType === tab)),
+    [accounts, tab]
   );
   const q = search.trim().toLowerCase();
   const matches = useCallback((a) => {
@@ -95,12 +95,12 @@ const ChartOfAccountsTab = () => {
   const tabTotals = useMemo(() => {
     const t = {};
     Object.keys(GROUPS).forEach((type) => {
-      t[type] = (kids.root || [])
-        .filter((r) => r.accountType === type)
+      t[type] = accounts
+        .filter((a) => a.accountType === type && !a.parentAccountId && !a.parentAccountId?._id)
         .reduce((s, r) => s + rollup(r, kids), 0);
     });
     return t;
-  }, [kids]);
+  }, [accounts, kids]);
 
   const toggleNode = (id) =>
     setOpenNodes((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
@@ -137,9 +137,13 @@ const ChartOfAccountsTab = () => {
       out.push({ ...a, d });
       (kids[a._id] || []).forEach((c) => go(c, d + 1));
     };
-    (kids.root || []).filter((r) => r.accountType === type).forEach((r) => go(r, 0));
+    // Use accounts directly to find roots – avoids kids.root key issues
+    // when parentAccountId comes back as null/undefined from the API.
+    accounts
+      .filter((a) => a.accountType === type && !a.parentAccountId && !a.parentAccountId?._id)
+      .forEach((r) => go(r, 0));
     return out;
-  }, [kids]);
+  }, [accounts, kids]);
 
   const nextCode = useCallback((parentId) => {
     const sibs = (kids[parentId] || []).map((k) => Number(k.accountCode)).filter(Number.isFinite);
@@ -155,7 +159,11 @@ const ChartOfAccountsTab = () => {
     setForm({ type, parentId: par, name: '', code: nextCode(par), openingBalance: '', description: '', error: '' });
   };
 
-  const changeType = (type) => { const opts = parentOptions(type); const par = opts[0]?._id || ''; setForm((f) => ({ ...f, type, parentId: par, code: nextCode(par) })); };
+  const changeType = (type) => {
+    const opts = parentOptions(type);
+    const par = opts[0]?._id || '';
+    setForm((f) => ({ ...f, type, parentId: par, code: par ? nextCode(par) : '' }));
+  };
   const changeParent = (par) => setForm((f) => ({ ...f, parentId: par, code: nextCode(par) }));
 
   const handleCreate = async (e) => {
