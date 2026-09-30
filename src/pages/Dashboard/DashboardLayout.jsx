@@ -163,6 +163,7 @@ const DashboardLayout = () => {
   if (!auth) return null;
 
   const { user, societyName } = auth;
+  console.log("Prining theuser --> ", user);
   // const roleKeys = user.roleKeys || JSON.parse(localStorage.getItem('roleKeys') || '[]');
   const roleKeys = user.roleKeys || auth.roleKeys;
   const roleLabel = user.displayRole
