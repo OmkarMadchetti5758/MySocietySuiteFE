@@ -22,4 +22,18 @@ export const residentsApi = {
     const res = await apiClient.delete(`/residents/${userId}`);
     return res.data;
   },
+
+  downloadBulkUploadTemplate: async () => {
+    const res = await apiClient.get('/residents/bulk-upload/template', {
+      responseType: 'blob',
+    });
+    return res.data;
+  },
+
+  bulkUploadResidents: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await apiClient.post('/residents/bulk-upload', formData);
+    return res.data;
+  },
 };
