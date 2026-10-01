@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Search, Plus, Loader2, X, Check, Copy, Edit, Trash2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Search, Plus, Download, Upload, AlertCircle, Loader2, X, Check, Copy, Edit, Trash2, Mail } from 'lucide-react';
 import { residentsApi } from '../../../services/residentsApi';
 import { blockApi } from '../../../services/blockApi';
 import { flatApi } from '../../../services/flatApi';
@@ -44,8 +44,68 @@ const ResidentsPage = () => {
   const [inviteLink, setInviteLink] = useState(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [uploadResult, setUploadResult] = useState(null);
+  const [isUploadResultModalOpen, setIsUploadResultModalOpen] = useState(false);
+  const fileInputRef = useRef(null);
+
   const { hasModuleAccess, PERMISSION_LEVELS } = usePermissions();
   const canManageResidents = hasModuleAccess('society_flat_setup', PERMISSION_LEVELS.FULL);
+
+  // Download template for resident bulk upload
+  const handleDownloadTemplate = async () => {
+    try {
+      const blob = await residentsApi.downloadBulkUploadTemplate();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'resident-bulk-upload-template.xlsx';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to download resident template', err);
+    }
+  };
+
+  const handleUploadClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith('.xlsx')) {
+      alert('Please select an Excel (.xlsx) file.');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const response = await residentsApi.bulkUploadResidents(file);
+      const data = response.data;
+      setUploadResult(data);
+      setIsUploadResultModalOpen(true);
+      if (data?.successfulCount > 0) {
+        fetchResidents(pagination.page, searchTerm);
+      }
+    } catch (err) {
+      const errData = err.response?.data;
+      if (errData?.data?.failedRows) {
+        setUploadResult(errData.data);
+        setIsUploadResultModalOpen(true);
+      } else {
+        alert(errData?.message || 'Failed to process bulk upload. Please check your Excel file.');
+      }
+    } finally {
+      setUploading(false);
+    }
+  };
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -216,13 +276,40 @@ const ResidentsPage = () => {
           <p className="text-gray-500 mt-1">Manage society residents and send account invitations.</p>
         </div>
         {canManageResidents && (
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium transition-colors shadow-sm"
-          >
-            <Plus className="w-5 h-5" />
-            Add Resident
-          </button>
+          <div className="flex items-center gap-3">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept=".xlsx"
+              className="hidden"
+            />
+
+            <button
+              onClick={handleDownloadTemplate}
+              className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 rounded-xl font-medium transition-colors border border-gray-200"
+            >
+              <Download className="w-5 h-5" />
+              Download Template
+            </button>
+
+            <button
+              onClick={handleUploadClick}
+              disabled={uploading}
+              className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 rounded-xl font-medium transition-colors border border-gray-200 disabled:opacity-50"
+            >
+              {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+              {uploading ? 'Uploading...' : 'Upload Excel'}
+            </button>
+
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium transition-colors shadow-sm"
+            >
+              <Plus className="w-5 h-5" />
+              Add Resident
+            </button>
+          </div>
         )}
       </div>
 
@@ -606,6 +693,140 @@ const ResidentsPage = () => {
                 </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+      {isUploadResultModalOpen && uploadResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-800">Bulk Upload Results</h3>
+              <button
+                onClick={() => {
+                  setIsUploadResultModalOpen(false);
+                  setUploadResult(null);
+                }}
+                className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 overflow-y-auto flex-1">
+              {/* Resident Creation Summary */}
+              <div>
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                  Resident Creation
+                </div>
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-3">
+                    <div className="text-xs font-semibold text-gray-500 uppercase">Total Rows</div>
+                    <div className="text-2xl font-bold text-gray-800 mt-1">{uploadResult.totalRows || 0}</div>
+                  </div>
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+                    <div className="text-xs font-semibold text-emerald-600 uppercase">Successful</div>
+                    <div className="text-2xl font-bold text-emerald-700 mt-1">{uploadResult.successfulCount || 0}</div>
+                  </div>
+                  <div className="bg-rose-50 border border-rose-200 rounded-xl p-3">
+                    <div className="text-xs font-semibold text-rose-600 uppercase">Failed</div>
+                    <div className="text-2xl font-bold text-rose-700 mt-1">{uploadResult.failedCount || 0}</div>
+                  </div>
+                </div>
+
+                {uploadResult.successfulCount > 0 && (
+                  <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl text-sm flex items-center gap-2 mt-3">
+                    <Check className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <span>
+                      Successfully created <strong>{uploadResult.successfulCount}</strong> resident{uploadResult.successfulCount > 1 ? 's' : ''} in database.
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Email Invitation Summary */}
+              {uploadResult.emailSummary && (
+                <div className="space-y-3 pt-3 border-t border-gray-100">
+                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-blue-600" />
+                    Email Invitation Summary
+                  </h4>
+                  <div className="grid grid-cols-4 gap-2 text-center">
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-2.5">
+                      <div className="text-xs font-semibold text-gray-500 uppercase">Total Queued</div>
+                      <div className="text-xl font-bold text-gray-800 mt-1">{uploadResult.emailSummary.totalQueued || 0}</div>
+                    </div>
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5">
+                      <div className="text-xs font-semibold text-emerald-600 uppercase">Sent</div>
+                      <div className="text-xl font-bold text-emerald-700 mt-1">{uploadResult.emailSummary.sent || 0}</div>
+                    </div>
+                    <div className="bg-rose-50 border border-rose-200 rounded-xl p-2.5">
+                      <div className="text-xs font-semibold text-rose-600 uppercase">Failed</div>
+                      <div className="text-xl font-bold text-rose-700 mt-1">{uploadResult.emailSummary.failed || 0}</div>
+                    </div>
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-2.5">
+                      <div className="text-xs font-semibold text-amber-600 uppercase">Skipped</div>
+                      <div className="text-xl font-bold text-amber-700 mt-1">{uploadResult.emailSummary.skipped || 0}</div>
+                    </div>
+                  </div>
+
+                  {uploadResult.emailSummary.failures && uploadResult.emailSummary.failures.length > 0 && (
+                    <div className="space-y-2 pt-1">
+                      <h5 className="text-xs font-bold text-rose-700 flex items-center gap-1.5">
+                        <AlertCircle className="w-3.5 h-3.5 text-rose-500" />
+                        Invitation Email Failures ({uploadResult.emailSummary.failures.length})
+                      </h5>
+                      <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
+                        {uploadResult.emailSummary.failures.map((item, idx) => (
+                          <div key={idx} className="bg-rose-50/70 border border-rose-200 rounded-xl p-3 text-xs">
+                            <div className="font-semibold text-rose-900 mb-0.5">
+                              Row {item.row}: {item.email}
+                            </div>
+                            <div className="text-rose-700">{item.error}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Validation / Creation Errors */}
+              {uploadResult.failedRows && uploadResult.failedRows.length > 0 && (
+                <div className="space-y-3 pt-3 border-t border-gray-100">
+                  <h4 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-rose-500" />
+                    Validation Errors ({uploadResult.failedRows.length} {uploadResult.failedRows.length === 1 ? 'row' : 'rows'})
+                  </h4>
+                  <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                    {uploadResult.failedRows.map((item) => (
+                      <div key={item.row} className="bg-rose-50/70 border border-rose-200 rounded-xl p-3 text-sm">
+                        <div className="font-semibold text-rose-900 mb-1">
+                          Row {item.row} {item.name && item.name !== '—' ? `(${item.name})` : ''}:
+                        </div>
+                        <ul className="list-disc list-inside text-rose-700 space-y-0.5 text-xs">
+                          {item.errors.map((err, idx) => (
+                            <li key={idx}>{err}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex items-center justify-end rounded-b-2xl">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsUploadResultModalOpen(false);
+                  setUploadResult(null);
+                }}
+                className="bg-gray-900 hover:bg-gray-800 text-white px-5 py-2 rounded-xl font-medium transition-colors text-sm"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
