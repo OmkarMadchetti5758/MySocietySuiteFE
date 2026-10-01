@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   CloudSun, Users, Sparkles, ShieldCheck, 
   Megaphone, Receipt, Headset, CalendarRange, 
@@ -11,6 +12,7 @@ const ResidentDashboard = ({
   societyName: propSocietyName = 'Society', 
   flatDetails: propFlatDetails = '' 
 }) => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
 
@@ -85,7 +87,7 @@ const ResidentDashboard = ({
       <section className="bg-[#FFF8F3] rounded-2xl p-6 md:p-8 relative overflow-hidden border border-orange-100/50 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="relative z-10">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-            Good Morning, <span className="text-[#EA580C]">{userInfo.userName}</span> 👋
+            Welcome, <span className="text-[#EA580C]">{userInfo.userName}</span> 
           </h1>
           <h2 className="text-lg font-bold text-gray-800 mt-2">{userInfo.societyName}</h2>
           <p className="text-sm text-gray-600 mt-1">{userInfo.flatDetails}</p>
@@ -108,13 +110,13 @@ const ResidentDashboard = ({
       <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 md:p-0">
         <div className="grid grid-cols-2 md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-gray-100">
           {[
-            { icon: Users, color: 'text-[#EA580C]', label: 'Visitors', value: metrics.visitors.value, subtext: metrics.visitors.subtext || 'Today' },
-            { icon: Sparkles, color: 'text-green-500', label: 'Cleaning', value: metrics.cleaning.value, subtext: metrics.cleaning.subtext || 'Completed' },
-            { icon: ShieldCheck, color: 'text-blue-500', label: 'Security', value: metrics.security.value, subtext: metrics.security.subtext || 'Active' },
-            { icon: Megaphone, color: 'text-purple-500', label: 'Notices', value: metrics.notices.value, subtext: metrics.notices.subtext || 'New' },
-            { icon: Receipt, color: 'text-red-500', label: 'Dues', value: metrics.dues.value, subtext: metrics.dues.subtext || 'View', valueColor: 'text-gray-900', subtextColor: 'text-gray-400' },
+            { icon: Users, color: 'text-[#EA580C]', label: 'Visitors', value: metrics.visitors.value, subtext: metrics.visitors.subtext || 'Today', path: 'visitors' },
+            { icon: Sparkles, color: 'text-green-500', label: 'Cleaning', value: metrics.cleaning.value, subtext: metrics.cleaning.subtext || 'Completed', path: 'helpdesk' },
+            { icon: ShieldCheck, color: 'text-blue-500', label: 'Security', value: metrics.security.value, subtext: metrics.security.subtext || 'Active', path: 'helpdesk' },
+            { icon: Megaphone, color: 'text-purple-500', label: 'Notices', value: metrics.notices.value, subtext: metrics.notices.subtext || 'New', path: 'notices' },
+            { icon: Receipt, color: 'text-red-500', label: 'Dues', value: metrics.dues.value, subtext: metrics.dues.subtext || 'View', valueColor: 'text-gray-900', subtextColor: 'text-gray-400', path: 'billing' },
           ].map((item, idx) => (
-            <div key={idx} className="p-4 md:p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50/50 transition-colors group">
+            <div key={idx} onClick={() => navigate(item.path)} className="p-4 md:p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50/50 transition-colors group">
               <item.icon className={`w-8 h-8 mb-3 ${item.color} group-hover:scale-110 transition-transform`} strokeWidth={1.5} />
               <span className="text-sm font-bold text-gray-800 mb-1">{item.label}</span>
               <span className={`text-xl font-black ${item.valueColor || 'text-gray-900'} leading-none`}>{item.value}</span>
@@ -134,17 +136,17 @@ const ResidentDashboard = ({
           <section>
             <div className="flex items-center justify-between mb-4 px-1">
               <h3 className="text-lg font-bold text-gray-900">Quick Actions</h3>
-              <button className="text-sm font-bold text-[#EA580C] hover:underline">View All</button>
+              <button onClick={() => navigate('helpdesk')} className="text-sm font-bold text-[#EA580C] hover:underline">View All</button>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
               {[
-                { icon: Users, color: 'text-[#EA580C]', border: 'border-orange-200', label: 'My Visitors' },
-                { icon: Headset, color: 'text-green-500', border: 'border-green-200', label: 'Raise Complaint' },
-                { icon: CalendarRange, color: 'text-blue-500', border: 'border-blue-200', label: 'Amenities Booking' },
-                { icon: Receipt, color: 'text-[#EA580C]', border: 'border-orange-200', label: 'Maintenance Bill', badge: quickActions.unpaidBillsCount > 0 ? quickActions.unpaidBillsCount : null },
-                { icon: MessageSquare, color: 'text-purple-500', border: 'border-purple-200', label: 'Help Desk' },
+                { icon: Users, color: 'text-[#EA580C]', border: 'border-orange-200', label: 'My Visitors', path: 'visitors' },
+                { icon: Headset, color: 'text-green-500', border: 'border-green-200', label: 'Raise Complaint', path: 'helpdesk' },
+                { icon: CalendarRange, color: 'text-blue-500', border: 'border-blue-200', label: 'Amenities Booking', path: 'amenities' },
+                { icon: Receipt, color: 'text-[#EA580C]', border: 'border-orange-200', label: 'Maintenance Bill', badge: quickActions.unpaidBillsCount > 0 ? quickActions.unpaidBillsCount : null, path: 'billing' },
+                { icon: MessageSquare, color: 'text-purple-500', border: 'border-purple-200', label: 'Help Desk', path: 'helpdesk' },
               ].map((action, idx) => (
-                <button key={idx} className="bg-white rounded-2xl p-4 flex flex-col items-center justify-center shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-200 transition-all group">
+                <button key={idx} onClick={() => navigate(action.path)} className="bg-white rounded-2xl p-4 flex flex-col items-center justify-center shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-200 transition-all group">
                   <div className={`w-12 h-12 rounded-full border-2 ${action.border} flex items-center justify-center mb-3 ${action.color} group-hover:scale-110 transition-transform relative bg-white shadow-sm`}>
                     <action.icon className="w-5 h-5" strokeWidth={2} />
                     {action.badge ? (
@@ -168,7 +170,7 @@ const ResidentDashboard = ({
             <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col h-full">
               <div className="flex items-center justify-between mb-5">
                 <h3 className="text-lg font-bold text-gray-900">Important Updates</h3>
-                <button className="text-sm font-bold text-[#EA580C] hover:underline">View All</button>
+                <button onClick={() => navigate('notices')} className="text-sm font-bold text-[#EA580C] hover:underline">View All</button>
               </div>
               <div className="space-y-4 flex-1">
                 {importantUpdates.length > 0 ? (
@@ -176,7 +178,7 @@ const ResidentDashboard = ({
                     const style = getNoticeIcon(update.type);
                     const IconComp = style.icon;
                     return (
-                      <div key={update.id || idx} className="flex items-start gap-4 group cursor-pointer border-b border-gray-50 pb-4 last:border-0 last:pb-0">
+                      <div key={update.id || idx} onClick={() => navigate('notices')} className="flex items-start gap-4 group cursor-pointer border-b border-gray-50 pb-4 last:border-0 last:pb-0">
                         <div className={`w-12 h-12 rounded-xl ${style.bg} flex items-center justify-center ${style.color} shrink-0 group-hover:scale-105 transition-transform border border-white shadow-sm`}>
                           <IconComp className="w-6 h-6" strokeWidth={1.5} />
                         </div>
@@ -205,10 +207,10 @@ const ResidentDashboard = ({
             <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col h-full">
               <div className="flex items-center justify-between mb-5">
                 <h3 className="text-lg font-bold text-gray-900">Upcoming Events</h3>
-                <button className="text-sm font-bold text-[#EA580C] hover:underline">View Calendar</button>
+                <button onClick={() => navigate('festivals')} className="text-sm font-bold text-[#EA580C] hover:underline">View Calendar</button>
               </div>
               {upcomingEvent ? (
-                <div className="bg-[#FFF8F3] rounded-2xl p-5 relative overflow-hidden border border-orange-100/50 flex flex-col shadow-inner">
+                <div onClick={() => navigate('festivals')} className="bg-[#FFF8F3] rounded-2xl p-5 relative overflow-hidden border border-orange-100/50 flex flex-col shadow-inner cursor-pointer hover:shadow-md transition-shadow">
                   <div className="flex gap-4 relative z-10">
                     <div className="flex flex-col items-center justify-center shrink-0">
                       <span className="text-xs font-black text-[#EA580C] uppercase tracking-wider">{upcomingEvent.month}</span>
