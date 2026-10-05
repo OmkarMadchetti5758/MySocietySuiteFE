@@ -226,7 +226,23 @@ const AuditTrailPage = ({ onBack }) => {
                       </span>
                     </td>
                     <td className="py-3 px-6 text-gray-800 font-medium break-all">
-                      {String(log.entityType || log.transactionType || log.resource || '-').replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase()}
+                      <div className="flex flex-col">
+                        <span>{String(log.entityType || log.transactionType || log.resource || '-').replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase()}</span>
+                        {(() => {
+                          let detail = '';
+                          const data = log.afterValue || log.details || log.metadata || {};
+                          if (data.name) detail = data.name;
+                          else if (data.invoiceNumber) detail = data.invoiceNumber;
+                          else if (data.noteNumber) detail = data.noteNumber;
+                          else if (data.billingFrequency) detail = `Config (${data.billingFrequency})`;
+                          else if (data.paymentType) detail = `Payment (${data.paymentType})`;
+                          
+                          if (detail) {
+                            return <span className="text-xs text-orange-600 mt-0.5">{detail}</span>;
+                          }
+                          return null;
+                        })()}
+                      </div>
                     </td>
                     <td className="py-3 px-6 text-gray-800 break-all">
                       {String(log.action || '-')}
