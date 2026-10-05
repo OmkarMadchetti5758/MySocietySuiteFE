@@ -28,7 +28,8 @@ export const GenerateInvoiceModal = ({ onClose, onSuccess, flats = [] }) => {
     dueDate: '',
     scope: 'single', // 'single' | 'multiple' | 'all'
     selectedFlatIds: [],
-    preview: null,
+    // previews is now an array: one entry per flat
+    previews: [],
     previewError: null,
   });
   const [billingConfig, setBillingConfig] = useState(null);
@@ -45,26 +46,26 @@ export const GenerateInvoiceModal = ({ onClose, onSuccess, flats = [] }) => {
   const selectedFlats = flats.filter(f => stepData.selectedFlatIds.includes(f._id));
   const targetFlats = stepData.scope === 'all' ? flats : selectedFlats;
 
-  // Auto-calculate preview whenever entering step 2 (Calculate step)
+  // Auto-calculate preview whenever entering step 2 — fetch per-flat preview for ALL selected flats
   useEffect(() => {
     if (step === 2 && targetFlats.length > 0) {
-      const firstFlat = targetFlats[0];
       setLoadingPreview(true);
-      apiClient.post('/billing/invoices/preview', {
-        flatId: firstFlat._id,
-        billingDate: stepData.billingDate + '-01',
-      })
-        .then(res => {
-          setStepData(prev => ({ ...prev, preview: res.data?.data, previewError: null }));
-        })
-        .catch(err => {
-          setStepData(prev => ({ ...prev, previewError: err.response?.data?.message || 'Preview failed' }));
-        })
-        .finally(() => {
-          setLoadingPreview(false);
-        });
+      Promise.allSettled(
+        targetFlats.map(flat =>
+          apiClient.post('/billing/invoices/preview', {
+            flatId: flat._id,
+            billingDate: stepData.billingDate + '-01',
+          }).then(res => ({ flat, data: res.data?.data, error: null }))
+            .catch(err => ({ flat, data: null, error: err.response?.data?.message || 'Preview failed' }))
+        )
+      ).then(results => {
+        const previews = results.map(r => r.value);
+        setStepData(prev => ({ ...prev, previews, previewError: null }));
+      }).finally(() => {
+        setLoadingPreview(false);
+      });
     }
-  }, [step, stepData.billingDate, targetFlats[0]?._id]);
+  }, [step, stepData.billingDate, targetFlats.map(f => f._id).join(',')]);
 
   const goNext = () => {
     if (step === 1 && targetFlats.length === 0) return toast.error('Select at least one flat');
@@ -114,7 +115,7 @@ export const GenerateInvoiceModal = ({ onClose, onSuccess, flats = [] }) => {
     }));
   };
 
-  const preview = stepData.preview;
+  const previews = stepData.previews || [];
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4">
@@ -263,55 +264,70 @@ export const GenerateInvoiceModal = ({ onClose, onSuccess, flats = [] }) => {
             </div>
           )}
 
-          {/* Step 2: Calculate */}
+          {/* Step 2: Calculate — per-flat preview */}
           {step === 2 && (
             <div className="space-y-4">
-              {/* <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-sm text-blue-700 flex gap-2">
-                <FaInfoCircle className="shrink-0 mt-0.5" />
-                <span>Showing calculation preview for {targetFlats.length > 1 ? `first flat (${targetFlats[0]?.flatNumber})` : `${targetFlats[0]?.flatNumber}`}. All selected flats will use their own applicable charge heads.</span>
-              </div> */}
-
               {loadingPreview ? (
-                <div className="text-center py-12"><FaSpinner className="animate-spin text-orange-500 text-3xl mx-auto mb-3" /><div className="text-sm text-gray-500">Calculating charges...</div></div>
-              ) : stepData.previewError ? (
-                <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 text-center">
-                  <FaExclamationTriangle className="text-amber-500 text-2xl mx-auto mb-2" />
-                  <div className="text-sm font-bold text-amber-700">{stepData.previewError}</div>
+                <div className="text-center py-12">
+                  <FaSpinner className="animate-spin text-orange-500 text-3xl mx-auto mb-3" />
+                  <div className="text-sm text-gray-500">Calculating charges for {targetFlats.length} flat{targetFlats.length !== 1 ? 's' : ''}...</div>
                 </div>
-              ) : preview ? (
-                preview.alreadyGenerated ? (
-                  <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5 text-center">
-                    <FaExclamationTriangle className="text-amber-500 text-2xl mx-auto mb-2" />
-                    <div className="text-sm font-bold text-amber-700">{preview.message}</div>
-                    <div className="text-xs text-gray-500 mt-1">This flat already has an invoice for this period</div>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {(preview.lineItems || []).map((item, i) => (
-                      <div key={i} className="flex justify-between items-center py-2 border-b border-gray-100">
-                        <div>
-                          <div className="text-sm font-semibold text-gray-900">{item.chargeHeadName}</div>
-                          <div className="text-xs text-gray-400">{item.calculationType === 'PER_SQ_FT' ? `₹${item.rate} × ${item.quantity} sq.ft` : 'Fixed'}</div>
-                        </div>
-                        <div className="font-bold text-gray-900">{fmt(item.totalAmount)}</div>
+              ) : previews.length > 0 ? (
+                <div className="space-y-4">
+                  {/* Info banner for multi-flat */}
+                  {targetFlats.length > 1 && (
+                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 text-xs text-blue-700 flex gap-2 items-start">
+                      <FaInfoCircle className="shrink-0 mt-0.5" />
+                      <span>Each flat shows its own charges, advance balance, and fines. Totals are calculated independently per resident.</span>
+                    </div>
+                  )}
+                  {previews.map(({ flat, data: p, error }) => (
+                    <div key={flat._id} className="border border-gray-100 rounded-2xl overflow-hidden">
+                      {/* Flat header */}
+                      <div className="bg-gray-50 px-4 py-2.5 flex items-center justify-between border-b border-gray-100">
+                        <div className="font-bold text-sm text-gray-900">{flat.flatNumber} <span className="font-normal text-gray-500">— {flat.ownerName || 'No resident'}</span></div>
+                        {p && !p.alreadyGenerated && (
+                          <div className="text-sm font-black text-orange-600">{fmt(p.totalPayable ?? p.totalAmount)}</div>
+                        )}
                       </div>
-                    ))}
-
-                    <div className="bg-orange-50 rounded-2xl p-4 space-y-2 text-sm mt-3">
-                      <div className="flex justify-between"><span className="text-gray-600">Subtotal</span><span className="font-semibold">{fmt(preview.subTotal)}</span></div>
-                      {preview.totalGst > 0 && <div className="flex justify-between"><span className="text-gray-600">GST (CGST {fmt(preview.cgst)} + SGST {fmt(preview.sgst)})</span><span className="font-semibold">{fmt(preview.totalGst)}</span></div>}
-                      {preview.arrearsAmount > 0 && <div className="flex justify-between text-amber-700"><span>Previous Arrears</span><span className="font-semibold">{fmt(preview.arrearsAmount)}</span></div>}
-                      {preview.fineAmount > 0 && <div className="flex justify-between text-red-600"><span>Fine</span><span className="font-semibold">{fmt(preview.fineAmount)}</span></div>}
-                      {preview.discountAmount > 0 && <div className="flex justify-between text-emerald-700"><span>Discount</span><span className="font-semibold">-{fmt(preview.discountAmount)}</span></div>}
-                      {preview.creditNoteAmount > 0 && <div className="flex justify-between text-emerald-700"><span>Credit Note</span><span className="font-semibold">-{fmt(preview.creditNoteAmount)}</span></div>}
-                      {preview.advanceAdjustment > 0 && <div className="flex justify-between text-cyan-700"><span>Advance applied</span><span className="font-semibold">-{fmt(preview.advanceAdjustment)}</span></div>}
-                      {preview.availableAdvance > 0 && !preview.advanceAdjustment && <div className="flex justify-between text-cyan-700"><span>Advance available</span><span className="font-semibold">{fmt(preview.availableAdvance)}</span></div>}
-                      <div className="border-t border-orange-200 pt-2 flex justify-between font-black text-gray-900 text-base">
-                        <span>Total Payable</span><span>{fmt(preview.totalPayable ?? preview.totalAmount)}</span>
+                      <div className="p-4">
+                        {error ? (
+                          <div className="text-xs text-red-500 flex gap-1 items-center"><FaExclamationTriangle />{error}</div>
+                        ) : p?.alreadyGenerated ? (
+                          <div className="text-xs text-amber-600 flex gap-1 items-center"><FaExclamationTriangle />{p.message}</div>
+                        ) : p ? (
+                          <div className="space-y-2">
+                            {/* Line items */}
+                            {(p.lineItems || []).map((item, i) => (
+                              <div key={i} className="flex justify-between items-center py-1 border-b border-gray-50 text-sm">
+                                <div>
+                                  <span className="font-medium text-gray-800">{item.chargeHeadName}</span>
+                                  {item.calculationType === 'PER_SQ_FT' && (
+                                    <span className="ml-2 text-xs text-gray-400">₹{item.rate} × {item.quantity} sq.ft</span>
+                                  )}
+                                </div>
+                                <span className="font-semibold text-gray-900">{fmt(item.totalAmount)}</span>
+                              </div>
+                            ))}
+                            {/* Summary */}
+                            <div className="bg-orange-50 rounded-xl p-3 space-y-1.5 text-sm mt-2">
+                              <div className="flex justify-between text-gray-600"><span>Subtotal</span><span className="font-semibold">{fmt(p.subTotal)}</span></div>
+                              {p.totalGst > 0 && <div className="flex justify-between text-gray-600"><span>GST</span><span className="font-semibold">{fmt(p.totalGst)}</span></div>}
+                              {p.arrearsAmount > 0 && <div className="flex justify-between text-amber-700"><span>Arrears</span><span className="font-semibold">{fmt(p.arrearsAmount)}</span></div>}
+                              {p.fineAmount > 0 && <div className="flex justify-between text-red-600"><span>Fine ({p.overdueCount} overdue)</span><span className="font-semibold">{fmt(p.fineAmount)}</span></div>}
+                              {p.discountAmount > 0 && <div className="flex justify-between text-emerald-700"><span>Discount</span><span className="font-semibold">-{fmt(p.discountAmount)}</span></div>}
+                              {p.advanceAdjustment > 0 && <div className="flex justify-between text-cyan-700"><span>Advance applied</span><span className="font-semibold">-{fmt(p.advanceAdjustment)}</span></div>}
+                              {p.availableAdvance > 0 && !p.advanceAdjustment && <div className="flex justify-between text-cyan-600"><span>Advance (will auto-apply)</span><span className="font-semibold">-{fmt(Math.min(p.availableAdvance, p.subTotal + (p.totalGst||0) + (p.arrearsAmount||0) + (p.fineAmount||0)))}</span></div>}
+                              <div className="border-t border-orange-200 pt-2 flex justify-between font-black text-gray-900">
+                                <span>Total Payable</span><span>{fmt(p.totalPayable ?? p.totalAmount)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ) : null}
                       </div>
                     </div>
-                  </div>
-                )
+                  ))}
+                </div>
               ) : null}
             </div>
           )}
@@ -325,10 +341,14 @@ export const GenerateInvoiceModal = ({ onClose, onSuccess, flats = [] }) => {
                   <div className="bg-white rounded-xl p-3"><div className="text-xs text-gray-400">Billing Period</div><div className="font-bold">{periodLabel(stepData.billingDate)}</div></div>
                   <div className="bg-white rounded-xl p-3"><div className="text-xs text-gray-400">Invoice Date</div><div className="font-bold">{fmtDate(stepData.invoiceDate)}</div></div>
                   <div className="bg-white rounded-xl p-3 col-span-2"><div className="text-xs text-gray-400">Flats to Generate</div><div className="font-bold text-orange-600 text-lg">{targetFlats.length} flat{targetFlats.length !== 1 ? 's' : ''}</div></div>
-                  {preview?.advanceAdjustment > 0 && (
+                  {previews.some(p => p?.data?.advanceAdjustment > 0) && (
                     <div className="bg-cyan-50 rounded-xl p-3 col-span-2">
-                      <div className="text-xs text-cyan-600">Advance will be auto-applied</div>
-                      <div className="font-bold text-cyan-800">{fmt(preview.advanceAdjustment)}{preview.totalPayable === 0 ? ' - invoice will be fully settled' : ''}</div>
+                      <div className="text-xs text-cyan-600">Advance will be auto-applied for some flats</div>
+                      <div className="font-bold text-cyan-800">
+                        {previews.filter(p => p?.data?.advanceAdjustment > 0).map(p =>
+                          `${p.flat?.flatNumber}: -${fmt(p.data.advanceAdjustment)}`
+                        ).join(', ')}
+                      </div>
                     </div>
                   )}
                 </div>

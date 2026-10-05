@@ -17,6 +17,7 @@ import AdvanceDepositsContainer from './AdvanceDeposits/AdvanceDepositsContainer
 import LedgerContainer from './Ledger/LedgerContainer';
 import CreditNotesDiscountsContainer from './CreditNotesDiscounts/CreditNotesDiscountsContainer';
 import AuditTrailPage from './AuditTrail/AuditTrailPage';
+import ReportsComplianceContainer from './ReportsCompliance/ReportsComplianceContainer';
 
 const SUBMODULE_CONFIG = [
   {
@@ -308,7 +309,7 @@ const BillingPage = () => {
         .catch(() => { });
 
       // ── Total Held Deposits (advance accounts) ────────────────────────────
-      apiClient.get('/advance-accounts?limit=1')
+      apiClient.get('/advance-deposits/advance-accounts?limit=1')
         .then(res => {
           const list = res.data?.data?.accounts || res.data?.data || [];
           const total = Array.isArray(list)
@@ -721,6 +722,13 @@ const BillingPage = () => {
     if (selectedModule.id === 'audit_trail') {
       return (
         <AuditTrailPage onBack={handleBackToHub} />
+      );
+    }
+
+    // ── Reports & Compliance (FR-B11) ──────────────────────────────────────
+    if (selectedModule.id === 'reports_compliance') {
+      return (
+        <ReportsComplianceContainer onBack={handleBackToHub} />
       );
     }
 
