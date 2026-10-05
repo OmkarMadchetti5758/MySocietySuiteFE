@@ -16,6 +16,7 @@ import VendorPaymentsPage from './VendorPayments/VendorPaymentsPage';
 import AdvanceDepositsContainer from './AdvanceDeposits/AdvanceDepositsContainer';
 import LedgerContainer from './Ledger/LedgerContainer';
 import CreditNotesDiscountsContainer from './CreditNotesDiscounts/CreditNotesDiscountsContainer';
+import AuditTrailPage from './AuditTrail/AuditTrailPage';
 
 const SUBMODULE_CONFIG = [
   {
@@ -254,6 +255,7 @@ const BillingPage = () => {
     discountsIssued: null,
     reconciledBalance: null,
     activeLedgers: null,
+    auditLogsCount: null,
   });
 
   useEffect(() => {
@@ -346,6 +348,14 @@ const BillingPage = () => {
             ?? res.data?.data?.length
             ?? null;
           if (count !== null) setHubStats(prev => ({ ...prev, activeLedgers: count }));
+        })
+        .catch(() => { });
+
+      // ── Audit Logs Count ────────────────────────────────────────────────────
+      apiClient.get('/billing/audit-logs?limit=1')
+        .then(res => {
+          const count = res.data?.data?.pagination?.total ?? res.data?.pagination?.total ?? null;
+          if (count !== null) setHubStats(prev => ({ ...prev, auditLogsCount: count }));
         })
         .catch(() => { });
     }
@@ -698,11 +708,19 @@ const BillingPage = () => {
         </div>
       );
     }
+    
 
-    // ── Credit Notes & Discounts (BRD 6.6) ──────────────────────────────────
+    // ── Credit Notes & Discount (BRD 6.6) ──────────────────────────────────
     if (selectedModule.id === 'credit_notes_discount') {
       return (
         <CreditNotesDiscountsContainer onBack={handleBackToHub} />
+      );
+    }
+
+    // ── Audit Trail ────────────────────────────────────────────────────────
+    if (selectedModule.id === 'audit_trail') {
+      return (
+        <AuditTrailPage onBack={handleBackToHub} />
       );
     }
 
@@ -1372,6 +1390,8 @@ const BillingPage = () => {
               dynamicStats = { ...mod.stats, value: formatINR(hubStats.reconciledBalance) };
             } else if (mod.id === 'ledger_management' && hubStats.activeLedgers !== null) {
               dynamicStats = { ...mod.stats, value: String(hubStats.activeLedgers) };
+            } else if (mod.id === 'audit_trail' && hubStats.auditLogsCount !== null) {
+              dynamicStats = { ...mod.stats, value: `${hubStats.auditLogsCount} events` };
             }
             return (
               <SectionCard
