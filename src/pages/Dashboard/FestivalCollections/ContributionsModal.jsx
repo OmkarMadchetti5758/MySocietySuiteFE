@@ -187,8 +187,8 @@ const ContributionsModal = ({ isOpen, onClose, collection, onRefresh }) => {
                   <p className="text-gray-500 mt-1">Payments recorded will appear here.</p>
                 </div>
               ) : (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                  <table className="w-full text-sm text-left">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
+                  <table className="w-full text-sm text-left min-w-[600px]">
                     <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-100">
                       <tr>
                         <th className="px-6 py-4">Flat / Resident</th>

@@ -246,7 +246,7 @@ const GenericReportView = ({ report, onBack }) => {
 
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[900px]">
             <thead>
               {renderTableHeaders()}
             </thead>

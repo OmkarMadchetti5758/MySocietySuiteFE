@@ -190,8 +190,8 @@ const AuditTrailPage = ({ onBack }) => {
       </div>
 
       <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-hidden">
-          <table className="w-full text-left border-collapse break-words">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[900px] text-left border-collapse break-words">
             <thead className="bg-gray-50/90 border-b border-gray-200">
               <tr className="text-xs text-gray-500 uppercase tracking-wider font-bold">
                 <th className="py-4 px-6 w-1/6">Date & Time</th>
