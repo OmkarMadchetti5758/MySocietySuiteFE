@@ -3,9 +3,10 @@ import { Html5QrcodeScanner } from 'html5-qrcode';
 import api from '../../services/apiClient';
 import toast from 'react-hot-toast';
 import { useNavigate, useParams } from 'react-router-dom';
-import { 
-    FaCheckCircle, FaTimesCircle, FaArrowLeft, FaClock, FaUser, 
-    FaPhoneAlt, FaBuilding, FaExclamationTriangle, FaUserCheck, FaRedo 
+import {
+    FaCheckCircle, FaTimesCircle, FaArrowLeft, FaClock, FaUser,
+    FaPhoneAlt, FaBuilding, FaExclamationTriangle, FaUserCheck, FaRedo,
+    FaKeyboard, FaQrcode
 } from 'react-icons/fa';
 
 const QRScanner = () => {
@@ -14,13 +15,20 @@ const QRScanner = () => {
     const [scanResult, setScanResult] = useState(null);
     const [loading, setLoading] = useState(false);
     const [gateId, setGateId] = useState('');
+    const [entryMode, setEntryMode] = useState('camera'); // 'camera' or 'manual'
+    const [manualCode, setManualCode] = useState('');
     const scannerRef = useRef(null);
+    const gateIdRef = useRef('');
+    gateIdRef.current = gateId;
+
+
+
 
     // 1. Fetch Guard's assigned gate (optional)
     useEffect(() => {
         const fetchGate = async () => {
             try {
-                const gateRes = await api.get('/guard/my-gate', { headers: { 'x-tenant-id': societyId }});
+                const gateRes = await api.get('/guard/my-gate', { headers: { 'x-tenant-id': societyId } });
                 if (gateRes.data?.data) {
                     setGateId(gateRes.data.data.gateId?._id || gateRes.data.data.gateId || '');
                 }
@@ -33,7 +41,7 @@ const QRScanner = () => {
 
     // 2. Initialize Scanner
     useEffect(() => {
-        if (scanResult) return; // Don't run scanner if showing result
+        if (scanResult) return;
 
         const scanner = new Html5QrcodeScanner("reader", {
             qrbox: { width: 260, height: 260 },
@@ -46,14 +54,14 @@ const QRScanner = () => {
         async function onScanSuccess(decodedText) {
             try {
                 await scanner.clear();
-            } catch (e) {}
+            } catch (e) { }
 
             setLoading(true);
             try {
                 const res = await api.post(
-                    '/visitor/qr-scan', 
-                    { qrCode: decodedText.trim(), gateId }, 
-                    { headers: { 'x-tenant-id': societyId }}
+                    '/visitor/qr-scan',
+                    { qrCode: decodedText.trim(), gateId: gateIdRef.current || gateId },
+                    { headers: { 'x-tenant-id': societyId } }
                 );
                 setScanResult({
                     status: 'success',
@@ -81,10 +89,10 @@ const QRScanner = () => {
 
         return () => {
             if (scannerRef.current) {
-                scannerRef.current.clear().catch(() => {});
+                scannerRef.current.clear().catch(() => { });
             }
         };
-    }, [societyId, gateId, scanResult]);
+    }, [societyId, scanResult]);
 
     // Fallback: Send for Manual Approval
     const handleSendForManualApproval = () => {
@@ -100,13 +108,52 @@ const QRScanner = () => {
         });
     };
 
+    // 3. Handle Manual Pass Code Verification
+    const handleManualSubmit = async (e) => {
+        if (e) e.preventDefault();
+        const cleanSuffix = manualCode.trim().toUpperCase().replace(/^MSS-PASS-/, '');
+        if (!cleanSuffix) {
+            toast.error("Please enter the pass code");
+            return;
+        }
+
+        // Automatic prefix attach
+        const fullCode = `MSS-PASS-${cleanSuffix}`;
+
+
+        setLoading(true);
+        try {
+            const res = await api.post(
+                '/visitor/qr-scan',
+                { qrCode: fullCode, gateId: gateIdRef.current || gateId },
+                { headers: { 'x-tenant-id': societyId } }
+            );
+            setScanResult({
+                status: 'success',
+                data: res.data.data
+            });
+            toast.success("Pass Validated & Entry Approved!");
+        } catch (err) {
+            const errData = err.response?.data || {};
+            setScanResult({
+                status: 'error',
+                message: errData.message || "Invalid or Unrecognized Pass Code",
+                errorCode: errData.errorCode || "QR_INVALID",
+                qrPass: errData.qrPass || null
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col p-4">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center">
-                    <button 
-                        onClick={() => navigate(-1)} 
+                    <button
+                        onClick={() => navigate(-1)}
                         className="p-2.5 bg-white border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-100 mr-3 shadow-sm"
                     >
                         <FaArrowLeft />
@@ -119,18 +166,105 @@ const QRScanner = () => {
             </div>
 
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 flex-1 flex flex-col items-center justify-center max-w-lg mx-auto w-full">
-                
-                {/* Camera Scanner View */}
+
+                {/* Mode Selector Tabs */}
                 {!scanResult && !loading && (
-                    <div className="w-full flex flex-col items-center">
+                    <div className="w-full max-w-sm mb-5">
+                        <div className="flex bg-gray-100 p-1 rounded-2xl border border-gray-200">
+                            <button
+                                type="button"
+                                onClick={() => setEntryMode('camera')}
+                                className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${entryMode === 'camera'
+                                    ? 'bg-white text-gray-900 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-700'
+                                    }`}
+                            >
+                                <FaQrcode /> Scan QR
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setEntryMode('manual')}
+                                className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all ${entryMode === 'manual'
+                                    ? 'bg-white text-gray-900 shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-700'
+                                    }`}
+                            >
+                                <FaKeyboard /> Enter Code Manually
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Camera Scanner View (Always mounted so Camera & Drag-and-Drop are preserved) */}
+                {!scanResult && !loading && (
+                    <div className={`w-full flex flex-col items-center ${entryMode === 'camera' ? 'block' : 'hidden'}`}>
                         <div id="reader" className="w-full max-w-sm rounded-2xl overflow-hidden shadow-inner border border-gray-200"></div>
                         <p className="text-center text-xs text-gray-500 mt-4 flex items-center gap-1.5 font-medium">
                             <FaClock className="text-orange-500" />
                             Point camera at visitor's Digital Pass QR
                         </p>
+                        <button
+                            type="button"
+                            onClick={() => setEntryMode('manual')}
+                            className="mt-3 text-xs text-blue-600 hover:underline font-semibold flex items-center gap-1"
+                        >
+                            Scanner not working? Enter pass code manually
+                        </button>
                     </div>
                 )}
-                
+
+
+                {/* Manual Code Entry View */}
+                {!scanResult && !loading && entryMode === 'manual' && (
+                    <form onSubmit={handleManualSubmit} className="w-full max-w-sm flex flex-col items-center animate-fade-in">
+                        <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-3">
+                            <FaKeyboard className="text-2xl" />
+                        </div>
+                        <h2 className="text-base font-bold text-gray-900">Enter Visitor Pass Code</h2>
+                        <p className="text-xs text-gray-500 mt-0.5 text-center mb-4">
+                            Type the unique code displayed below the QR code (e.g. MSS-PASS-XXXXXX)
+                        </p>
+
+                        <div className="w-full mb-4">
+                            <div className="flex items-center rounded-2xl border-2 border-gray-200 bg-white overflow-hidden focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
+                                <span className="bg-gray-100 text-gray-700 font-mono font-bold text-xs sm:text-sm px-3.5 py-3.5 border-r border-gray-200 select-none tracking-wider">
+                                    MSS-PASS-
+                                </span>
+                                <input
+                                    type="text"
+                                    placeholder="HDMKU9..."
+                                    value={manualCode}
+                                    onChange={(e) => {
+                                        // removes the prefix MSS-PASS- if user enters it
+                                        const clean = e.target.value.toUpperCase().replace(/^MSS-PASS-/, '');
+                                        setManualCode(clean);
+                                    }}
+                                    autoFocus
+                                    className="flex-1 px-3 py-3 font-mono text-base font-bold tracking-wider uppercase text-gray-900 outline-none bg-transparent"
+                                />
+                            </div>
+                        </div>
+
+
+                        <button
+                            type="submit"
+                            disabled={!manualCode.trim()}
+                            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl py-3.5 font-bold shadow-lg shadow-blue-500/30 hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 active:scale-95"
+                        >
+                            Verify & Approve Entry
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => setEntryMode('camera')}
+                            className="mt-3 text-xs text-gray-500 hover:text-gray-700 font-semibold"
+                        >
+                            ← Switch back to camera scanner
+                        </button>
+                    </form>
+                )}
+
+
                 {/* Loading State */}
                 {loading && (
                     <div className="flex flex-col items-center my-12">
@@ -187,12 +321,16 @@ const QRScanner = () => {
                             )}
                         </div>
 
-                        <button 
-                            onClick={() => setScanResult(null)} 
+                        <button
+                            onClick={() => {
+                                setScanResult(null);
+                                setManualCode('');
+                            }}
                             className="mt-6 w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-2xl py-3.5 font-bold shadow-lg shadow-green-600/30 hover:from-emerald-600 hover:to-green-700 transition-all active:scale-95"
                         >
                             Scan Next QR
                         </button>
+
                     </div>
                 )}
 
@@ -202,11 +340,11 @@ const QRScanner = () => {
                         <div className="w-20 h-20 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
                             <FaTimesCircle className="text-4xl" />
                         </div>
-                        
+
                         <span className="text-xs font-bold uppercase tracking-wider text-rose-700 bg-rose-50 px-3 py-1 rounded-full border border-rose-200">
-                            {scanResult.errorCode === 'QR_ALREADY_USED' ? 'QR ALREADY USED ❌' : 
-                             scanResult.errorCode === 'QR_EXPIRED' ? 'QR EXPIRED ❌' : 
-                             scanResult.errorCode === 'QR_REVOKED' ? 'QR REVOKED ❌' : 'INVALID PASS ❌'}
+                            {scanResult.errorCode === 'QR_ALREADY_USED' ? 'QR ALREADY USED ❌' :
+                                scanResult.errorCode === 'QR_EXPIRED' ? 'QR EXPIRED ❌' :
+                                    scanResult.errorCode === 'QR_REVOKED' ? 'QR REVOKED ❌' : 'INVALID PASS ❌'}
                         </span>
 
                         <h2 className="text-2xl font-black text-rose-600 mt-2">Pass Invalid</h2>
@@ -226,8 +364,21 @@ const QRScanner = () => {
                         </div>
 
                         <div className="flex flex-col gap-3 mt-6">
+                            {/* Option to try manual code input if scan was corrupt or unreadable */}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setScanResult(null);
+                                    setEntryMode('manual');
+                                }}
+                                className="w-full bg-blue-600 text-white rounded-2xl py-3.5 font-bold shadow-lg shadow-blue-600/30 hover:bg-blue-700 transition-all flex items-center justify-center gap-2 active:scale-95"
+                            >
+                                <FaKeyboard />
+                                Enter Pass Code Manually
+                            </button>
+
                             {/* Manual Approval Fallback Button */}
-                            <button 
+                            <button
                                 onClick={handleSendForManualApproval}
                                 className="w-full bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-2xl py-3.5 font-bold shadow-lg shadow-orange-500/30 hover:from-orange-600 hover:to-amber-700 transition-all flex items-center justify-center gap-2 active:scale-95"
                             >
@@ -235,8 +386,11 @@ const QRScanner = () => {
                                 Request Manual Resident Approval
                             </button>
 
-                            <button 
-                                onClick={() => setScanResult(null)} 
+                            <button
+                                onClick={() => {
+                                    setScanResult(null);
+                                    setManualCode('');
+                                }}
                                 className="w-full bg-gray-100 text-gray-700 rounded-2xl py-3 font-semibold hover:bg-gray-200 transition-all flex items-center justify-center gap-2 active:scale-95"
                             >
                                 <FaRedo className="text-xs" />

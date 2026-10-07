@@ -1,19 +1,20 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import api, { API_URL } from '../../../services/apiClient';
 import toast from 'react-hot-toast';
 import {
     FaUserCheck, FaUserTimes, FaUser, FaPhoneAlt, FaCar, FaClipboard,
     FaHistory, FaClock, FaCheckCircle, FaTimesCircle, FaDoorOpen, FaBell,
-    FaQrcode, FaPlus, FaShareAlt, FaBan, FaCalendarAlt, FaCopy, FaCheck
+    FaQrcode, FaPlus, FaShareAlt, FaBan, FaCalendarAlt, FaCopy, FaCheck,
+    FaDownload
 } from 'react-icons/fa';
 
 const STATUS_CONFIG = {
-    pending:    { label: 'Pending',    color: 'bg-amber-100 text-amber-700 border-amber-200',   icon: FaClock },
-    approved:   { label: 'Approved',   color: 'bg-blue-100 text-blue-700 border-blue-200',      icon: FaCheckCircle },
-    rejected:   { label: 'Denied',     color: 'bg-rose-100 text-rose-700 border-rose-200',         icon: FaTimesCircle },
+    pending: { label: 'Pending', color: 'bg-amber-100 text-amber-700 border-amber-200', icon: FaClock },
+    approved: { label: 'Approved', color: 'bg-blue-100 text-blue-700 border-blue-200', icon: FaCheckCircle },
+    rejected: { label: 'Denied', color: 'bg-rose-100 text-rose-700 border-rose-200', icon: FaTimesCircle },
     checked_in: { label: 'Checked In', color: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: FaDoorOpen },
 };
 
@@ -22,11 +23,30 @@ const CATEGORY_LABEL = { guest: 'Guest', delivery: 'Delivery', service: 'Service
 const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 // ─── Modal to Generate Digital QR Pass ──────────────────────────────────────────
-const CreateQRPassModal = ({ isOpen, onClose, societyId, onSuccess, userFlats }) => {
+// ─── Modal to Generate Digital QR Pass ──────────────────────────────────────────
+const CreateQRPassModal = ({ isOpen, onClose, societyId, onSuccess, userFlats = [], currentUser = {}, isResident = false }) => {
+    const user = currentUser?.id || currentUser?._id ? currentUser : JSON.parse(localStorage.getItem('user') || '{}');
+    const userFlatId = user.flatId?._id || user.flatId || '';
+
+    // Find the resident's flat in userFlats
+    const myFlat = userFlats.find(f => {
+        if (userFlatId && String(f._id) === String(userFlatId)) return true;
+        if (user._id && String(f.primaryOwner?._id || f.primaryOwner) === String(user._id)) return true;
+        if (user.id && String(f.primaryOwner?._id || f.primaryOwner) === String(user.id)) return true;
+        if (user.mobile && (f.primaryOwner?.mobile === user.mobile || f.primaryOwner?.phone === user.mobile)) return true;
+        if (user.email && f.primaryOwner?.email === user.email) return true;
+        if (user.name && f.ownerName && f.ownerName.trim().toLowerCase() === user.name.trim().toLowerCase()) return true;
+        return false;
+    });
+
+    const isUserResident = isResident || Boolean(myFlat) || Boolean(userFlatId) || (user.roleKeys || []).some(r => ['resident_owner', 'resident_tenant', 'resident'].includes(r));
+    const isFlatDisabled = isUserResident && Boolean(myFlat || userFlatId);
+    const initialFlatId = myFlat?._id || userFlatId || userFlats[0]?._id || '';
+
     const [formData, setFormData] = useState({
         visitorName: '',
         visitorMobile: '',
-        flatId: userFlats[0]?._id || '',
+        flatId: initialFlatId,
         type: 'one_time', // 'one_time' or 'recurring'
         validFrom: new Date().toISOString().split('T')[0],
         validTo: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -37,10 +57,14 @@ const CreateQRPassModal = ({ isOpen, onClose, societyId, onSuccess, userFlats })
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
-        if (userFlats.length > 0 && !formData.flatId) {
+        if (myFlat?._id) {
+            setFormData(prev => ({ ...prev, flatId: myFlat._id }));
+        } else if (userFlatId) {
+            setFormData(prev => ({ ...prev, flatId: userFlatId }));
+        } else if (userFlats.length > 0 && !formData.flatId) {
             setFormData(prev => ({ ...prev, flatId: userFlats[0]._id }));
         }
-    }, [userFlats, formData.flatId]);
+    }, [myFlat?._id, userFlatId, userFlats.length]);
 
     if (!isOpen) return null;
 
@@ -91,8 +115,8 @@ const CreateQRPassModal = ({ isOpen, onClose, societyId, onSuccess, userFlats })
                         </h2>
                         <p className="text-xs text-gray-500 mt-0.5">Pre-approve a visitor, guest, cab or recurring staff</p>
                     </div>
-                    <button 
-                        onClick={onClose} 
+                    <button
+                        onClick={onClose}
                         className="w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 flex items-center justify-center font-bold"
                     >
                         ✕
@@ -126,22 +150,42 @@ const CreateQRPassModal = ({ isOpen, onClose, societyId, onSuccess, userFlats })
                     </div>
 
                     {/* Flat selection */}
-                    {userFlats.length > 1 && (
-                        <div>
-                            <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Select Flat *</label>
-                            <select
-                                value={formData.flatId}
-                                onChange={e => setFormData({ ...formData, flatId: e.target.value })}
-                                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none"
-                            >
-                                {userFlats.map(f => (
-                                    <option key={f._id} value={f._id}>
-                                        {f.blockId?.name || ''} {f.flatNumber}
-                                    </option>
-                                ))}
-                            </select>
+                    <div>
+                        <div className="flex items-center justify-between mb-1">
+                            <label className="block text-xs font-bold text-gray-700 uppercase">
+                                Select Flat *
+                            </label>
+                            {isFlatDisabled && (
+                                <span className="text-[10px] font-semibold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-200">
+                                    Your Registered Flat
+                                </span>
+                            )}
                         </div>
-                    )}
+                        <select
+                            value={formData.flatId}
+                            onChange={e => setFormData({ ...formData, flatId: e.target.value })}
+                            disabled={isFlatDisabled}
+                            className={`w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition-all ${
+                                isFlatDisabled
+                                    ? 'bg-gray-100/90 text-gray-600 border-gray-200 cursor-not-allowed font-medium'
+                                    : 'bg-white text-gray-800 border-gray-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500'
+                            }`}
+                        >
+                            {userFlats.map(f => {
+                                const residentName = f.ownerName || f.primaryOwner?.name || f.primaryOwner?.fullName || '';
+                                return (
+                                    <option key={f._id} value={f._id}>
+                                        {f.blockId?.name || ''} {f.flatNumber}{residentName ? ` - (${residentName})` : ''}
+                                    </option>
+                                );
+                            })}
+                        </select>
+                        {isFlatDisabled && (
+                            <p className="text-[11px] text-gray-400 mt-1">
+                                QR Pass is automatically issued for your own flat.
+                            </p>
+                        )}
+                    </div>
 
                     {/* Pass Type: One-time vs Recurring */}
                     <div>
@@ -150,11 +194,10 @@ const CreateQRPassModal = ({ isOpen, onClose, societyId, onSuccess, userFlats })
                             <button
                                 type="button"
                                 onClick={() => setFormData({ ...formData, type: 'one_time' })}
-                                className={`py-3 px-4 rounded-2xl border text-sm font-bold flex flex-col items-center gap-1 transition-all ${
-                                    formData.type === 'one_time'
-                                        ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-sm'
-                                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                                }`}
+                                className={`py-3 px-4 rounded-2xl border text-sm font-bold flex flex-col items-center gap-1 transition-all ${formData.type === 'one_time'
+                                    ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-sm'
+                                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                                    }`}
                             >
                                 <span>⚡ One-Time Pass</span>
                                 <span className="text-[11px] font-normal text-gray-500">For Guest, Delivery, Cab</span>
@@ -163,11 +206,10 @@ const CreateQRPassModal = ({ isOpen, onClose, societyId, onSuccess, userFlats })
                             <button
                                 type="button"
                                 onClick={() => setFormData({ ...formData, type: 'recurring' })}
-                                className={`py-3 px-4 rounded-2xl border text-sm font-bold flex flex-col items-center gap-1 transition-all ${
-                                    formData.type === 'recurring'
-                                        ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-sm'
-                                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                                }`}
+                                className={`py-3 px-4 rounded-2xl border text-sm font-bold flex flex-col items-center gap-1 transition-all ${formData.type === 'recurring'
+                                    ? 'border-orange-500 bg-orange-50 text-orange-700 shadow-sm'
+                                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                                    }`}
                             >
                                 <span>🔄 Recurring Pass</span>
                                 <span className="text-[11px] font-normal text-gray-500">For Maid, Driver, Milkman</span>
@@ -209,11 +251,10 @@ const CreateQRPassModal = ({ isOpen, onClose, societyId, onSuccess, userFlats })
                                             type="button"
                                             key={day}
                                             onClick={() => toggleDay(day)}
-                                            className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                                                selected
-                                                    ? 'bg-orange-500 text-white shadow-sm'
-                                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                            }`}
+                                            className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${selected
+                                                ? 'bg-orange-500 text-white shadow-sm'
+                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                }`}
                                         >
                                             {day.slice(0, 3)}
                                         </button>
@@ -277,6 +318,152 @@ const ViewQRPassModal = ({ pass, isOpen, onClose, onRevoke }) => {
     const isUsed = pass.type === 'one_time' && pass.isUsed;
     const isRevoked = pass.status === 'revoked';
 
+// Helper to render the complete Visitor Pass card (Visitor Name, Mobile, Dashed Box, QR, Code Badge)
+const generatePassCardBlob = async (pass) => {
+    return new Promise((resolve) => {
+        const qrCanvas = document.getElementById("qr-pass-canvas");
+        if (!qrCanvas) {
+            resolve(null);
+            return;
+        }
+
+        const scale = 2; // High-res 2x scaling for crisp, clear image
+        const cardWidth = 290;
+        const qrSize = 180;
+        const boxPaddingX = 22;
+        const boxPaddingTop = 18;
+        const boxPaddingBottom = 16;
+        const boxWidth = qrSize + (boxPaddingX * 2); // 224px
+        const boxInnerQrGap = 10;
+        const badgeHeight = 28;
+        const boxHeight = boxPaddingTop + qrSize + boxInnerQrGap + badgeHeight + boxPaddingBottom; // 252px
+
+        const hasMobile = Boolean(pass.visitorMobile);
+        const topPadding = 24;
+        let nameFontSize = 20;
+        const mobileFontSize = 13;
+        const nameMobileGap = hasMobile ? 4 : 0;
+        const headerToBoxGap = 18;
+        const bottomPadding = 24;
+
+        // Measure font dynamically so longer names scale down smoothly
+        const tempCanvas = document.createElement("canvas");
+        const tempCtx = tempCanvas.getContext("2d");
+        if (tempCtx) {
+            tempCtx.font = `bold ${nameFontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+            while (tempCtx.measureText(pass.visitorName || "").width > (cardWidth - 36) && nameFontSize > 13) {
+                nameFontSize -= 1;
+                tempCtx.font = `bold ${nameFontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+            }
+        }
+
+        const nameHeight = nameFontSize * 1.25;
+        const mobileHeight = hasMobile ? mobileFontSize * 1.3 : 0;
+        const cardHeight = Math.round(topPadding + nameHeight + nameMobileGap + mobileHeight + headerToBoxGap + boxHeight + bottomPadding);
+
+        // Offscreen high-DPI canvas
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(cardWidth * scale);
+        canvas.height = Math.round(cardHeight * scale);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+            resolve(null);
+            return;
+        }
+
+        ctx.scale(scale, scale);
+
+        // 1. Pure White Background
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, cardWidth, cardHeight);
+
+        // 2. Visitor Name
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.fillStyle = "#0f172a"; // slate-900
+        ctx.font = `bold ${nameFontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+        const nameY = topPadding;
+        ctx.fillText(pass.visitorName || "Visitor Pass", cardWidth / 2, nameY);
+
+        // 3. Visitor Mobile
+        let currentY = nameY + nameHeight + nameMobileGap;
+        if (hasMobile) {
+            ctx.fillStyle = "#64748b"; // slate-500
+            ctx.font = `500 ${mobileFontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+            ctx.fillText(pass.visitorMobile, cardWidth / 2, currentY);
+            currentY += mobileHeight;
+        }
+
+        // 4. Dashed Box around QR & Badge
+        const boxX = (cardWidth - boxWidth) / 2;
+        const boxY = currentY + headerToBoxGap;
+        const boxRadius = 18;
+
+        const drawRoundRectPath = (c, x, y, w, h, r) => {
+            c.beginPath();
+            if (typeof c.roundRect === "function") {
+                c.roundRect(x, y, w, h, r);
+            } else {
+                c.moveTo(x + r, y);
+                c.arcTo(x + w, y, x + w, y + h, r);
+                c.arcTo(x + w, y + h, x, y + h, r);
+                c.arcTo(x, y + h, x, y, r);
+                c.arcTo(x, y + h, x, y, r);
+                c.closePath();
+            }
+        };
+
+        ctx.save();
+        drawRoundRectPath(ctx, boxX, boxY, boxWidth, boxHeight, boxRadius);
+        ctx.fillStyle = "#ffffff";
+        ctx.fill();
+
+        ctx.lineWidth = 1.8;
+        ctx.setLineDash([6, 5]);
+        ctx.strokeStyle = "#cbd5e1"; // slate-300
+        ctx.stroke();
+        ctx.restore();
+
+        // 5. Draw QR code centered in dashed box
+        const qrX = boxX + boxPaddingX;
+        const qrY = boxY + boxPaddingTop;
+        ctx.save();
+        ctx.imageSmoothingEnabled = false; // Sharp QR pixels
+        ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+        ctx.restore();
+
+        // 6. Draw Badge below QR
+        const badgeWidth = boxWidth - 28;
+        const badgeX = boxX + 14;
+        const badgeY = qrY + qrSize + boxInnerQrGap;
+        const badgeRadius = 7;
+
+        ctx.save();
+        drawRoundRectPath(ctx, badgeX, badgeY, badgeWidth, badgeHeight, badgeRadius);
+        ctx.fillStyle = "#f8fafc"; // slate-50
+        ctx.fill();
+        ctx.restore();
+
+        // Badge Text (passCode)
+        let codeFontSize = 11.5;
+        ctx.font = `bold ${codeFontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace`;
+        while (ctx.measureText(pass.passCode || "").width > (badgeWidth - 14) && codeFontSize > 8) {
+            codeFontSize -= 0.5;
+            ctx.font = `bold ${codeFontSize}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace`;
+        }
+
+        ctx.fillStyle = "#334155"; // slate-700
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(pass.passCode || "", boxX + (boxWidth / 2), badgeY + (badgeHeight / 2));
+
+        // Export as Blob and DataURL
+        canvas.toBlob((blob) => {
+            resolve({ blob, dataUrl: canvas.toDataURL("image/png") });
+        }, "image/png");
+    });
+};
+
     const handleCopy = () => {
         navigator.clipboard.writeText(pass.passCode);
         setCopied(true);
@@ -284,11 +471,43 @@ const ViewQRPassModal = ({ pass, isOpen, onClose, onRevoke }) => {
         toast.success("Pass code copied!");
     };
 
+    const handleDownloadQR = async () => {
+        try {
+            const cardData = await generatePassCardBlob(pass);
+            if (!cardData?.dataUrl) {
+                toast.error("Could not find QR Code to download");
+                return;
+            }
+            const a = document.createElement("a");
+            a.href = cardData.dataUrl;
+            a.download = `Visitor_Pass_${(pass.visitorName || 'Guest').replace(/\s+/g, '_')}_${pass.passCode || 'pass'}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            toast.success("Visitor Pass card downloaded!");
+        } catch (err) {
+            console.error("Error downloading pass card:", err);
+            toast.error("Failed to download pass card");
+        }
+    };
+
     const handleShareWhatsApp = () => {
-        const text = encodeURIComponent(
-            `Hello ${pass.visitorName}, here is your Digital Entry Pass for our society!\nPass Code: ${pass.passCode}\nType: ${pass.type === 'recurring' ? 'Recurring' : 'One-Time'}\nValid: ${new Date(pass.validFrom).toLocaleDateString()} to ${new Date(pass.validTo).toLocaleDateString()} (${pass.timeWindowStart || 'Anytime'} - ${pass.timeWindowEnd || 'Anytime'})\nShow this QR to the security guard at the gate.`
-        );
-        window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+        const text = `Hello ${pass.visitorName}, here is your Digital Entry Pass for our society!\nPass Code: ${pass.passCode}\nType: ${pass.type === 'recurring' ? 'Recurring' : 'One-Time'}\nValid: ${new Date(pass.validFrom).toLocaleDateString()} to ${new Date(pass.validTo).toLocaleDateString()} (${pass.timeWindowStart || 'Anytime'} - ${pass.timeWindowEnd || 'Anytime'})\nShow this QR to the security guard at the gate.`;
+
+        // 1. Copy complete Visitor Pass card image to Clipboard so user can press Ctrl+V directly in WhatsApp Web chat!
+        generatePassCardBlob(pass).then((cardData) => {
+            if (cardData?.blob && navigator.clipboard?.write && window.ClipboardItem) {
+                navigator.clipboard.write([new ClipboardItem({ 'image/png': cardData.blob })])
+                    .then(() => {
+                        toast.success("Pass Image copied! Press Ctrl+V in WhatsApp chat to paste the card.", { duration: 5000 });
+                    })
+                    .catch(() => { });
+            }
+        }).catch(() => { });
+
+        // 2. Direct WhatsApp Redirect (Opens WhatsApp Web / Mobile WhatsApp instantly)
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+        window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
     };
 
     return (
@@ -306,9 +525,10 @@ const ViewQRPassModal = ({ pass, isOpen, onClose, onRevoke }) => {
                 <h3 className="text-xl font-bold text-gray-900">{pass.visitorName}</h3>
                 {pass.visitorMobile && <p className="text-xs text-gray-500">{pass.visitorMobile}</p>}
 
-                {/* QR Code */}
+                {/* QR Code Canvas */}
                 <div className="my-5 p-4 bg-white border-2 border-dashed border-gray-200 rounded-2xl inline-block shadow-sm">
-                    <QRCodeSVG
+                    <QRCodeCanvas
+                        id="qr-pass-canvas"
                         value={pass.passCode}
                         size={180}
                         level="H"
@@ -352,19 +572,28 @@ const ViewQRPassModal = ({ pass, isOpen, onClose, onRevoke }) => {
                 </div>
 
                 {/* Share Options */}
-                <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className="grid grid-cols-3 gap-2 mb-3">
                     <button
                         onClick={handleShareWhatsApp}
-                        className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition-all shadow-sm"
+                        className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition-all shadow-sm"
+                        title="Share on WhatsApp (Mobile: shares image & text; Web: copies image for Ctrl+V)"
                     >
-                        <FaShareAlt /> Share WhatsApp
+                        <FaShareAlt /> WhatsApp
+                    </button>
+                    <button
+                        onClick={handleDownloadQR}
+                        className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-blue-50 text-blue-700 font-bold text-xs hover:bg-blue-100 transition-all border border-blue-200"
+                        title="Download QR Image as PNG"
+                    >
+                        <FaDownload /> Download
                     </button>
                     <button
                         onClick={handleCopy}
-                        className="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gray-100 text-gray-700 font-bold text-xs hover:bg-gray-200 transition-all"
+                        className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gray-100 text-gray-700 font-bold text-xs hover:bg-gray-200 transition-all"
+                        title="Copy Pass Code"
                     >
                         {copied ? <FaCheck className="text-emerald-600" /> : <FaCopy />}
-                        {copied ? 'Copied' : 'Copy Code'}
+                        {copied ? 'Copied' : 'Copy'}
                     </button>
                 </div>
 
@@ -398,7 +627,7 @@ const VisitorApprovalPage = () => {
 
     // User info
     const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const isResident = (user.roleKeys || []).some(r => ['resident_owner', 'resident_tenant'].includes(r));
+    const isResident = (user.roleKeys || []).some(r => ['resident_owner', 'resident_tenant', 'resident'].includes(r)) || user.role === 'resident' || Boolean(user.flatId);
 
     // Fetch flats for resident
     useEffect(() => {
@@ -584,11 +813,10 @@ const VisitorApprovalPage = () => {
             <div className="flex gap-2 mb-6 bg-gray-100 p-1.5 rounded-2xl w-fit flex-wrap">
                 <button
                     onClick={() => setActiveTab('pending')}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                        activeTab === 'pending'
-                            ? 'bg-white text-gray-900 shadow-sm'
-                            : 'text-gray-500 hover:text-gray-700'
-                    }`}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${activeTab === 'pending'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700'
+                        }`}
                 >
                     <span>Pending Approvals</span>
                     {pendingList.length > 0 && (
@@ -600,11 +828,10 @@ const VisitorApprovalPage = () => {
 
                 <button
                     onClick={() => setActiveTab('qr_passes')}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                        activeTab === 'qr_passes'
-                            ? 'bg-white text-gray-900 shadow-sm'
-                            : 'text-gray-500 hover:text-gray-700'
-                    }`}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${activeTab === 'qr_passes'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700'
+                        }`}
                 >
                     <FaQrcode />
                     <span>My QR Passes</span>
@@ -617,11 +844,10 @@ const VisitorApprovalPage = () => {
 
                 <button
                     onClick={() => setActiveTab('history')}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                        activeTab === 'history'
-                            ? 'bg-white text-gray-900 shadow-sm'
-                            : 'text-gray-500 hover:text-gray-700'
-                    }`}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${activeTab === 'history'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700'
+                        }`}
                 >
                     <FaHistory />
                     <span>Visitor Log History</span>
@@ -663,11 +889,10 @@ const VisitorApprovalPage = () => {
                                 <div key={pass._id} className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all p-5 flex flex-col justify-between">
                                     <div>
                                         <div className="flex items-center justify-between mb-3">
-                                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
-                                                pass.type === 'recurring' 
-                                                    ? 'bg-purple-50 text-purple-700 border border-purple-200' 
-                                                    : 'bg-blue-50 text-blue-700 border border-blue-200'
-                                            }`}>
+                                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${pass.type === 'recurring'
+                                                ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                                                : 'bg-blue-50 text-blue-700 border border-blue-200'
+                                                }`}>
                                                 {pass.type === 'recurring' ? '🔄 Recurring' : '⚡ One-Time'}
                                             </span>
 
@@ -807,6 +1032,8 @@ const VisitorApprovalPage = () => {
                 onClose={() => setIsCreateModalOpen(false)}
                 societyId={societyId}
                 userFlats={userFlats}
+                currentUser={user}
+                isResident={isResident}
                 onSuccess={(newPass) => {
                     setQrPassesList(prev => [newPass, ...prev]);
                     setSelectedQrPass(newPass);
