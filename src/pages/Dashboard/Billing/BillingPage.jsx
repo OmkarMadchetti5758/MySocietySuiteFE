@@ -18,6 +18,7 @@ import LedgerContainer from './Ledger/LedgerContainer';
 import CreditNotesDiscountsContainer from './CreditNotesDiscounts/CreditNotesDiscountsContainer';
 import AuditTrailPage from './AuditTrail/AuditTrailPage';
 import ReportsComplianceContainer from './ReportsCompliance/ReportsComplianceContainer';
+import BudgetPage from './Budget/BudgetPage';
 
 const SUBMODULE_CONFIG = [
   {
@@ -729,6 +730,25 @@ const BillingPage = () => {
     if (selectedModule.id === 'reports_compliance') {
       return (
         <ReportsComplianceContainer onBack={handleBackToHub} />
+      );
+    }
+
+    // ── Budgeting (FR-B10) ───────────────────────────────────────────────────
+    if (selectedModule.id === 'budgeting') {
+      return (
+        <div className="animate-fade-in-up pb-12">
+          <div className="flex items-center px-4 sm:px-6 pt-4 mb-0">
+            <button
+              onClick={handleBackToHub}
+              className="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-orange-600 transition-colors"
+            >
+              <FaArrowLeft /> Back to Billing Hub
+            </button>
+          </div>
+          <div className="px-4 sm:px-6 mt-4">
+            <BudgetPage />
+          </div>
+        </div>
       );
     }
 
