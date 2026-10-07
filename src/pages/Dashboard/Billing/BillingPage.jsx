@@ -16,6 +16,7 @@ import VendorPaymentsPage from './VendorPayments/VendorPaymentsPage';
 import AdvanceDepositsContainer from './AdvanceDeposits/AdvanceDepositsContainer';
 import LedgerContainer from './Ledger/LedgerContainer';
 import CreditNotesDiscountsContainer from './CreditNotesDiscounts/CreditNotesDiscountsContainer';
+import BudgetingContainer from './Budgeting/BudgetingContainer';
 
 const SUBMODULE_CONFIG = [
   {
@@ -124,7 +125,7 @@ const SUBMODULE_CONFIG = [
     desc: 'Annual financial budget allocation, department expense limits, and variance analysis.',
     icon: FaCalculator,
     colorClass: 'bg-lime-100 text-lime-600',
-    stats: { label: 'FY 2026-27 Budget', value: '₹45,00,000' },
+    stats: { label: 'FY 2026-27 Budget', value: '₹12,50,000' },
     columns: ['Budget Head', 'Annual Allocation', 'Spent (YTD)', 'Remaining', 'Utilization %'],
     sampleRows: []
   },
@@ -703,6 +704,13 @@ const BillingPage = () => {
     if (selectedModule.id === 'credit_notes_discount') {
       return (
         <CreditNotesDiscountsContainer onBack={handleBackToHub} />
+      );
+    }
+
+    // ── Budgeting (FR-B10.1, FR-B10.2, FR-B10.3) ──────────────────────────
+    if (selectedModule.id === 'budgeting') {
+      return (
+        <BudgetingContainer onBack={handleBackToHub} />
       );
     }
 
