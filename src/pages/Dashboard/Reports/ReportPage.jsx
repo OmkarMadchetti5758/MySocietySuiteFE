@@ -143,7 +143,7 @@ const GenericReportView = ({ report, onBack }) => {
     setLoading(true);
     try {
       let fetchedData = [];
-      
+
       const extractList = (response) => {
         if (!response) return [];
         if (Array.isArray(response)) return response;
@@ -158,7 +158,7 @@ const GenericReportView = ({ report, onBack }) => {
         const res = await complaintApi.getComplaints();
         const list = extractList(res);
         fetchedData = list.map((c, i) => ({
-          'Ticket ID': c.ticketId || c._id?.substring(0,6) || '-',
+          'Ticket ID': c.ticketId || c._id?.substring(0, 6) || '-',
           'Category': c.category || '-',
           'Resident/Flat': c.flatId?.flatNumber || '-',
           'Assigned To': c.assignedStaffId?.name || c.assignedVendorId?.name || '-',
@@ -199,18 +199,18 @@ const GenericReportView = ({ report, onBack }) => {
           'Event Date': f.eventDate ? new Date(f.eventDate).toLocaleDateString() : '-',
           'Status': f.status || '-'
         }));
-      
+
       } else if (report.id === 'visitor') {
         const res = await api.get('/visitor/history');
         const list = extractList(res);
         fetchedData = list.map(v => ({
-          'Photo': v.photo ? 'Yes' : '-',
+          // 'Photo': v.photo ? 'Yes' : '-',
           'Visitor Name': v.visitorName || '-',
           'Purpose': v.purposeOfVisit || v.category || '-',
           'Flat No.': v.flatId?.flatNumber || '-',
           'Status': v.status || '-',
           'Entry Time': v.entryTime ? new Date(v.entryTime).toLocaleString() : '-',
-          'Exit Time': v.exitTime ? new Date(v.exitTime).toLocaleString() : '-',
+          // 'Exit Time': v.exitTime ? new Date(v.exitTime).toLocaleString() : '-',
           'Guard': v.guardId?.name || '-'
         }));
       }
@@ -236,11 +236,11 @@ const GenericReportView = ({ report, onBack }) => {
       toast.error('No data to export');
       return;
     }
-    
+
     if (type === 'CSV') {
       const headers = Object.keys(data[0]);
       const csvRows = [headers.join(',')];
-      
+
       for (const row of data) {
         const values = headers.map(header => {
           const val = row[header] !== null && row[header] !== undefined ? row[header] : '';
@@ -248,7 +248,7 @@ const GenericReportView = ({ report, onBack }) => {
         });
         csvRows.push(values.join(','));
       }
-      
+
       const csvString = csvRows.join('\n');
       const blob = new Blob([csvString], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
@@ -303,7 +303,7 @@ const GenericReportView = ({ report, onBack }) => {
       collection: ['Flat No.', 'Resident Name', 'Billing Period', 'Bill Amount', 'Paid Amount', 'Outstanding Amount', 'Status', 'Date'],
       income_expense: ['Date', 'Description', 'Category', 'Transaction ID', 'Amount', 'Type'],
       defaulter: ['Flat No.', 'Resident Name', 'Contact', 'Outstanding', 'Cycles Overdue', 'Oldest Pending', 'Due Date', 'Status'],
-      visitor: ['Photo', 'Visitor Name', 'Purpose', 'Flat No.', 'Status', 'Entry Time', 'Exit Time', 'Guard'],
+      visitor: ['Visitor Name', 'Purpose', 'Flat No.', 'Status', 'Entry Time', 'Guard'],
       complaint: ['Ticket ID', 'Category', 'Resident/Flat', 'Assigned To', 'Status', 'Resolution Time', 'SLA'],
       amenity: ['Amenity Name', 'Booking Date', 'Time Slot', 'Resident Name', 'Flat No.', 'Status'],
       attendance: ['Staff Name', 'Role', 'Month', 'Working Days', 'Present', 'Absent', 'Attendance %'],
@@ -402,13 +402,13 @@ const ReportsPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const activeReportId = searchParams.get('report');
-  
+
   // Note: Replace with actual auth context/hook in production
   const roleKeys = JSON.parse(localStorage.getItem('roleKeys') || '["admin"]');
 
-  const visibleReports = REPORTS_CONFIG.filter(report => 
-    report.allowedRoles.some(role => roleKeys.includes(role)) || 
-    roleKeys.includes('super_admin') || 
+  const visibleReports = REPORTS_CONFIG.filter(report =>
+    report.allowedRoles.some(role => roleKeys.includes(role)) ||
+    roleKeys.includes('super_admin') ||
     roleKeys.includes('admin')
   );
 
@@ -440,7 +440,7 @@ const ReportsPage = () => {
         {visibleReports.map(report => {
           const Icon = report.icon;
           return (
-            <div 
+            <div
               key={report.id}
               onClick={() => {
                 const basePath = location.pathname.split('/reports')[0];
@@ -467,7 +467,7 @@ const ReportsPage = () => {
           );
         })}
       </div>
-      
+
       {visibleReports.length === 0 && (
         <div className="text-center py-20 bg-white rounded-3xl border border-gray-100">
           <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
