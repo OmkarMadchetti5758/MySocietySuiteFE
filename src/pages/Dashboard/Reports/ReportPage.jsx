@@ -199,6 +199,7 @@ const GenericReportView = ({ report, onBack }) => {
           'Event Date': f.eventDate ? new Date(f.eventDate).toLocaleDateString() : '-',
           'Status': f.status || '-'
         }));
+      
       } else if (report.id === 'visitor') {
         const res = await api.get('/visitor/history');
         const list = extractList(res);
