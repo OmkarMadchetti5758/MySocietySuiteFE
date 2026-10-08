@@ -56,6 +56,7 @@ import VehicleLookup from '../GuardApp/VehicleLookup';
 import VisitorApprovalPage from './Visitors/VisitorApprovalPage';
 import AIAssistantPage from './AIAssistant/AIAssistantPage';
 import ResidentDashboard from './ResidentDashboard';
+import ReportsPage from './Reports/ReportPage';
 
 const MODULE_DEF = [
   { id: 'society_flat_setup', label: 'Society & Flats', icon: FaBuilding, path: 'setup', group: 'SOCIETY' },
@@ -518,6 +519,9 @@ const DashboardLayout = () => {
                 }
                 if (mod.path === 'documents') {
                   return <Route key={mod.routeKey || mod.path} path={mod.path} element={<DocumentsPage />} />;
+                }
+                if (mod.path === 'reports') {
+                  return <Route key={mod.routeKey || mod.path} path={mod.path} element={<ReportsPage />} />;
                 }
                 if (mod.path === 'ai') {
                   return (
