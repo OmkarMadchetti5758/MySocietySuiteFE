@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import * as budgetApi from '../../../services/budgetApi';
 import {
   FaMoneyCheckAlt, FaFileInvoiceDollar, FaStore,
   FaArrowRight, FaExclamationCircle, FaArrowLeft, FaSearch,
@@ -258,6 +259,9 @@ const BillingPage = () => {
     reconciledBalance: null,
     activeLedgers: null,
     auditLogsCount: null,
+    // ── Budget card ────────────────────────────────────────────────────────
+    budgetFYLabel: null,      // e.g. "FY 2026-27 Budget"
+    budgetTotalPaise: null,   // total budgeted expense in paise
   });
 
   useEffect(() => {
@@ -361,6 +365,36 @@ const BillingPage = () => {
         })
         .catch(() => { });
     }
+
+    // ── Current FY Budget (approved or best available) ────────────────────
+    const _now = new Date();
+    const _curYear = _now.getMonth() >= 3 ? _now.getFullYear() : _now.getFullYear() - 1;
+    const _currentFY = `${_curYear}-${String(_curYear + 1).slice(-2)}`;
+    budgetApi.getBudgets(_currentFY)
+      .then(res => {
+        const all = res.data?.data?.budgets || [];
+        const priority = ['APPROVED', 'PENDING_APPROVAL', 'DRAFT'];
+        let found = null;
+        for (const s of priority) {
+          found = all.find(b => b.financialYear === _currentFY && b.status === s);
+          if (found) break;
+        }
+        if (found) {
+          // Fetch full budget to get line totals
+          budgetApi.getBudget(found._id)
+            .then(detailRes => {
+              const lines = detailRes.data?.data?.lines || [];
+              const totalPaise = lines.reduce((sum, l) => sum + (l.allocatedPaise || 0), 0);
+              setHubStats(prev => ({
+                ...prev,
+                budgetFYLabel: `FY ${_currentFY} Budget`,
+                budgetTotalPaise: totalPaise,
+              }));
+            })
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
   }, [isResident]);
 
   // ── Charge Head & Billing Config State ─────────────────────────────────────
@@ -1420,6 +1454,12 @@ const BillingPage = () => {
               dynamicStats = { ...mod.stats, value: String(hubStats.activeLedgers) };
             } else if (mod.id === 'audit_trail' && hubStats.auditLogsCount !== null) {
               dynamicStats = { ...mod.stats, value: `${hubStats.auditLogsCount} events` };
+            } else if (mod.id === 'budgeting' && hubStats.budgetTotalPaise !== null) {
+              dynamicStats = {
+                ...mod.stats,
+                label: hubStats.budgetFYLabel || mod.stats.label,
+                value: formatINR(hubStats.budgetTotalPaise / 100),
+              };
             }
             return (
               <SectionCard
