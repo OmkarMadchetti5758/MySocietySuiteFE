@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { FaFileInvoiceDollar, FaChartLine, FaExclamationTriangle, FaIdBadge, FaWrench, FaSwimmer, FaUserClock, FaTools, FaLaptopCode, FaGift, FaArrowLeft, FaFileExcel, FaFilePdf, FaFileCsv, FaSearch, FaFilter, FaChevronLeft, FaChevronRight, FaEye } from 'react-icons/fa';
 import { useSearchParams, useNavigate, useParams, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import complaintApi from '../../../services/complaintApi';
+import vendorApi from '../../../services/vendorApi';
+import { bookingService } from '../../../services/amenityBookingService';
+import { festivalCollectionApi } from '../../../services/festivalCollectionApi';
+import parkingApi from '../../../services/parkingApi';
 
 // ── Reusable UI Components ──────────────────────────────────────────────────
 
@@ -134,65 +139,83 @@ const GenericReportView = ({ report, onBack }) => {
   const [toDate, setToDate] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const fetchReportData = () => {
+  const fetchReportData = async () => {
     setLoading(true);
-    // Simulate API call and populate data based on report type
-    setTimeout(() => {
-      const mockData = generateMockData(report.id);
-      setData(mockData);
+    try {
+      let fetchedData = [];
+      
+      if (report.id === 'complaint') {
+        const res = await complaintApi.getComplaints();
+        const list = res.data?.data || res.data || [];
+        fetchedData = list.map((c, i) => ({
+          'Ticket ID': c.ticketId || c._id?.substring(0,6) || `T-${i}`,
+          'Category': c.category || 'N/A',
+          'Resident/Flat': c.flat?.flatNumber || 'N/A',
+          'Assigned To': c.assignedTo?.name || 'Unassigned',
+          'Status': c.status || 'N/A',
+          'Resolution Time': c.resolutionTime || 'N/A',
+          'SLA': c.sla || 'N/A'
+        }));
+      } else if (report.id === 'vendor') {
+        const res = await vendorApi.getAllVendors();
+        const list = res.data?.data || res.data || [];
+        fetchedData = list.map(v => ({
+          'Vendor Name': v.name || 'N/A',
+          'Category': v.category || 'N/A',
+          'Total Assigned': v.tasksAssigned || 0,
+          'Completed': v.tasksCompleted || 0,
+          'Pending': v.tasksPending || 0,
+          'Completion %': v.completionRate || '0%'
+        }));
+      } else if (report.id === 'amenity') {
+        const res = await bookingService.getBookings();
+        const list = res.data?.data || res.data || [];
+        fetchedData = list.map(b => ({
+          'Amenity Name': b.amenity?.name || 'N/A',
+          'Booking Date': b.bookingDate ? new Date(b.bookingDate).toLocaleDateString() : 'N/A',
+          'Time Slot': `${b.startTime || ''} - ${b.endTime || ''}`,
+          'Resident Name': b.user?.name || 'N/A',
+          'Flat No.': b.flat?.flatNumber || 'N/A',
+          'Status': b.status || 'N/A'
+        }));
+      } else if (report.id === 'festival') {
+        const res = await festivalCollectionApi.getCollections();
+        const list = res.data?.data || res.data || [];
+        fetchedData = list.map(f => ({
+          'Resident Name': f.title || 'N/A',
+          'Flat No.': '-',
+          'Contribution Amount': f.targetAmount || 0,
+          'Paid Amount': f.collectedAmount || 0,
+          'Status': f.status || 'N/A',
+          'Payment Date': f.createdAt ? new Date(f.createdAt).toLocaleDateString() : 'N/A',
+          'Receipt': 'N/A'
+        }));
+      } else if (report.id === 'visitor') {
+        const res = await parkingApi.getVisitorParkings();
+        const list = res.data?.data || res.data || [];
+        fetchedData = list.map(v => ({
+          'Photo': v.photoUrl ? 'Yes' : 'NA',
+          'Visitor Name': v.visitorName || 'N/A',
+          'Purpose': v.purpose || 'N/A',
+          'Flat No.': v.flat?.flatNumber || 'N/A',
+          'Status': v.status || 'N/A',
+          'Entry Time': v.checkInTime ? new Date(v.checkInTime).toLocaleString() : 'N/A',
+          'Exit Time': v.checkOutTime ? new Date(v.checkOutTime).toLocaleString() : 'N/A',
+          'Guard': v.checkedInBy?.name || 'N/A'
+        }));
+      }
+
+      setData(fetchedData);
+    } catch (err) {
+      console.error('Failed to fetch report data', err);
+      toast.error('Failed to fetch report data.');
+      setData([]);
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
-  const generateMockData = (reportId) => {
-    const dataCount = 25;
-    const generated = [];
-    const today = new Date().toISOString().split('T')[0];
-    
-    for (let i = 1; i <= dataCount; i++) {
-      switch (reportId) {
-        case 'visitor':
-          generated.push({ 
-            Photo: 'NA', 'Visitor Name': `Visitor ${i}`, Purpose: 'Meeting', 'Flat No.': `A-${100+i}`, 
-            Status: 'Checked In', 'Entry Time': '10:00 AM', 'Exit Time': '12:00 PM', Guard: 'Guard 1' 
-          });
-          break;
-        case 'complaint':
-          generated.push({ 
-            'Ticket ID': `TKT-00${i}`, Category: 'Plumbing', 'Resident/Flat': `A-${100+i}`, 'Assigned To': 'Plumber 1', 
-            Status: 'Open', 'Resolution Time': '24h', SLA: '48h' 
-          });
-          break;
-        case 'amenity':
-          generated.push({ 
-            'Amenity Name': 'Clubhouse', 'Booking Date': today, 'Time Slot': '10:00 - 12:00', 'Resident Name': `Resident ${i}`, 
-            'Flat No.': `B-${200+i}`, Status: 'Confirmed' 
-          });
-          break;
-        case 'vendor':
-          generated.push({ 
-            'Vendor Name': `Vendor ${i}`, Category: 'Maintenance', 'Total Assigned': 10+i, Completed: 8+i, 
-            Pending: 2, 'Completion %': '80%' 
-          });
-          break;
-        case 'platform':
-          generated.push({ 
-            'Society Name': 'Grand Residency', 'Total Residents': 200, 'Active Users': 150+i, 'Login Count': 400+i*10, 
-            'Module Activity': 'High', 'Last Activity': today 
-          });
-          break;
-        case 'festival':
-          generated.push({ 
-            'Resident Name': `Resident ${i}`, 'Flat No.': `C-${300+i}`, 'Contribution Amount': '₹1000', 'Paid Amount': '₹1000', 
-            Status: 'Paid', 'Payment Date': today, Receipt: 'Available' 
-          });
-          break;
-        default:
-          generated.push({ ID: i, Date: today, Details: `Sample data ${i}` });
-      }
-    }
-    return generated;
-  };
+
 
   useEffect(() => {
     fetchReportData();
