@@ -6,7 +6,7 @@ import complaintApi from '../../../services/complaintApi';
 import vendorApi from '../../../services/vendorApi';
 import { bookingService } from '../../../services/amenityBookingService';
 import { festivalCollectionApi } from '../../../services/festivalCollectionApi';
-import parkingApi from '../../../services/parkingApi';
+import api from '../../../services/apiClient';
 
 // ── Reusable UI Components ──────────────────────────────────────────────────
 
@@ -144,64 +144,74 @@ const GenericReportView = ({ report, onBack }) => {
     try {
       let fetchedData = [];
       
+      const extractList = (response) => {
+        if (!response) return [];
+        if (Array.isArray(response)) return response;
+        if (Array.isArray(response.data)) return response.data;
+        if (response.data?.data && Array.isArray(response.data.data)) return response.data.data;
+        if (response.data?.docs && Array.isArray(response.data.docs)) return response.data.docs;
+        if (response.data?.data?.docs && Array.isArray(response.data.data.docs)) return response.data.data.docs;
+        return [];
+      };
+
       if (report.id === 'complaint') {
         const res = await complaintApi.getComplaints();
-        const list = res.data?.data || res.data || [];
+        const list = extractList(res);
         fetchedData = list.map((c, i) => ({
-          'Ticket ID': c.ticketId || c._id?.substring(0,6) || `T-${i}`,
-          'Category': c.category || 'N/A',
-          'Resident/Flat': c.flat?.flatNumber || 'N/A',
-          'Assigned To': c.assignedTo?.name || 'Unassigned',
-          'Status': c.status || 'N/A',
-          'Resolution Time': c.resolutionTime || 'N/A',
-          'SLA': c.sla || 'N/A'
+          'Ticket ID': c.ticketId || c._id?.substring(0,6) || '-',
+          'Category': c.category || '-',
+          'Resident/Flat': c.flatId?.flatNumber || '-',
+          'Assigned To': c.assignedStaffId?.name || c.assignedVendorId?.name || '-',
+          'Status': c.status || '-',
+          'Resolution Time': c.resolvedAt ? new Date(c.resolvedAt).toLocaleDateString() : '-',
+          'SLA': c.sla?.status || '-'
         }));
       } else if (report.id === 'vendor') {
         const res = await vendorApi.getAllVendors();
-        const list = res.data?.data || res.data || [];
+        const list = extractList(res);
         fetchedData = list.map(v => ({
-          'Vendor Name': v.name || 'N/A',
-          'Category': v.category || 'N/A',
-          'Total Assigned': v.tasksAssigned || 0,
-          'Completed': v.tasksCompleted || 0,
-          'Pending': v.tasksPending || 0,
-          'Completion %': v.completionRate || '0%'
+          'Vendor Name': v.name || '-',
+          'Category': v.serviceCategory || '-',
+          'Phone': v.phone || '-',
+          'Email': v.email || '-',
+          'Contract Start': v.contractStartDate ? new Date(v.contractStartDate).toLocaleDateString() : '-',
+          'Status': v.status || '-'
         }));
       } else if (report.id === 'amenity') {
         const res = await bookingService.getBookings();
-        const list = res.data?.data || res.data || [];
+        const list = extractList(res);
         fetchedData = list.map(b => ({
-          'Amenity Name': b.amenity?.name || 'N/A',
-          'Booking Date': b.bookingDate ? new Date(b.bookingDate).toLocaleDateString() : 'N/A',
-          'Time Slot': `${b.startTime || ''} - ${b.endTime || ''}`,
-          'Resident Name': b.user?.name || 'N/A',
-          'Flat No.': b.flat?.flatNumber || 'N/A',
-          'Status': b.status || 'N/A'
+          'Amenity Name': b.amenityId?.name || '-',
+          'Booking Date': b.date ? new Date(b.date).toLocaleDateString() : '-',
+          'Time Slot': b.slotId ? `${b.slotId.startTime || ''} - ${b.slotId.endTime || ''}` : '-',
+          'Resident Name': b.bookedBy?.name || '-',
+          'Flat No.': b.flatId?.flatNumber || '-',
+          'Status': b.status || '-'
         }));
       } else if (report.id === 'festival') {
         const res = await festivalCollectionApi.getCollections();
-        const list = res.data?.data || res.data || [];
+        const list = extractList(res);
         fetchedData = list.map(f => ({
-          'Resident Name': f.title || 'N/A',
-          'Flat No.': '-',
-          'Contribution Amount': f.targetAmount || 0,
-          'Paid Amount': f.collectedAmount || 0,
-          'Status': f.status || 'N/A',
-          'Payment Date': f.createdAt ? new Date(f.createdAt).toLocaleDateString() : 'N/A',
-          'Receipt': 'N/A'
+          'Festival Name': f.title || '-',
+          'Purpose': f.purpose || '-',
+          'Target Amount': f.targetAmount ? `₹${f.targetAmount}` : '-',
+          'Collected Amount': f.collectedAmount ? `₹${f.collectedAmount}` : '-',
+          'Event Date': f.eventDate ? new Date(f.eventDate).toLocaleDateString() : '-',
+          'Status': f.status || '-'
         }));
+      
       } else if (report.id === 'visitor') {
-        const res = await parkingApi.getVisitorParkings();
-        const list = res.data?.data || res.data || [];
+        const res = await api.get('/visitor/history');
+        const list = extractList(res);
         fetchedData = list.map(v => ({
-          'Photo': v.photoUrl ? 'Yes' : 'NA',
-          'Visitor Name': v.visitorName || 'N/A',
-          'Purpose': v.purpose || 'N/A',
-          'Flat No.': v.flat?.flatNumber || 'N/A',
-          'Status': v.status || 'N/A',
-          'Entry Time': v.checkInTime ? new Date(v.checkInTime).toLocaleString() : 'N/A',
-          'Exit Time': v.checkOutTime ? new Date(v.checkOutTime).toLocaleString() : 'N/A',
-          'Guard': v.checkedInBy?.name || 'N/A'
+          'Photo': v.photo ? 'Yes' : '-',
+          'Visitor Name': v.visitorName || '-',
+          'Purpose': v.purposeOfVisit || v.category || '-',
+          'Flat No.': v.flatId?.flatNumber || '-',
+          'Status': v.status || '-',
+          'Entry Time': v.entryTime ? new Date(v.entryTime).toLocaleString() : '-',
+          'Exit Time': v.exitTime ? new Date(v.exitTime).toLocaleString() : '-',
+          'Guard': v.guardId?.name || '-'
         }));
       }
 
@@ -297,9 +307,9 @@ const GenericReportView = ({ report, onBack }) => {
       complaint: ['Ticket ID', 'Category', 'Resident/Flat', 'Assigned To', 'Status', 'Resolution Time', 'SLA'],
       amenity: ['Amenity Name', 'Booking Date', 'Time Slot', 'Resident Name', 'Flat No.', 'Status'],
       attendance: ['Staff Name', 'Role', 'Month', 'Working Days', 'Present', 'Absent', 'Attendance %'],
-      vendor: ['Vendor Name', 'Category', 'Total Assigned', 'Completed', 'Pending', 'Completion %'],
+      vendor: ['Vendor Name', 'Category', 'Phone', 'Email', 'Contract Start', 'Status'],
       platform: ['Society Name', 'Total Residents', 'Active Users', 'Login Count', 'Module Activity', 'Last Activity'],
-      festival: ['Resident Name', 'Flat No.', 'Contribution Amount', 'Paid Amount', 'Status', 'Payment Date', 'Receipt']
+      festival: ['Festival Name', 'Purpose', 'Target Amount', 'Collected Amount', 'Event Date', 'Status']
     };
     const cols = colMap[report.id] || ['ID', 'Date', 'Details'];
     return (
