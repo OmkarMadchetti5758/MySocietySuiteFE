@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { FaFileInvoiceDollar, FaChartLine, FaExclamationTriangle, FaIdBadge, FaWrench, FaSwimmer, FaUserClock, FaTools, FaLaptopCode, FaGift, FaArrowLeft, FaFileExcel, FaFilePdf, FaFileCsv, FaSearch, FaFilter, FaChevronLeft, FaChevronRight, FaEye } from 'react-icons/fa';
 import { useSearchParams, useNavigate, useParams, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import complaintApi from '../../../services/complaintApi';
+import vendorApi from '../../../services/vendorApi';
+import { bookingService } from '../../../services/amenityBookingService';
+import { festivalCollectionApi } from '../../../services/festivalCollectionApi';
+import parkingApi from '../../../services/parkingApi';
 
 // ── Reusable UI Components ──────────────────────────────────────────────────
 
@@ -126,28 +131,128 @@ const GenericReportView = ({ report, onBack }) => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
   const [page, setPage] = useState(1);
-  const totalPages = 1;
+  const totalPages = Math.ceil(data.length / 10) || 1;
+  const paginatedData = data.slice((page - 1) * 10, page * 10);
 
   // Mock filters
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const fetchReportData = () => {
+  const fetchReportData = async () => {
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setData([]); // Show empty state for now until API is integrated
+    try {
+      let fetchedData = [];
+      
+      if (report.id === 'complaint') {
+        const res = await complaintApi.getComplaints();
+        const list = res.data?.data || res.data || [];
+        fetchedData = list.map((c, i) => ({
+          'Ticket ID': c.ticketId || c._id?.substring(0,6) || `T-${i}`,
+          'Category': c.category || 'N/A',
+          'Resident/Flat': c.flat?.flatNumber || 'N/A',
+          'Assigned To': c.assignedTo?.name || 'Unassigned',
+          'Status': c.status || 'N/A',
+          'Resolution Time': c.resolutionTime || 'N/A',
+          'SLA': c.sla || 'N/A'
+        }));
+      } else if (report.id === 'vendor') {
+        const res = await vendorApi.getAllVendors();
+        const list = res.data?.data || res.data || [];
+        fetchedData = list.map(v => ({
+          'Vendor Name': v.name || 'N/A',
+          'Category': v.category || 'N/A',
+          'Total Assigned': v.tasksAssigned || 0,
+          'Completed': v.tasksCompleted || 0,
+          'Pending': v.tasksPending || 0,
+          'Completion %': v.completionRate || '0%'
+        }));
+      } else if (report.id === 'amenity') {
+        const res = await bookingService.getBookings();
+        const list = res.data?.data || res.data || [];
+        fetchedData = list.map(b => ({
+          'Amenity Name': b.amenity?.name || 'N/A',
+          'Booking Date': b.bookingDate ? new Date(b.bookingDate).toLocaleDateString() : 'N/A',
+          'Time Slot': `${b.startTime || ''} - ${b.endTime || ''}`,
+          'Resident Name': b.user?.name || 'N/A',
+          'Flat No.': b.flat?.flatNumber || 'N/A',
+          'Status': b.status || 'N/A'
+        }));
+      } else if (report.id === 'festival') {
+        const res = await festivalCollectionApi.getCollections();
+        const list = res.data?.data || res.data || [];
+        fetchedData = list.map(f => ({
+          'Resident Name': f.title || 'N/A',
+          'Flat No.': '-',
+          'Contribution Amount': f.targetAmount || 0,
+          'Paid Amount': f.collectedAmount || 0,
+          'Status': f.status || 'N/A',
+          'Payment Date': f.createdAt ? new Date(f.createdAt).toLocaleDateString() : 'N/A',
+          'Receipt': 'N/A'
+        }));
+      } else if (report.id === 'visitor') {
+        const res = await parkingApi.getVisitorParkings();
+        const list = res.data?.data || res.data || [];
+        fetchedData = list.map(v => ({
+          'Photo': v.photoUrl ? 'Yes' : 'NA',
+          'Visitor Name': v.visitorName || 'N/A',
+          'Purpose': v.purpose || 'N/A',
+          'Flat No.': v.flat?.flatNumber || 'N/A',
+          'Status': v.status || 'N/A',
+          'Entry Time': v.checkInTime ? new Date(v.checkInTime).toLocaleString() : 'N/A',
+          'Exit Time': v.checkOutTime ? new Date(v.checkOutTime).toLocaleString() : 'N/A',
+          'Guard': v.checkedInBy?.name || 'N/A'
+        }));
+      }
+
+      setData(fetchedData);
+    } catch (err) {
+      console.error('Failed to fetch report data', err);
+      toast.error('Failed to fetch report data.');
+      setData([]);
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
+
+
 
   useEffect(() => {
     fetchReportData();
-  }, [page]);
+  }, [page, report.id]);
 
   const handleExport = (type) => {
-    toast.success(`Exporting ${report.title} as ${type}...`);
+    if (!data || data.length === 0) {
+      toast.error('No data to export');
+      return;
+    }
+    
+    if (type === 'CSV') {
+      const headers = Object.keys(data[0]);
+      const csvRows = [headers.join(',')];
+      
+      for (const row of data) {
+        const values = headers.map(header => {
+          const val = row[header] !== null && row[header] !== undefined ? row[header] : '';
+          return `"${String(val).replace(/"/g, '""')}"`;
+        });
+        csvRows.push(values.join(','));
+      }
+      
+      const csvString = csvRows.join('\n');
+      const blob = new Blob([csvString], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${report.title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(`${report.title} exported as CSV`);
+    } else {
+      toast.error(`${type} export is currently not supported for this report. Please use CSV.`);
+    }
   };
 
   const renderFilters = () => {
@@ -185,18 +290,18 @@ const GenericReportView = ({ report, onBack }) => {
 
   const renderTableHeaders = () => {
     const colMap = {
-      collection: ['Flat No.', 'Resident Name', 'Billing Period', 'Bill Amount', 'Paid Amount', 'Outstanding Amount', 'Status', 'Date', 'Actions'],
-      income_expense: ['Date', 'Description', 'Category', 'Transaction ID', 'Amount', 'Type', 'Actions'],
-      defaulter: ['Flat No.', 'Resident Name', 'Contact', 'Outstanding', 'Cycles Overdue', 'Oldest Pending', 'Due Date', 'Status', 'Actions'],
-      visitor: ['Photo', 'Visitor Name', 'Purpose', 'Flat No.', 'Status', 'Entry Time', 'Exit Time', 'Guard', 'Actions'],
-      complaint: ['Ticket ID', 'Category', 'Resident/Flat', 'Assigned To', 'Status', 'Resolution Time', 'SLA', 'Actions'],
-      amenity: ['Amenity Name', 'Booking Date', 'Time Slot', 'Resident Name', 'Flat No.', 'Status', 'Actions'],
-      attendance: ['Staff Name', 'Role', 'Month', 'Working Days', 'Present', 'Absent', 'Attendance %', 'Actions'],
-      vendor: ['Vendor Name', 'Category', 'Total Assigned', 'Completed', 'Pending', 'Completion %', 'Actions'],
-      platform: ['Society Name', 'Total Residents', 'Active Users', 'Login Count', 'Module Activity', 'Last Activity', 'Actions'],
-      festival: ['Resident Name', 'Flat No.', 'Contribution Amount', 'Paid Amount', 'Status', 'Payment Date', 'Receipt', 'Actions']
+      collection: ['Flat No.', 'Resident Name', 'Billing Period', 'Bill Amount', 'Paid Amount', 'Outstanding Amount', 'Status', 'Date'],
+      income_expense: ['Date', 'Description', 'Category', 'Transaction ID', 'Amount', 'Type'],
+      defaulter: ['Flat No.', 'Resident Name', 'Contact', 'Outstanding', 'Cycles Overdue', 'Oldest Pending', 'Due Date', 'Status'],
+      visitor: ['Photo', 'Visitor Name', 'Purpose', 'Flat No.', 'Status', 'Entry Time', 'Exit Time', 'Guard'],
+      complaint: ['Ticket ID', 'Category', 'Resident/Flat', 'Assigned To', 'Status', 'Resolution Time', 'SLA'],
+      amenity: ['Amenity Name', 'Booking Date', 'Time Slot', 'Resident Name', 'Flat No.', 'Status'],
+      attendance: ['Staff Name', 'Role', 'Month', 'Working Days', 'Present', 'Absent', 'Attendance %'],
+      vendor: ['Vendor Name', 'Category', 'Total Assigned', 'Completed', 'Pending', 'Completion %'],
+      platform: ['Society Name', 'Total Residents', 'Active Users', 'Login Count', 'Module Activity', 'Last Activity'],
+      festival: ['Resident Name', 'Flat No.', 'Contribution Amount', 'Paid Amount', 'Status', 'Payment Date', 'Receipt']
     };
-    const cols = colMap[report.id] || ['ID', 'Date', 'Details', 'Actions'];
+    const cols = colMap[report.id] || ['ID', 'Date', 'Details'];
     return (
       <tr className="bg-gray-50/90 text-left text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
         {cols.map((col, i) => <th key={i} className="py-4 px-6">{col}</th>)}
@@ -219,12 +324,6 @@ const GenericReportView = ({ report, onBack }) => {
         <div className="flex gap-2">
           <button onClick={() => handleExport('CSV')} className="p-2 border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all shadow-sm flex items-center gap-2 text-sm font-bold">
             <FaFileCsv className="text-lg text-emerald-600" /> Export CSV
-          </button>
-          <button onClick={() => handleExport('Excel')} className="p-2 border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all shadow-sm flex items-center gap-2 text-sm font-bold">
-            <FaFileExcel className="text-lg text-emerald-600" /> Export Excel
-          </button>
-          <button onClick={() => handleExport('PDF')} className="p-2 border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-all shadow-sm flex items-center gap-2 text-sm font-bold">
-            <FaFilePdf className="text-lg text-red-500" /> Export PDF
           </button>
         </div>
       </div>
@@ -258,10 +357,12 @@ const GenericReportView = ({ report, onBack }) => {
                     <p className="text-sm text-gray-500 font-medium">Loading report data...</p>
                   </td>
                 </tr>
-              ) : data.length > 0 ? (
-                data.map((row, idx) => (
+              ) : paginatedData.length > 0 ? (
+                paginatedData.map((row, idx) => (
                   <tr key={idx} className="hover:bg-blue-50/30 transition-colors">
-                    <td colSpan={10} className="py-4 px-6 text-sm text-gray-700">Row data goes here</td>
+                    {Object.values(row).map((val, i) => (
+                      <td key={i} className="py-4 px-6 text-sm text-gray-700">{val}</td>
+                    ))}
                   </tr>
                 ))
               ) : (
@@ -278,7 +379,7 @@ const GenericReportView = ({ report, onBack }) => {
             </tbody>
           </table>
         </div>
-        {!loading && data.length === 0 && <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />}
+        {!loading && data.length > 0 && <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />}
       </div>
     </div>
   );
@@ -349,9 +450,6 @@ const ReportsPage = () => {
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${report.colorClass} shadow-sm group-hover:scale-110 transition-transform`}>
                   <Icon />
                 </div>
-                <button className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                  View Report
-                </button>
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">{report.title}</h3>
               <p className="text-sm text-gray-500 flex-1">{report.desc}</p>
