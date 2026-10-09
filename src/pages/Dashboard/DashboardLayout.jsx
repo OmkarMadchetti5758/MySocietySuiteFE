@@ -117,7 +117,7 @@ const DashboardLayout = () => {
   // const [user, setUser] = useState(null);
   // const [societyName, setSocietyName] = useState('');
   // const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
 
   const auth = useMemo(() => readAuthSession(societyId), [societyId]);
 
