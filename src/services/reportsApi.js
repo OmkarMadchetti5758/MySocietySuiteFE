@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import apiClient, { API_URL } from './apiClient';
 
 // societyId is NOT in the URL — it comes from the JWT (set by injectSocietyId middleware on the BE).
 // All report endpoints are under /api/v1/reports/...
@@ -102,7 +102,7 @@ export const streamExportDownload = async (reportType, format, params = {}, file
   const activeContext = localStorage.getItem('activeContext');
 
   const response = await fetch(
-    `${(await import('./apiClient')).API_URL}/reports/exports/stream`,
+    `${API_URL}/reports/exports/stream`,
     {
       method: 'POST',
       headers: {
