@@ -303,6 +303,20 @@ const BillingPage = () => {
       })
       .catch(() => { });
 
+    if (isResident) {
+      // ── Resident: fetch own advance account + security deposit balance ─────
+      apiClient.get('/advance-deposits/overview-stats')
+        .then(res => {
+          const d = res.data?.data;
+          if (d) {
+            const advBal = d.advance?.totalBalance || 0;
+            const depBal = d.securityDeposit?.totalHeld || 0;
+            setHubStats(prev => ({ ...prev, totalHeldDeposits: advBal + depBal }));
+          }
+        })
+        .catch(() => { });
+    }
+
     if (!isResident) {
       apiClient.get('/billing/vendor-payments?limit=1')
         .then(res => {

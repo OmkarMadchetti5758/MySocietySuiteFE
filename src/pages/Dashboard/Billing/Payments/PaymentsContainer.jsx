@@ -18,8 +18,6 @@ const TABS = [
 ];
 
 export default function PaymentsContainer() {
-  const [activeTab, setActiveTab] = useState('overview');
-
   // Get role from localStorage
   const currentUser = (() => {
     try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; }
@@ -28,10 +26,13 @@ export default function PaymentsContainer() {
   const isAdmin = currentUser.role === 'admin' || currentUser.role === 'super_admin' || roleKeys.includes('admin');
   const isAccountant = roleKeys.includes('accountant');
   const isResident = currentUser.role === 'resident_owner' || currentUser.role === 'resident_tenant' || roleKeys.includes('resident_owner') || roleKeys.includes('resident_tenant');
+  const isResidentOnly = isResident && !isAdmin && !isAccountant;
 
-  // Residents only see overview, payments, receipts
-  const visibleTabs = isResident && !isAdmin && !isAccountant
-    ? TABS.filter(t => ['overview', 'payments', 'receipts'].includes(t.id))
+  const [activeTab, setActiveTab] = useState(isResidentOnly ? 'payments' : 'overview');
+
+  // Residents see payments and receipts only (no Overview, Pending/Failed, Collections)
+  const visibleTabs = isResidentOnly
+    ? TABS.filter(t => ['payments', 'receipts'].includes(t.id))
     : TABS;
 
   const renderTab = () => {
@@ -41,7 +42,7 @@ export default function PaymentsContainer() {
       case 'pending':      return <PendingFailedTab isAdmin={isAdmin} isAccountant={isAccountant} />;
       case 'receipts':     return <ReceiptsTab />;
       case 'collections':  return <CollectionsTab />;
-      default:             return <PaymentsOverviewTab isAdmin={isAdmin} isAccountant={isAccountant} />;
+      default:             return isResidentOnly ? <PaymentsListTab isAdmin={isAdmin} isAccountant={isAccountant} /> : <PaymentsOverviewTab isAdmin={isAdmin} isAccountant={isAccountant} />;
     }
   };
 
