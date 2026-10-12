@@ -366,10 +366,10 @@ const DashboardLayout = () => {
             </div>
 
             {/* Notifications */}
-            <button className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-full transition-colors">
+            {/* <button className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-full transition-colors">
               <FaBell className="text-xl" />
               <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
-            </button>
+            </button> */}
 
             {/* Profile */}
             <NavLink
