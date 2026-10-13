@@ -287,9 +287,138 @@ const BillingPage = () => {
         if (isMounted) setLoadingHub(false);
       });
 
+<<<<<<< HEAD
     return () => {
       isMounted = false;
     };
+=======
+    apiClient.get('/payments/overview')
+      .then(res => {
+        if (res.data?.data) {
+          setHubStats(prev => ({ ...prev, totalArrears: res.data.data.outstandingAmount ?? 0 }));
+        }
+      })
+      .catch(() => { });
+
+    const now = new Date();
+    const start = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+    const end = now.toISOString().split('T')[0];
+    apiClient.get(`/payments/collections-analytics?startDate=${start}&endDate=${end}`)
+      .then(res => {
+        if (res.data?.data?.byMode) {
+          const monthTotal = res.data.data.byMode.reduce((sum, item) => sum + (item.total || 0), 0);
+          setHubStats(prev => ({ ...prev, collectedThisMonth: monthTotal }));
+        }
+      })
+      .catch(() => { });
+
+    if (isResident) {
+      // ── Resident: fetch own advance account + security deposit balance ─────
+      apiClient.get('/advance-deposits/overview-stats')
+        .then(res => {
+          const d = res.data?.data;
+          if (d) {
+            const advBal = d.advance?.totalBalance || 0;
+            const depBal = d.securityDeposit?.totalHeld || 0;
+            setHubStats(prev => ({ ...prev, totalHeldDeposits: advBal + depBal }));
+          }
+        })
+        .catch(() => { });
+    }
+
+    if (!isResident) {
+      apiClient.get('/billing/vendor-payments?limit=1')
+        .then(res => {
+          const total = res.data?.data?.pagination?.total;
+          if (total !== undefined) {
+            setHubStats(prev => ({ ...prev, vendorPaymentsCount: total }));
+          }
+        })
+        .catch(() => { });
+
+      // ── Total Held Deposits (advance accounts) ────────────────────────────
+      apiClient.get('/advance-deposits/advance-accounts?limit=1')
+        .then(res => {
+          const list = res.data?.data?.accounts || res.data?.data || [];
+          const total = Array.isArray(list)
+            ? list.reduce((s, a) => s + (a.currentBalance || 0), 0)
+            : (res.data?.data?.totalBalance || 0);
+          setHubStats(prev => ({ ...prev, totalHeldDeposits: total }));
+        })
+        .catch(() => { });
+
+      // ── Discounts Issued (credit notes this month) ────────────────────────
+      apiClient.get('/billing/credit-notes?status=APPROVED&limit=200')
+        .then(res => {
+          const list = res.data?.data?.creditNotes || res.data?.data || [];
+          const total = Array.isArray(list)
+            ? list.reduce((s, c) => s + (c.amount || c.creditAmount || 0), 0)
+            : 0;
+          setHubStats(prev => ({ ...prev, discountsIssued: total }));
+        })
+        .catch(() => { });
+
+      // ── Reconciled Balance (sum of all bank/cash financial accounts) ──────
+      apiClient.get('/reconciliation/accounts')
+        .then(res => {
+          const list = res.data?.data?.accounts || res.data?.data || [];
+          const total = Array.isArray(list)
+            ? list.reduce((s, a) => s + (a.currentBalance || 0), 0)
+            : 0;
+          setHubStats(prev => ({ ...prev, reconciledBalance: total }));
+        })
+        .catch(() => { });
+
+      // ── Active Ledgers (chart of accounts active count) ───────────────────
+      apiClient.get('/ledger/accounts?status=ACTIVE&limit=1')
+        .then(res => {
+          const count = res.data?.data?.pagination?.total
+            ?? res.data?.data?.accounts?.length
+            ?? res.data?.data?.length
+            ?? null;
+          if (count !== null) setHubStats(prev => ({ ...prev, activeLedgers: count }));
+        })
+        .catch(() => { });
+
+      // ── Audit Logs Count ────────────────────────────────────────────────────
+      apiClient.get('/billing/audit-logs?limit=1')
+        .then(res => {
+          const count = res.data?.data?.pagination?.total ?? res.data?.pagination?.total ?? null;
+          if (count !== null) setHubStats(prev => ({ ...prev, auditLogsCount: count }));
+        })
+        .catch(() => { });
+    }
+
+    // ── Current FY Budget (approved or best available) ────────────────────
+    const _now = new Date();
+    const _curYear = _now.getMonth() >= 3 ? _now.getFullYear() : _now.getFullYear() - 1;
+    const _currentFY = `${_curYear}-${String(_curYear + 1).slice(-2)}`;
+    budgetApi.getBudgets(_currentFY)
+      .then(res => {
+        const all = res.data?.data?.budgets || [];
+        const priority = ['APPROVED', 'PENDING_APPROVAL', 'DRAFT'];
+        let found = null;
+        for (const s of priority) {
+          found = all.find(b => b.financialYear === _currentFY && b.status === s);
+          if (found) break;
+        }
+        if (found) {
+          // Fetch full budget to get line totals
+          budgetApi.getBudget(found._id)
+            .then(detailRes => {
+              const lines = detailRes.data?.data?.lines || [];
+              const totalPaise = lines.reduce((sum, l) => sum + (l.allocatedPaise || 0), 0);
+              setHubStats(prev => ({
+                ...prev,
+                budgetFYLabel: `FY ${_currentFY} Budget`,
+                budgetTotalPaise: totalPaise,
+              }));
+            })
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
+>>>>>>> 0e068269412b8fae1eddd80040decfc692532d67
   }, [isResident]);
 
   // ── Charge Head & Billing Config State ─────────────────────────────────────
