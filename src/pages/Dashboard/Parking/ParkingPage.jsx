@@ -29,7 +29,10 @@ const ParkingPage = () => {
   const { societyId } = useParams();
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
-  const isResident = user?.role === 'resident_owner' || user?.role === 'resident_tenant' || user?.role === 'resident';
+  const isResident = user?.role === 'resident_owner' || 
+                     user?.role === 'resident_tenant' || 
+                     user?.role === 'resident' || 
+                     (Array.isArray(user?.roleKeys) && user.roleKeys.some(r => ['resident_owner', 'resident_tenant', 'resident'].includes(r)));
 
   const [activeTab, setActiveTab] = useState(isResident ? 'my_parking' : 'dashboard');
   const [loading, setLoading] = useState(false);
@@ -77,10 +80,12 @@ const ParkingPage = () => {
 
   const loadAuxiliaryData = async () => {
     try {
-      const [resRes, blockRes, slotsRes] = await Promise.allSettled([
+      const [resRes, blockRes, slotsRes, vehRes, assignRes] = await Promise.allSettled([
         residentsApi.getResidents({ limit: 100 }),
         blockApi.getWings(),
         parkingApi.getSlots({ limit: 100 }),
+        parkingApi.getVehicles({ limit: 100 }),
+        parkingApi.getAssignments({ limit: 100 }),
       ]);
 
       if (resRes.status === 'fulfilled') {
@@ -101,6 +106,16 @@ const ParkingPage = () => {
       if (slotsRes.status === 'fulfilled') {
         const slotList = unwrapList(slotsRes.value, 'slots');
         setSlots(prev => prev.length === 0 ? slotList : prev);
+      }
+
+      if (vehRes.status === 'fulfilled') {
+        const vehList = unwrapList(vehRes.value, 'vehicles');
+        setVehicles(prev => prev.length === 0 ? vehList : prev);
+      }
+
+      if (assignRes.status === 'fulfilled') {
+        const assignList = unwrapList(assignRes.value, 'assignments');
+        setAssignments(prev => prev.length === 0 ? assignList : prev);
       }
     } catch (err) {
       console.warn("Auxiliary data load error:", err);
@@ -251,10 +266,24 @@ const ParkingPage = () => {
   /* ── Assignment Handlers ── */
   const handleAssignSlot = async (assignData) => {
     try {
-      await parkingApi.assignSlot(assignData);
-      showSuccess('Parking slot successfully allocated');
+      if (modalData?._id) {
+        await parkingApi.approveRequest(modalData._id, assignData);
+        showSuccess('Parking slot allocated and request approved');
+      } else {
+        await parkingApi.assignSlot(assignData);
+        showSuccess('Parking slot successfully allocated');
+      }
       setActiveModal(null);
       loadTabContent(activeTab);
+      // Refresh auxiliary parking data in background
+      const [slotsRes, vehRes, assignRes] = await Promise.allSettled([
+        parkingApi.getSlots({ limit: 100 }),
+        parkingApi.getVehicles({ limit: 100 }),
+        parkingApi.getAssignments({ limit: 100 }),
+      ]);
+      if (slotsRes.status === 'fulfilled') setSlots(unwrapList(slotsRes.value, 'slots'));
+      if (vehRes.status === 'fulfilled') setVehicles(unwrapList(vehRes.value, 'vehicles'));
+      if (assignRes.status === 'fulfilled') setAssignments(unwrapList(assignRes.value, 'assignments'));
     } catch (err) {
       showError(err, 'Failed to allocate slot');
     }
@@ -299,7 +328,11 @@ const ParkingPage = () => {
       await parkingApi.createRequest(reqData);
       showSuccess('Parking request submitted successfully');
       setActiveModal(null);
-      loadTabContent(activeTab);
+      if (activeTab === 'requests') {
+        loadTabContent('requests');
+      } else {
+        setActiveTab('requests');
+      }
     } catch (err) {
       showError(err, 'Failed to submit request');
     }
@@ -495,6 +528,9 @@ const ParkingPage = () => {
         flats={[]}
         slots={slots}
         vehicles={vehicles}
+        assignments={assignments}
+        isResident={isResident}
+        currentUser={user}
         onSubmitSlot={handleSaveSlot}
         onSubmitVehicle={handleSaveVehicle}
         onSubmitAssign={handleAssignSlot}

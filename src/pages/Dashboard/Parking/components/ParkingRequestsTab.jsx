@@ -25,13 +25,18 @@ const ParkingRequestsTab = ({ requests, loading, onCreateRequest, onApproveReque
   const [statusFilter, setStatusFilter] = useState('ALL');
 
   const filtered = requests.filter((r) => {
-    const res = (r.residentId?.name || '').toLowerCase();
+    const res = (r.residentId?.name || r.userId?.name || '').toLowerCase();
     const flat = (r.flatId?.flatNumber || '').toLowerCase();
-    const type = (r.requestType || '').toLowerCase();
-    const matchSearch = res.includes(search.toLowerCase()) ||
-      flat.includes(search.toLowerCase()) ||
-      type.includes(search.toLowerCase());
-    const matchStatus = statusFilter === 'ALL' || r.status === statusFilter;
+    const type = (r.requestType || 'NEW_SLOT').toLowerCase();
+    const slot = (r.requestedSlotType || r.preferredSlotType || r.preferredType || '').toLowerCase();
+    const reason = (r.notes || r.reason || '').toLowerCase();
+    const searchLower = search.toLowerCase();
+    const matchSearch = res.includes(searchLower) ||
+      flat.includes(searchLower) ||
+      type.includes(searchLower) ||
+      slot.includes(searchLower) ||
+      reason.includes(searchLower);
+    const matchStatus = statusFilter === 'ALL' || String(r.status || 'pending').toLowerCase() === statusFilter.toLowerCase();
     return matchSearch && matchStatus;
   });
 
@@ -49,7 +54,7 @@ const ParkingRequestsTab = ({ requests, loading, onCreateRequest, onApproveReque
           </div>
           <button
             onClick={onCreateRequest}
-            className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-5 py-2.5 rounded-xl shadow-sm transition-all text-sm shrink-0"
+            className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-5 py-2.5 rounded-xl shadow-sm transition-all text-sm shrink-0 cursor-pointer"
           >
             <FaPlus /> Submit Request
           </button>
@@ -92,33 +97,71 @@ const ParkingRequestsTab = ({ requests, loading, onCreateRequest, onApproveReque
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filtered.map((req) => (
-              <div key={req._id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-orange-100 text-orange-700">
-                    {formatLabel(req.requestType)}
-                  </span>
-                  <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${REQUEST_STATUS_STYLES[req.status] || REQUEST_STATUS_STYLES.pending}`}>
-                    {formatLabel(req.status)}
-                  </span>
+            {filtered.map((req) => {
+              const statusKey = String(req.status || 'pending').toLowerCase();
+              const reqType = req.requestType || 'NEW_SLOT';
+              const slotType = req.requestedSlotType || req.preferredSlotType || req.preferredType || 'FOUR_WHEELER';
+              const reasonText = req.notes || req.reason;
+              const adminNoteText = req.rejectionReason || req.reviewNotes;
+
+              return (
+                <div key={req._id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between gap-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-orange-50 text-orange-600 border border-orange-100">
+                        {formatLabel(reqType)}
+                      </span>
+                      <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${REQUEST_STATUS_STYLES[statusKey] || REQUEST_STATUS_STYLES.pending}`}>
+                        {formatLabel(req.status || 'pending')}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+                      <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-3 py-2 rounded-xl border border-gray-100">
+                        <FaCar className="text-orange-500 shrink-0" />
+                        <span className="text-gray-400">Preferred:</span>
+                        <span className="font-bold text-gray-800">
+                          {formatLabel(slotType)}
+                        </span>
+                      </div>
+
+                      {req.flatId?.flatNumber && (
+                        <div className="flex items-center gap-1.5 text-gray-600 bg-gray-50 px-3 py-2 rounded-xl border border-gray-100">
+                          <FaBuilding className="text-orange-500 shrink-0" />
+                          <span className="text-gray-400">Unit:</span>
+                          <span className="font-bold text-gray-800">
+                            Flat {req.flatId.flatNumber} {req.flatId?.wing ? `(${formatWing(req.flatId.wing)})` : ''}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {reasonText && (
+                      <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                        <span className="text-[10px] uppercase font-bold text-gray-400 block mb-0.5">Reason / Justification</span>
+                        <p className="italic text-gray-700">"{reasonText}"</p>
+                      </div>
+                    )}
+
+                    {adminNoteText && (
+                      <div className="text-xs text-amber-800 bg-amber-50/80 p-3 rounded-xl border border-amber-200">
+                        <span className="text-[10px] uppercase font-bold text-amber-600 block mb-0.5">Admin Note</span>
+                        <p>{adminNoteText}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] text-gray-400 pt-2 border-t border-gray-100">
+                    <span className="flex items-center gap-1">
+                      <FaClock className="text-[10px]" /> {new Date(req.createdAt).toLocaleString()}
+                    </span>
+                    {(req.residentId?.name || req.userId?.name) && (
+                      <span className="font-medium text-gray-500">{req.residentId?.name || req.userId?.name}</span>
+                    )}
+                  </div>
                 </div>
-                <div className="text-xs space-y-1">
-                  <p className="text-gray-500 flex items-center gap-1">
-                    <FaCar className="text-gray-400" /> Preferred type:&nbsp;
-                    <span className="font-semibold text-gray-700">{formatLabel(req.preferredType || req.preferredSlotType)}</span>
-                  </p>
-                  {req.reason && (
-                    <p className="text-gray-600 italic bg-gray-50 p-2 rounded-xl border border-gray-100">"{req.reason}"</p>
-                  )}
-                  {req.reviewNotes && (
-                    <p className="text-gray-500 bg-amber-50 border border-amber-100 p-2 rounded-xl">
-                      <span className="font-semibold text-amber-700">Admin note:</span> {req.reviewNotes}
-                    </p>
-                  )}
-                  <p className="text-gray-400">{new Date(req.createdAt).toLocaleString()}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -224,14 +267,14 @@ const ParkingRequestsTab = ({ requests, loading, onCreateRequest, onApproveReque
                     </td>
                     <td className="px-5 py-4">
                       <span className="text-xs font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-orange-100 text-orange-700">
-                        {formatLabel(req.requestType) || 'Parking Request'}
+                        {formatLabel(req.requestType || 'NEW_SLOT')}
                       </span>
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-1 text-xs text-gray-600">
                         <FaCar className="text-gray-400 text-[10px]" />
                         <span className="font-semibold capitalize">
-                          {formatLabel(req.requestedSlotType || req.preferredSlotType || req.preferredType) || '-'}
+                          {formatLabel(req.requestedSlotType || req.preferredSlotType || req.preferredType || 'FOUR_WHEELER')}
                         </span>
                       </div>
                     </td>
