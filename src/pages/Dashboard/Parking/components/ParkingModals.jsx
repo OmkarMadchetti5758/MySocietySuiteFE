@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaTimes, FaParking, FaCar, FaUserCheck, FaWalking, FaClock, FaExclamationTriangle } from 'react-icons/fa';
+import { FaTimes, FaParking, FaCar, FaUserCheck, FaWalking, FaClock, FaExclamationTriangle, FaLock } from 'react-icons/fa';
 
 export const ParkingModals = ({
   activeModal,
@@ -10,6 +10,9 @@ export const ParkingModals = ({
   flats,
   slots,
   vehicles,
+  assignments = [],
+  isResident,
+  currentUser,
   onSubmitSlot,
   onSubmitVehicle,
   onSubmitAssign,
@@ -44,6 +47,8 @@ export const ParkingModals = ({
             wings={wings}
             residents={residents}
             flats={flats}
+            isResident={isResident}
+            currentUser={currentUser}
             onSubmit={onSubmitVehicle}
             onClose={onClose}
           />
@@ -52,6 +57,7 @@ export const ParkingModals = ({
             slots={slots}
             residents={residents}
             vehicles={vehicles}
+            assignments={assignments}
             flats={flats}
             initialData={modalData}
             onSubmit={onSubmitAssign}
@@ -70,6 +76,8 @@ export const ParkingModals = ({
             residents={residents}
             flats={flats}
             initialData={modalData}
+            isResident={isResident}
+            currentUser={currentUser}
             onSubmit={onSubmitRequest}
             onClose={onClose}
           />
@@ -220,7 +228,7 @@ const SlotModal = ({ isEdit, initialData, wings, onSubmit, onClose }) => {
 };
 
 /* ── Register / Edit Vehicle Modal ── */
-const VehicleModal = ({ isEdit, initialData, wings, residents, flats, onSubmit, onClose }) => {
+const VehicleModal = ({ isEdit, initialData, residents = [], isResident, currentUser, onSubmit, onClose }) => {
   const [regNumber, setRegNumber] = useState(initialData?.regNumber || initialData?.registrationNumber || '');
   // Extract the userId string - userId may be a populated object in edit mode
   const resolvedUserId = initialData?.userId?._id
@@ -230,7 +238,21 @@ const VehicleModal = ({ isEdit, initialData, wings, residents, flats, onSubmit, 
       : initialData?.residentId
         ? String(initialData.residentId)
         : '';
-  const [residentId, setResidentId] = useState(resolvedUserId);
+
+  const currentResident = residents.find(r => 
+    String(r.userId?._id || r.userId || r._id) === String(currentUser?._id || currentUser?.id) ||
+    (r.email && currentUser?.email && r.email.toLowerCase() === currentUser.email.toLowerCase())
+  );
+
+  const residentDisplayName = currentResident?.name 
+    ? `${currentResident.name}${currentResident.flatNumber ? ` (Flat ${currentResident.flatNumber})` : (currentUser?.flatNumber ? ` (Flat ${currentUser.flatNumber})` : '')}`
+    : (currentUser?.name ? `${currentUser.name}${currentUser?.flatNumber ? ` (Flat ${currentUser.flatNumber})` : ''}` : 'Resident');
+
+  const resolvedResidentId = currentResident?._id || currentResident?.userId || currentUser?._id || currentUser?.id || '';
+
+  const [residentId, setResidentId] = useState(
+    isResident ? resolvedResidentId : resolvedUserId
+  );
   const [type, setType] = useState(initialData?.type || initialData?.vehicleType || 'FOUR_WHEELER');
   const [make, setMake] = useState(initialData?.make || '');
   const [model, setModel] = useState(initialData?.model || initialData?.vehicleModel || '');
@@ -247,13 +269,13 @@ const VehicleModal = ({ isEdit, initialData, wings, residents, flats, onSubmit, 
     // Only include regNumber and userId when registering a new vehicle
     if (!isEdit) {
       payload.regNumber = regNumber.toUpperCase().trim();
-      payload.userId = residentId || undefined;
+      payload.userId = isResident ? (resolvedResidentId || currentUser?._id || currentUser?.id) : (residentId || undefined);
     }
     onSubmit(payload, initialData?._id);
   };
 
   // Display name of current owner in edit mode
-  const ownerDisplayName = initialData?.userId?.name || residents.find(r => String(r.userId || r._id) === resolvedUserId)?.name || 'N/A';
+  const ownerDisplayName = initialData?.userId?.name || residents.find(r => String(r.userId || r._id) === resolvedUserId)?.name || (isResident ? residentDisplayName : 'N/A');
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -299,8 +321,30 @@ const VehicleModal = ({ isEdit, initialData, wings, residents, flats, onSubmit, 
       <div>
         <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Resident Owner {isEdit ? '' : '*'}</label>
         {isEdit ? (
-          <div className="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500">
-            {ownerDisplayName}
+          <div className="relative">
+            <input
+              type="text"
+              readOnly
+              disabled
+              value={ownerDisplayName}
+              className="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-700 font-semibold cursor-not-allowed select-none pr-9"
+            />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+              <FaLock className="text-xs" />
+            </div>
+          </div>
+        ) : isResident ? (
+          <div className="relative">
+            <input
+              type="text"
+              readOnly
+              disabled
+              value={residentDisplayName}
+              className="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-700 font-semibold cursor-not-allowed select-none pr-9"
+            />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+              <FaLock className="text-xs" />
+            </div>
           </div>
         ) : (
           <select
@@ -372,15 +416,82 @@ const VehicleModal = ({ isEdit, initialData, wings, residents, flats, onSubmit, 
 };
 
 /* ── Allocate Slot Modal ── */
-const AssignModal = ({ slots, residents, vehicles, flats, initialData, onSubmit, onClose }) => {
+const AssignModal = ({ slots, residents, vehicles, assignments = [], initialData, onSubmit, onClose }) => {
+  // When opened from "Approve Request", initialData is the request row.
+  // Extract the locked resident identity from the request.
+  const lockedFromRequest = Boolean(initialData?._id);
+
+  // Resolve the userId to use for this allocation.
+  // initialData.userId is the User ObjectId stored on the request;
+  // initialData.residentId may be a populated object with a userId field.
+  const resolvedLockedUserId =
+    initialData?.userId?._id ||
+    initialData?.userId ||
+    initialData?.residentId?.userId?._id ||
+    initialData?.residentId?.userId ||
+    initialData?.residentId?._id ||
+    '';
+
+  // Build the display label for the locked resident field.
+  const residentName =
+    initialData?.residentId?.name ||
+    initialData?.userId?.name ||
+    'Resident';
+  const flatNumber =
+    initialData?.flatId?.flatNumber ||
+    initialData?.flatId?.flatNumberClean ||
+    '';
+  const residentDisplayName = flatNumber
+    ? `${residentName} (Flat ${flatNumber})`
+    : residentName;
+
   const [slotId, setSlotId] = useState('');
-  const [userId, setUserId] = useState(initialData?.residentId?._id || initialData?.residentId?.userId || '');
-  const [flatId, setFlatId] = useState(initialData?.flatId?._id || initialData?.flatId || '');
+  const [userId, setUserId] = useState(
+    lockedFromRequest ? resolvedLockedUserId : ''
+  );
+  const [flatId, setFlatId] = useState(
+    initialData?.flatId?._id || initialData?.flatId || ''
+  );
   const [vehicleId, setVehicleId] = useState('');
   const [assignmentType, setAssignmentType] = useState('permanent');
   const [notes, setNotes] = useState('');
 
   const availableSlots = slots.filter(s => s.status === 'available');
+
+  // Build a Set of vehicleIds that already have an active assignment.
+  const assignedVehicleIds = new Set(
+    (assignments || []).map(a => String(a.vehicleId?._id || a.vehicleId || ''))
+  );
+
+  // When we have a locked resident, filter vehicles:
+  // 1. Only vehicles belonging to this resident (match by userId or residentId)
+  // 2. Exclude vehicles already allocated (parkingSlotId set OR active assignment)
+  const residentVehicles = lockedFromRequest
+    ? vehicles.filter(v => {
+        const vUserId = String(v.userId?._id || v.userId || '');
+        const vResidentId = String(v.residentId?._id || v.residentId || '');
+        const reqResidentId = String(
+          initialData?.residentId?._id || initialData?.residentId || ''
+        );
+        const matchesResident =
+          (resolvedLockedUserId && vUserId === String(resolvedLockedUserId)) ||
+          (reqResidentId && vResidentId === reqResidentId);
+        if (!matchesResident) return false;
+        // Exclude already-allocated
+        const hasSlot = Boolean(v.parkingSlotId);
+        const hasAssignment = assignedVehicleIds.has(String(v._id));
+        return !hasSlot && !hasAssignment;
+      })
+    : vehicles.filter(v => {
+        // Without a locked resident: just exclude allocated vehicles.
+        if (!userId) return true;
+        const vUserId = String(v.userId?._id || v.userId || '');
+        const matchesSelected = vUserId === String(userId);
+        if (!matchesSelected) return false;
+        const hasSlot = Boolean(v.parkingSlotId);
+        const hasAssignment = assignedVehicleIds.has(String(v._id));
+        return !hasSlot && !hasAssignment;
+      });
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -390,7 +501,8 @@ const AssignModal = ({ slots, residents, vehicles, flats, initialData, onSubmit,
       flatId: flatId || undefined,
       vehicleId,
       assignmentType,
-      notes
+      notes,
+      ...(initialData?._id ? { requestId: initialData._id } : {}),
     });
   };
 
@@ -402,7 +514,9 @@ const AssignModal = ({ slots, residents, vehicles, flats, initialData, onSubmit,
         </div>
         <div>
           <h3 className="text-lg font-bold text-gray-800">Allocate Parking Slot</h3>
-          <p className="text-xs text-gray-500">Assign an available slot to a resident and vehicle</p>
+          <p className="text-xs text-gray-500">
+            {lockedFromRequest ? 'Approve & assign a slot for this parking request' : 'Assign an available slot to a resident and vehicle'}
+          </p>
         </div>
       </div>
 
@@ -416,26 +530,43 @@ const AssignModal = ({ slots, residents, vehicles, flats, initialData, onSubmit,
         >
           <option value="">Select Available Slot</option>
           {availableSlots.map(s => (
-            <option key={s._id} value={s._id}>Slot {s.slotNumber} (Wing {s.wing} - {s.parkingType})</option>
+            <option key={s._id} value={s._id}>
+              Slot {s.slotNumber} (Wing {s.wing} - {(s.type || s.parkingType || 'Standard').replace(/_/g, ' ')})
+            </option>
           ))}
         </select>
       </div>
 
       <div>
         <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Resident *</label>
-        <select
-          required
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
-          className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20"
-        >
-          <option value="">Select Resident</option>
-          {residents.map(r => (
-            <option key={r._id || r.id} value={r.userId || r._id}>
-              {r.name} {r.flatNumber ? `(Flat ${r.flatNumber})` : r.email || r.mobile ? `(${r.email || r.mobile})` : ''}
-            </option>
-          ))}
-        </select>
+        {lockedFromRequest ? (
+          <div className="relative">
+            <input
+              type="text"
+              readOnly
+              disabled
+              value={residentDisplayName}
+              className="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-700 font-semibold cursor-not-allowed select-none pr-9"
+            />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+              <FaLock className="text-xs" />
+            </div>
+          </div>
+        ) : (
+          <select
+            required
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
+            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+          >
+            <option value="">Select Resident</option>
+            {residents.map(r => (
+              <option key={r._id || r.id} value={r.userId || r._id}>
+                {r.name} {r.flatNumber ? `(Flat ${r.flatNumber})` : r.email || r.mobile ? `(${r.email || r.mobile})` : ''}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       <div>
@@ -447,10 +578,18 @@ const AssignModal = ({ slots, residents, vehicles, flats, initialData, onSubmit,
           className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20"
         >
           <option value="">Select Vehicle</option>
-          {vehicles.map(v => (
-            <option key={v._id} value={v._id}>{v.regNumber || v.registrationNumber} ({v.make || ''} {v.model || ''})</option>
+          {residentVehicles.length === 0 && (
+            <option value="" disabled>No eligible vehicles found</option>
+          )}
+          {residentVehicles.map(v => (
+            <option key={v._id} value={v._id}>
+              {v.regNumber || v.registrationNumber} ({v.make || ''} {v.model || ''})
+            </option>
           ))}
         </select>
+        {lockedFromRequest && residentVehicles.length === 0 && (
+          <p className="text-xs text-amber-600 mt-1">⚠ All vehicles for this resident are already allocated to a parking slot.</p>
+        )}
       </div>
 
       <div>
@@ -616,8 +755,21 @@ const VisitorModal = ({ slots, residents, flats, onSubmit, onClose }) => {
 };
 
 /* ── Submit Parking Request Modal ── */
-const RequestModal = ({ residents, flats, initialData, onSubmit, onClose }) => {
-  const [residentId, setResidentId] = useState(residents[0]?._id || '');
+const RequestModal = ({ residents = [], isResident, currentUser, onSubmit, onClose }) => {
+  const currentResident = residents.find(r => 
+    String(r.userId?._id || r.userId || r._id) === String(currentUser?._id || currentUser?.id) ||
+    (r.email && currentUser?.email && r.email.toLowerCase() === currentUser.email.toLowerCase())
+  );
+
+  const residentDisplayName = currentResident?.name 
+    ? `${currentResident.name}${currentResident.flatNumber ? ` (Flat ${currentResident.flatNumber})` : (currentUser?.flatNumber ? ` (Flat ${currentUser.flatNumber})` : '')}`
+    : (currentUser?.name ? `${currentUser.name}${currentUser?.flatNumber ? ` (Flat ${currentUser.flatNumber})` : ''}` : 'Resident');
+
+  const resolvedResidentId = currentResident?._id || currentResident?.userId || currentUser?._id || currentUser?.id || '';
+
+  const [residentId, setResidentId] = useState(
+    isResident ? resolvedResidentId : (residents[0]?._id || '')
+  );
   const [requestType, setRequestType] = useState('NEW_SLOT');
   const [preferredSlotType, setPreferredSlotType] = useState('FOUR_WHEELER');
   const [reason, setReason] = useState('');
@@ -625,9 +777,11 @@ const RequestModal = ({ residents, flats, initialData, onSubmit, onClose }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit({
-      residentId,
+      residentId: isResident ? (resolvedResidentId || currentUser?._id || currentUser?.id) : residentId,
       requestType,
       requestedSlotType: preferredSlotType,
+      preferredSlotType,
+      reason,
       notes: reason,
     });
   };
@@ -646,19 +800,34 @@ const RequestModal = ({ residents, flats, initialData, onSubmit, onClose }) => {
 
       <div>
         <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Resident *</label>
-        <select
-          required
-          value={residentId}
-          onChange={(e) => setResidentId(e.target.value)}
-          className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-        >
-          <option value="">Select Resident</option>
-          {residents.map(r => (
-            <option key={r._id || r.id} value={r._id}>
-              {r.name} {r.flatNumber ? `(Flat ${r.flatNumber})` : ''}
-            </option>
-          ))}
-        </select>
+        {isResident ? (
+          <div className="relative">
+            <input
+              type="text"
+              readOnly
+              disabled
+              value={residentDisplayName}
+              className="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-700 font-semibold cursor-not-allowed select-none pr-9"
+            />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+              <FaLock className="text-xs" />
+            </div>
+          </div>
+        ) : (
+          <select
+            required
+            value={residentId}
+            onChange={(e) => setResidentId(e.target.value)}
+            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+          >
+            <option value="">Select Resident</option>
+            {residents.map(r => (
+              <option key={r._id || r.id} value={r._id}>
+                {r.name} {r.flatNumber ? `(Flat ${r.flatNumber})` : ''}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
