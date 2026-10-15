@@ -12,6 +12,8 @@ import {
 import { authApi } from '../services/authApi';
 import { usePermissions } from '../context/PermissionsContext';
 import { toast } from 'react-hot-toast';
+import { setupStorageService } from '../features/society-setup/services/setupStorageService';
+import { SETUP_STATUS } from '../features/society-setup/constants/setupConstants';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -59,8 +61,16 @@ const LoginPage = () => {
         setTimeout(() => {
           if (user.role === 'vendor' || (user.roleKeys && user.roleKeys.includes('vendor'))) {
             navigate(`/${user.societyId}/dashboard/vendors`);
-          } else {
+          } else if (user.role === 'security_guard' || user.role === 'guard') {
             navigate(`/${user.societyId}/dashboard`);
+          } else {
+            // Check society setup status
+            const status = setupStorageService.getSetupStatus(user.societyId);
+            if (status !== SETUP_STATUS.COMPLETED) {
+              navigate(`/${user.societyId}/setup`);
+            } else {
+              navigate(`/${user.societyId}/dashboard`);
+            }
           }
         }, 1000);
       } else {
