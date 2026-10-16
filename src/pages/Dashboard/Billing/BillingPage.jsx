@@ -25,99 +25,99 @@ const SUBMODULE_CONFIG = [
   {
     id: 'invoice_billing_generation',
     slug: 'invoice-billing-generation',
-    title: 'Invoice/billing generation',
+    title: 'Invoice / Billing Generation',
     desc: 'Generate, issue and manage monthly society invoices and maintenance bills.',
     icon: FaFileInvoiceDollar,
     colorClass: 'bg-blue-100 text-blue-600',
-    stats: { label: 'Invoices Issued', value: '412', trend: '+5%' },
+    statLabel: 'Invoices Issued',
     columns: ['Invoice ID', 'Flat / Member', 'Billing Cycle', 'Amount', 'Status'],
     sampleRows: []
   },
   {
     id: 'billing_config_charge_head',
     slug: 'billing-config-charge-head',
-    title: 'Billing config and charge head',
+    title: 'Billing Config & Charge Heads',
     desc: 'Setup and manage charge heads, per-sq-ft calculations, taxes and fixed fees.',
     icon: FaCog,
     colorClass: 'bg-purple-100 text-purple-600',
-    stats: { label: 'Active Charge Heads', value: '8' },
+    statLabel: 'Active Charge Heads',
     columns: ['Charge Head ID', 'Head Name', 'Calculation Type', 'Rate / Amount', 'Status'],
     sampleRows: []
   },
   {
     id: 'fines_interests_arrears',
     slug: 'fines-interests-arrears',
-    title: 'Fines, Interests, Arrears',
+    title: 'Fines, Interests & Arrears',
     desc: 'Configure late payment interest rules, penalty charges, and outstanding dues.',
     icon: FaExclamationCircle,
     colorClass: 'bg-red-100 text-red-600',
-    stats: { label: 'Total Arrears', value: '₹1,12,000', trend: '-8%' },
+    statLabel: 'Total Arrears',
     columns: ['Record ID', 'Member / Flat', 'Overdue Period', 'Interest / Fine', 'Total Arrears', 'Status'],
     sampleRows: []
   },
   {
     id: 'payments_collection',
     slug: 'payments-collection',
-    title: 'Payments and collection',
+    title: 'Payments & Collections',
     desc: 'Monitor incoming payments, UPI transactions, cheques, and payment receipts.',
     icon: FaMoneyCheckAlt,
     colorClass: 'bg-emerald-100 text-emerald-600',
-    stats: { label: 'Collected This Month', value: '₹4,52,000', trend: '+14%' },
+    statLabel: 'Total Collections',
     columns: ['Payment Ref', 'Payer / Flat', 'Payment Mode', 'Date Received', 'Amount', 'Status'],
     sampleRows: []
   },
   {
     id: 'advance_accounts_deposits',
     slug: 'advance-accounts-deposits',
-    title: 'Advance accounts and security deposists',
+    title: 'Advance Accounts & Deposits',
     desc: 'Manage resident advance payment accounts, tenant deposits, and security funds.',
     icon: FaShieldAlt,
     colorClass: 'bg-indigo-100 text-indigo-600',
-    stats: { label: 'Total Held Deposits', value: '₹6,40,000' },
+    statLabel: 'Held Deposits & Advance',
     columns: ['Deposit ID', 'Resident / Flat', 'Deposit Category', 'Amount Held', 'Date Received', 'Status'],
     sampleRows: []
   },
   {
     id: 'credit_notes_discount',
     slug: 'credit-notes-discount',
-    title: 'Credit notes and discount',
+    title: 'Credit Notes & Discounts',
     desc: 'Process bill adjustments, early payment discounts, waivers, and credit notes.',
     icon: FaPercent,
     colorClass: 'bg-amber-100 text-amber-600',
-    stats: { label: 'Discounts Issued', value: '₹18,500' },
+    statLabel: 'Approved Discounts',
     columns: ['Note ID', 'Recipient / Flat', 'Adjustment Reason', 'Discount / Credit Amount', 'Approved By', 'Status'],
     sampleRows: []
   },
   {
     id: 'bank_cash_reconciliation',
     slug: 'bank-cash-reconciliation',
-    title: 'Bank and cash reconciliation',
+    title: 'Bank & Cash Reconciliation',
     desc: 'Reconcile bank statements, cash in hand, bank charges, and uncleared instruments.',
     icon: FaUniversity,
     colorClass: 'bg-teal-100 text-teal-600',
-    stats: { label: 'Reconciled Balance', value: '₹18,45,200', trend: 'Balanced' },
+    statLabel: 'Reconciled Net Balance',
     columns: ['Reconcile ID', 'Bank Account / Book', 'Statement Date', 'Closing Balance', 'Variance', 'Status'],
     sampleRows: []
   },
   {
     id: 'ledger_management',
     slug: 'ledger-management',
-    title: 'Ledger management',
+    title: 'Ledger Management',
     desc: 'Double-entry accounting, manage chart of accounts, journal entries, and trial balances.',
     icon: FaFileAlt,
     colorClass: 'bg-cyan-100 text-cyan-600',
-    stats: { label: 'Active Accounts (CoA)', value: '' },
+    statLabel: 'Chart of Accounts (CoA)',
     columns: ['Account Code', 'Account Name', 'Type', 'Normal Balance', 'Current Balance'],
     sampleRows: []
   },
   {
     id: 'vendor_payments',
     slug: 'vendor-payments',
-    title: 'Vendor payments',
+    title: 'Vendor Payments',
     desc: 'Manage vendor invoices, purchase orders, contractor payments, and TDS deductions.',
     icon: FaStore,
     colorClass: 'bg-orange-100 text-orange-600',
-    stats: { label: 'Paid This Month', value: '₹1,85,000' },
+    statLabel: 'Vendor Payouts',
     columns: ['Voucher ID', 'Vendor Name', 'Service Description', 'Bill Amount', 'TDS Deduction', 'Payment Status'],
     sampleRows: []
   },
@@ -128,39 +128,31 @@ const SUBMODULE_CONFIG = [
     desc: 'Annual financial budget allocation, department expense limits, and variance analysis.',
     icon: FaCalculator,
     colorClass: 'bg-lime-100 text-lime-600',
-    stats: { label: 'FY 2026-27 Budget', value: '₹45,00,000' },
+    statLabel: 'Annual Budget',
     columns: ['Budget Head', 'Annual Allocation', 'Spent (YTD)', 'Remaining', 'Utilization %'],
     sampleRows: []
   },
   {
     id: 'reports_compliance',
     slug: 'reports-compliance',
-    title: 'Reports and compliance',
+    title: 'Reports & Compliance',
     desc: 'Audit reports, GST returns, income-expenditure statements, and balance sheets.',
     icon: FaFileAlt,
     colorClass: 'bg-violet-100 text-violet-600',
-    stats: { label: 'Compliances Filed', value: '100% Compliant' },
+    statLabel: 'Financial Statements',
     columns: ['Report Code', 'Report Name', 'Period', 'Filing Type', 'Generated Date', 'Status'],
-    sampleRows: [
-      { id: 'REP-GST3B', col1: 'GST 3B Monthly Return', col2: 'Aug 2026', col3: 'Statutory Filing', col4: '2026-09-05', status: 'Filed' },
-      { id: 'REP-BS2026', col1: 'Audited Balance Sheet', col2: 'FY 2025-26', col3: 'Statutory Audit', col4: '2026-07-30', status: 'Approved' },
-      { id: 'REP-IE2026', col1: 'Income & Expenditure Stmt', col2: 'Aug 2026', col3: 'Internal Audit', col4: '2026-09-01', status: 'Ready' },
-    ]
+    sampleRows: []
   },
   {
     id: 'audit_trail',
     slug: 'audit-trail',
-    title: 'Audit trail',
+    title: 'Audit Trail',
     desc: 'Detailed log of all financial modifications, rate edits, waivers, and system actions.',
     icon: FaHistory,
     colorClass: 'bg-rose-100 text-rose-600',
-    stats: { label: 'Logged Audit Events', value: '1,420 events' },
+    statLabel: 'Audit Logs',
     columns: ['Event ID', 'Timestamp', 'User Name', 'Action Executed', 'Module / Target', 'Details / Status'],
-    sampleRows: [
-      { id: 'LOG-9941', col1: '2026-09-09 14:22', col2: 'Rahul (Admin)', col3: 'Modified Charge Head Rate', col4: 'Billing Config', status: 'Maint rate updated to 3.50/sqft' },
-      { id: 'LOG-9942', col1: '2026-09-09 11:15', col2: 'Sunil (Treasurer)', col3: 'Approved Credit Note', col4: 'Credit Notes', status: 'CN-110 approved for Flat A-404' },
-      { id: 'LOG-9943', col1: '2026-09-08 16:40', col2: 'System Bot', col3: 'Auto-generated Monthly Bills', col4: 'Invoice Gen', status: '412 invoices created for Sept 2026' },
-    ]
+    sampleRows: []
   }
 ];
 
@@ -200,22 +192,29 @@ const SectionCard = ({ title, icon: IconComponent, colorClass, desc, stats, onCl
   >
     <div className={`absolute -right-8 -top-8 w-32 h-32 rounded-full opacity-5 ${colorClass.split(' ')[0]} transition-transform group-hover:scale-150 duration-500`}></div>
     <div>
-      <div className="flex justify-between items-start mb-6">
-        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-sm ${colorClass}`}>
+      <div className="flex justify-between items-start mb-5">
+        <div className={`w-13 h-13 rounded-2xl flex items-center justify-center text-2xl shadow-sm ${colorClass}`}>
           <IconComponent />
         </div>
         <button className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-full transition-colors">
           <FaArrowRight className="transform -rotate-45 group-hover:rotate-0 transition-all duration-300" />
         </button>
       </div>
-      <h3 className="text-lg font-bold text-gray-800 mb-2 group-hover:text-orange-600 transition-colors leading-snug">{title}</h3>
-      <p className="text-xs text-gray-500 mb-6 line-clamp-2">{desc}</p>
+      <h3 className="text-lg font-bold text-gray-800 mb-1.5 group-hover:text-orange-600 transition-colors leading-snug">{title}</h3>
+      <p className="text-xs text-gray-500 mb-5 line-clamp-2 leading-relaxed">{desc}</p>
     </div>
     {stats && (
-      <div className="pt-4 border-t border-gray-100/60 flex justify-between items-end mt-auto">
+      <div className="pt-3.5 border-t border-gray-100 flex justify-between items-end mt-auto">
         <div className="flex flex-col">
-          <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{stats.label}</span>
-          <span className="text-lg font-black text-gray-900">{stats.value}</span>
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{stats.label}</span>
+          {stats.loading ? (
+            <div className="w-20 h-5 bg-gray-100 animate-pulse rounded-md mt-0.5" />
+          ) : (
+            <span className="text-lg font-black text-gray-900">{stats.value ?? '-'}</span>
+          )}
+          {stats.sub && !stats.loading && (
+            <span className="text-[11px] text-gray-400 font-medium mt-0.5">{stats.sub}</span>
+          )}
         </div>
       </div>
     )}
@@ -246,43 +245,53 @@ const BillingPage = () => {
   const [selectedModule, setSelectedModule] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // ── Hub Dynamic Stats State ────────────────────────────────────────────────
+  const [loadingHub, setLoadingHub] = useState(true);
   const [hubStats, setHubStats] = useState({
     invoicesIssued: null,
+    invoicesPaid: null,
+    invoicesOverdue: null,
+    totalInvoicedAmount: null,
     activeChargeHeads: null,
     totalArrears: null,
+    totalCollected: null,
     collectedThisMonth: null,
     vendorPaymentsCount: null,
-    // ── New dynamic card stats ─────────────────────────────────────────────
+    vendorPaymentsAmount: null,
     totalHeldDeposits: null,
+    advanceAccountsCount: null,
     discountsIssued: null,
+    creditNotesCount: null,
     reconciledBalance: null,
+    financialAccountsCount: null,
     activeLedgers: null,
     auditLogsCount: null,
-    // ── Budget card ────────────────────────────────────────────────────────
-    budgetFYLabel: null,      // e.g. "FY 2026-27 Budget"
-    budgetTotalPaise: null,   // total budgeted expense in paise
+    budgetFYLabel: null,
+    budgetTotalPaise: null,
   });
 
   useEffect(() => {
-    const invEndpoint = isResident ? '/billing/my/invoices/stats' : '/billing/invoices/stats';
-    apiClient.get(invEndpoint)
+    let isMounted = true;
+    setLoadingHub(true);
+
+    apiClient.get('/billing/hub-stats')
       .then(res => {
-        if (res.data?.data) {
-          setHubStats(prev => ({ ...prev, invoicesIssued: res.data.data.total ?? 0 }));
+        if (!isMounted) return;
+        if (res.data?.success && res.data?.data) {
+          setHubStats(res.data.data);
         }
       })
-      .catch(() => { });
-
-    apiClient.get('/billing/charge-heads')
-      .then(res => {
-        if (res.data?.data) {
-          const list = Array.isArray(res.data.data) ? res.data.data : [];
-          setHubStats(prev => ({ ...prev, activeChargeHeads: list.length }));
-        }
+      .catch(err => {
+        console.error('Failed to load billing hub statistics:', err);
       })
-      .catch(() => { });
+      .finally(() => {
+        if (isMounted) setLoadingHub(false);
+      });
 
+<<<<<<< HEAD
+    return () => {
+      isMounted = false;
+    };
+=======
     apiClient.get('/payments/overview')
       .then(res => {
         if (res.data?.data) {
@@ -409,6 +418,7 @@ const BillingPage = () => {
         }
       })
       .catch(() => {});
+>>>>>>> 0e068269412b8fae1eddd80040decfc692532d67
   }, [isResident]);
 
   // ── Charge Head & Billing Config State ─────────────────────────────────────
@@ -1439,42 +1449,155 @@ const BillingPage = () => {
         </div>
       </div>
 
+      {/* ── Executive Financial Overview (Dynamic DB Aggregates) ───────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm relative overflow-hidden flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
+              {isResident ? 'My Invoiced Dues' : 'Total Invoiced'}
+            </span>
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg">
+              <FaFileInvoiceDollar />
+            </div>
+          </div>
+          <div>
+            {loadingHub ? (
+              <div className="h-8 w-28 bg-gray-100 animate-pulse rounded-lg mb-1" />
+            ) : (
+              <div className="text-2xl font-black text-gray-900">
+                {formatINR(hubStats.totalInvoicedAmount || 0)}
+              </div>
+            )}
+            <p className="text-xs text-gray-500 mt-1">
+              {loadingHub ? 'Loading...' : `${hubStats.invoicesIssued || 0} total invoices issued`}
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm relative overflow-hidden flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
+              {isResident ? 'Total Paid' : 'Total Collections'}
+            </span>
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+              <FaMoneyCheckAlt />
+            </div>
+          </div>
+          <div>
+            {loadingHub ? (
+              <div className="h-8 w-28 bg-gray-100 animate-pulse rounded-lg mb-1" />
+            ) : (
+              <div className="text-2xl font-black text-emerald-600">
+                {formatINR(hubStats.totalCollected || 0)}
+              </div>
+            )}
+            <p className="text-xs text-gray-500 mt-1">
+              {loadingHub ? 'Loading...' : `${formatINR(hubStats.collectedThisMonth || 0)} this month`}
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm relative overflow-hidden flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
+              {isResident ? 'Pending Arrears' : 'Total Arrears / Overdue'}
+            </span>
+            <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center text-lg">
+              <FaExclamationCircle />
+            </div>
+          </div>
+          <div>
+            {loadingHub ? (
+              <div className="h-8 w-28 bg-gray-100 animate-pulse rounded-lg mb-1" />
+            ) : (
+              <div className="text-2xl font-black text-red-600">
+                {formatINR(hubStats.totalArrears || 0)}
+              </div>
+            )}
+            <p className="text-xs text-gray-500 mt-1">
+              {loadingHub ? 'Loading...' : `${hubStats.invoicesOverdue || 0} overdue invoices`}
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm relative overflow-hidden flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
+              {isResident ? 'Advance & Deposits' : 'Bank & Cash Balance'}
+            </span>
+            <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center text-lg">
+              <FaUniversity />
+            </div>
+          </div>
+          <div>
+            {loadingHub ? (
+              <div className="h-8 w-28 bg-gray-100 animate-pulse rounded-lg mb-1" />
+            ) : (
+              <div className="text-2xl font-black text-gray-900">
+                {formatINR(isResident ? (hubStats.totalHeldDeposits || 0) : (hubStats.reconciledBalance || 0))}
+              </div>
+            )}
+            <p className="text-xs text-gray-500 mt-1">
+              {loadingHub ? 'Loading...' : (isResident ? `${hubStats.advanceAccountsCount || 0} accounts` : `${hubStats.financialAccountsCount || 0} active accounts`)}
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-gray-800">Billing &amp; Accounting Sub-Modules ({visibleSubmodules.length})</h2>
-          {/* <span className="text-xs text-gray-500">Select any sub-module to manage records</span> */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {visibleSubmodules.map((mod) => {
-            let dynamicStats = mod.stats;
-            if (mod.id === 'invoice_billing_generation' && hubStats.invoicesIssued !== null) {
-              dynamicStats = { ...mod.stats, value: String(hubStats.invoicesIssued) };
-            } else if (mod.id === 'billing_config_charge_head' && hubStats.activeChargeHeads !== null) {
-              dynamicStats = { ...mod.stats, value: String(hubStats.activeChargeHeads) };
-            } else if (mod.id === 'fines_interests_arrears' && hubStats.totalArrears !== null) {
-              dynamicStats = { ...mod.stats, value: formatINR(hubStats.totalArrears) };
-            } else if (mod.id === 'payments_collection' && hubStats.collectedThisMonth !== null) {
-              dynamicStats = { ...mod.stats, value: formatINR(hubStats.collectedThisMonth) };
-            } else if (mod.id === 'vendor_payments' && hubStats.vendorPaymentsCount !== null) {
-              dynamicStats = { ...mod.stats, label: 'Total Payments', value: String(hubStats.vendorPaymentsCount) };
-            } else if (mod.id === 'advance_accounts_deposits' && hubStats.totalHeldDeposits !== null) {
-              dynamicStats = { ...mod.stats, value: formatINR(hubStats.totalHeldDeposits) };
-            } else if (mod.id === 'credit_notes_discount' && hubStats.discountsIssued !== null) {
-              dynamicStats = { ...mod.stats, value: formatINR(hubStats.discountsIssued) };
-            } else if (mod.id === 'bank_cash_reconciliation' && hubStats.reconciledBalance !== null) {
-              dynamicStats = { ...mod.stats, value: formatINR(hubStats.reconciledBalance) };
-            } else if (mod.id === 'ledger_management' && hubStats.activeLedgers !== null) {
-              dynamicStats = { ...mod.stats, value: String(hubStats.activeLedgers) };
-            } else if (mod.id === 'audit_trail' && hubStats.auditLogsCount !== null) {
-              dynamicStats = { ...mod.stats, value: `${hubStats.auditLogsCount} events` };
-            } else if (mod.id === 'budgeting' && hubStats.budgetTotalPaise !== null) {
-              dynamicStats = {
-                ...mod.stats,
-                label: hubStats.budgetFYLabel || mod.stats.label,
-                value: formatINR(hubStats.budgetTotalPaise / 100),
-              };
+            let statsData = {
+              label: mod.statLabel,
+              value: '-',
+              sub: null,
+              loading: loadingHub,
+            };
+
+            if (!loadingHub) {
+              if (mod.id === 'invoice_billing_generation') {
+                statsData.value = String(hubStats.invoicesIssued || 0);
+                statsData.sub = `${hubStats.invoicesPaid || 0} paid • ${hubStats.invoicesOverdue || 0} overdue`;
+              } else if (mod.id === 'billing_config_charge_head') {
+                statsData.value = String(hubStats.activeChargeHeads || 0);
+                statsData.sub = 'Active rate rules';
+              } else if (mod.id === 'fines_interests_arrears') {
+                statsData.value = formatINR(hubStats.totalArrears || 0);
+                statsData.sub = `${hubStats.defaultersCount || 0} defaulters listed`;
+              } else if (mod.id === 'payments_collection') {
+                statsData.value = formatINR(hubStats.totalCollected || 0);
+                statsData.sub = `${formatINR(hubStats.collectedThisMonth || 0)} this month`;
+              } else if (mod.id === 'advance_accounts_deposits') {
+                statsData.value = formatINR(hubStats.totalHeldDeposits || 0);
+                statsData.sub = `${hubStats.advanceAccountsCount || 0} advance accounts`;
+              } else if (mod.id === 'credit_notes_discount') {
+                statsData.value = formatINR(hubStats.discountsIssued || 0);
+                statsData.sub = `${hubStats.creditNotesCount || 0} approved notes`;
+              } else if (mod.id === 'bank_cash_reconciliation') {
+                statsData.value = formatINR(hubStats.reconciledBalance || 0);
+                statsData.sub = `${hubStats.financialAccountsCount || 0} books active`;
+              } else if (mod.id === 'ledger_management') {
+                statsData.value = String(hubStats.activeLedgers || 0);
+                statsData.sub = 'Active CoA heads';
+              } else if (mod.id === 'vendor_payments') {
+                statsData.value = formatINR(hubStats.vendorPaymentsAmount || 0);
+                statsData.sub = `${hubStats.vendorPaymentsCount || 0} vendor payments`;
+              } else if (mod.id === 'budgeting') {
+                statsData.value = formatINR((hubStats.budgetTotalPaise || 0) / 100);
+                statsData.sub = hubStats.budgetFYLabel || 'Approved budget';
+              } else if (mod.id === 'reports_compliance') {
+                statsData.value = 'Ready';
+                statsData.sub = 'All statements synced';
+              } else if (mod.id === 'audit_trail') {
+                statsData.value = String(hubStats.auditLogsCount || 0);
+                statsData.sub = 'Recorded events';
+              }
             }
+
             return (
               <SectionCard
                 key={mod.id}
@@ -1482,7 +1605,7 @@ const BillingPage = () => {
                 icon={mod.icon}
                 colorClass={mod.colorClass}
                 desc={mod.desc}
-                stats={dynamicStats}
+                stats={statsData}
                 onClick={() => handleSelectModule(mod.slug)}
               />
             );
