@@ -57,6 +57,7 @@ const PermissionMatrix = ({
   onToggleAction,
   onSelectAllColumn,
   isReadOnly = false,
+  matrixStructure = MATRIX_STRUCTURE,
 }) => {
   const [collapsedGroups, setCollapsedGroups] = useState({});
 
@@ -69,7 +70,7 @@ const PermissionMatrix = ({
 
   // Collect all item IDs for column-level select all
   const allItemIds = [];
-  MATRIX_STRUCTURE.forEach((entry) => {
+  matrixStructure.forEach((entry) => {
     if (entry.type === 'group') {
       entry.items.forEach((item) => allItemIds.push(item.id));
     } else {
@@ -195,7 +196,7 @@ const PermissionMatrix = ({
 
           {/* Table Body */}
           <tbody>
-            {MATRIX_STRUCTURE.map((entry) => {
+            {matrixStructure.map((entry) => {
               if (entry.type === 'single') {
                 return renderModuleRow(entry, false);
               }

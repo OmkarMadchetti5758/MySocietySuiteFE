@@ -1,7 +1,8 @@
+import { useMemo } from 'react';
 import { FiInfo, FiCopy, FiLock } from 'react-icons/fi';
 import { FaSave, FaUndo } from 'react-icons/fa';
 import { Loader2 } from 'lucide-react';
-import { getRoleTheme } from './rolesUiConstants';
+import { getRoleTheme, getFilteredMatrix } from './rolesUiConstants';
 import SummaryCards from './SummaryCards';
 import PermissionMatrix from './PermissionMatrix';
 import UnsavedChangesBar from './UnsavedChangesBar';
@@ -20,6 +21,28 @@ const PermissionsPanel = ({
   saving = false,
   totalCount = 13,
 }) => {
+  const matrixStructure = useMemo(() => getFilteredMatrix(role), [role]);
+
+  // Extract all visible item IDs in the matrix
+  const allItemIds = useMemo(() => {
+    const ids = [];
+    matrixStructure.forEach((entry) => {
+      if (entry.type === 'group') {
+        entry.items.forEach((item) => ids.push(item.id));
+      } else {
+        ids.push(entry.id);
+      }
+    });
+    return ids;
+  }, [matrixStructure]);
+
+  const dynamicTotalCount = allItemIds.length || totalCount;
+
+  // Calculate enabled count strictly among visible items
+  const enabledCount = useMemo(() => {
+    return allItemIds.filter((id) => draftPermissions[id]?.enabled).length;
+  }, [allItemIds, draftPermissions]);
+
   if (!role) {
     return (
       <div className="flex-1 bg-white rounded-[20px] border border-[#F1F1F1] p-12 shadow-xs flex flex-col items-center justify-center text-center">
@@ -39,9 +62,6 @@ const PermissionsPanel = ({
   const isReadOnly = !role.isEditable || role.roleKey === 'admin';
   const description = role.description || theme.defaultDesc;
 
-  // Calculate enabled count
-  const enabledCount = Object.values(draftPermissions).filter((p) => p.enabled).length;
-
   return (
     <div className="flex-1 bg-white rounded-[20px] border border-[#F1F1F1] p-5 sm:p-6 shadow-xs flex flex-col gap-5 min-w-0">
       {/* 1. Header with Role Info & Top Actions */}
@@ -54,9 +74,16 @@ const PermissionsPanel = ({
             <Icon />
           </div>
           <div className="min-w-0">
-            <h2 className="text-xl font-bold text-[#0F172A] truncate">
-              {role.roleName}
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold text-[#0F172A] truncate">
+                {role.roleName}
+              </h2>
+              {role.activePlan && (
+                <span className="inline-flex items-center gap-1 bg-orange-50 text-[#EA580C] text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-orange-200">
+                  <span>Plan: {role.activePlan.name}</span>
+                </span>
+              )}
+            </div>
             <p className="text-xs text-[#64748B] mt-0.5 truncate">
               {description}
             </p>
@@ -121,21 +148,29 @@ const PermissionsPanel = ({
       <SummaryCards
         role={role}
         enabledCount={enabledCount}
-        totalCount={totalCount}
+        totalCount={dynamicTotalCount}
         theme={theme}
       />
 
       {/* 3. Info Banner */}
-      <div className="bg-[#FFF7ED] border border-[#FFEDD5] rounded-xl px-4 py-2.5 flex items-center gap-2.5">
-        <FiInfo className="text-sm text-[#EA580C] shrink-0" />
-        <span className="text-xs font-medium text-[#C2410C]">
-          Changes apply to all users with this role.
-        </span>
+      <div className="bg-[#FFF7ED] border border-[#FFEDD5] rounded-xl px-4 py-2.5 flex items-center justify-between gap-2.5">
+        <div className="flex items-center gap-2.5">
+          <FiInfo className="text-sm text-[#EA580C] shrink-0" />
+          <span className="text-xs font-medium text-[#C2410C]">
+            Changes apply to all users with this role.
+          </span>
+        </div>
+        {role.activePlan && (
+          <span className="text-[11px] font-semibold text-[#EA580C] hidden sm:inline">
+            Active Tier: {role.activePlan.name} ({dynamicTotalCount} modules)
+          </span>
+        )}
       </div>
 
       {/* 4. Permissions Matrix Table */}
       <PermissionMatrix
         draftPermissions={draftPermissions}
+        matrixStructure={matrixStructure}
         onToggleModule={onToggleModule}
         onToggleAction={onToggleAction}
         onSelectAllColumn={onSelectAllColumn}
