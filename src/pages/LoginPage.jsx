@@ -64,8 +64,9 @@ const LoginPage = () => {
           } else if (user.role === 'security_guard' || user.role === 'guard') {
             navigate(`/${user.societyId}/dashboard`);
           } else {
-            // Check society setup status
-            const status = setupStorageService.getSetupStatus(user.societyId);
+            // Check society setup status from login response
+            const status = data.data?.setupStatus || user.setupStatus || setupStorageService.getSetupStatus(user.societyId);
+            setupStorageService.setSetupStatus(user.societyId, status);
             if (status !== SETUP_STATUS.COMPLETED) {
               navigate(`/${user.societyId}/setup`);
             } else {

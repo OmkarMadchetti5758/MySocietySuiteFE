@@ -8,8 +8,7 @@ import {
   FiSearch,
   FiFilter,
   FiEye,
-  FiDownload,
-  FiMoreVertical,
+  FiTrash2,
   FiChevronLeft,
   FiChevronRight,
   FiCheck,
@@ -110,8 +109,74 @@ const Step5Documents = () => {
         isMandatory: true,
         fileSize: (file.size / (1024 * 1024)).toFixed(1) + ' MB',
         fileType: 'pdf',
+        fileUrl: URL.createObjectURL(file),
+        file,
+        status: 'Verified',
+        uploadedBy: 'Super Admin',
+        uploadDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
       });
       toast.success(`Uploaded: ${file.name}`);
+    }
+  };
+
+  const handleViewDocument = (doc) => {
+    if (doc.fileUrl) {
+      const url = doc.fileUrl.startsWith('http') || doc.fileUrl.startsWith('blob:')
+        ? doc.fileUrl
+        : `${import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:5000'}${doc.fileUrl.startsWith('/') ? '' : '/'}${doc.fileUrl}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    if (doc.file instanceof File || doc.file instanceof Blob) {
+      const blobUrl = URL.createObjectURL(doc.file);
+      window.open(blobUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    // Open clean preview in a new tab
+    const previewWindow = window.open('', '_blank');
+    if (previewWindow) {
+      previewWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <title>${doc.documentName || 'Document'}</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 40px 20px; display: flex; align-items: center; justify-content: center; min-height: 80vh; }
+              .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 40px; max-width: 520px; width: 100%; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); text-align: center; }
+              .icon { width: 56px; height: 56px; border-radius: 16px; background: #fff7ed; color: #ea580c; display: flex; align-items: center; justify-content: center; font-size: 26px; margin: 0 auto 20px; border: 1px solid #ffedd5; }
+              .title { font-size: 20px; font-weight: 700; color: #0f172a; margin: 0 0 8px; }
+              .badge { display: inline-block; padding: 4px 14px; border-radius: 9999px; font-size: 11px; font-weight: 600; text-transform: uppercase; background: #f1f5f9; color: #475569; margin-bottom: 24px; }
+              .info-grid { text-align: left; background: #f8fafc; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; font-size: 13px; }
+              .info-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #edf2f7; }
+              .info-row:last-child { border-bottom: none; }
+              .label { color: #64748b; font-weight: 500; }
+              .val { color: #0f172a; font-weight: 600; }
+              .footer-note { font-size: 11px; color: #94a3b8; }
+            </style>
+          </head>
+          <body>
+            <div class="card">
+              <div class="icon">📄</div>
+              <h1 class="title">${doc.documentName || 'Document'}</h1>
+              <span class="badge">${doc.category || 'Legal'}</span>
+              <div class="info-grid">
+                <div class="info-row"><span class="label">Document Name</span><span class="val">${doc.documentName || '—'}</span></div>
+                <div class="info-row"><span class="label">Category</span><span class="val">${doc.category || '—'}</span></div>
+                <div class="info-row"><span class="label">Status</span><span class="val" style="color: #16a34a;">${doc.status || 'Verified'}</span></div>
+                <div class="info-row"><span class="label">Uploaded By</span><span class="val">${doc.uploadedBy || 'Super Admin'}</span></div>
+                <div class="info-row"><span class="label">Upload Date</span><span class="val">${doc.uploadDate || '—'}</span></div>
+                ${doc.expiryDate ? `<div class="info-row"><span class="label">Expiry Date</span><span class="val">${doc.expiryDate}</span></div>` : ''}
+              </div>
+              <p class="footer-note">MySocietySuite Document Management</p>
+            </div>
+          </body>
+        </html>
+      `);
+      previewWindow.document.close();
     }
   };
 
@@ -387,22 +452,14 @@ const Step5Documents = () => {
 
                       {/* Actions */}
                       <td className="py-3 px-3 text-center">
-                        <div className="flex items-center justify-center gap-2 text-gray-400">
+                        <div className="flex items-center justify-center gap-3 text-gray-400">
                           <button
                             type="button"
-                            onClick={() => toast.success(`Viewing ${row.documentName}`)}
+                            onClick={() => handleViewDocument(row)}
                             className="p-1 hover:text-blue-600 transition-colors"
-                            title="View Document"
+                            title="View Document in New Tab"
                           >
-                            <FiEye className="text-sm" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => toast.success(`Downloading ${row.documentName}`)}
-                            className="p-1 hover:text-emerald-600 transition-colors"
-                            title="Download Document"
-                          >
-                            <FiDownload className="text-sm" />
+                            <FiEye className="text-base" />
                           </button>
                           <button
                             type="button"
@@ -413,7 +470,7 @@ const Step5Documents = () => {
                             className="p-1 hover:text-red-500 transition-colors"
                             title="Delete Document"
                           >
-                            <FiMoreVertical className="text-sm" />
+                            <FiTrash2 className="text-base" />
                           </button>
                         </div>
                       </td>

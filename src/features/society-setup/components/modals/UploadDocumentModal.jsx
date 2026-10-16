@@ -3,6 +3,8 @@ import { FiX, FiUploadCloud, FiCheck, FiFileText } from 'react-icons/fi';
 import { DOCUMENT_CATEGORIES } from '../../constants/setupConstants';
 import { formatDisplayDate } from '../../utils/calculations';
 
+import { setupApi } from '../../services/setupApi';
+
 const UploadDocumentModal = ({ isOpen, onClose, onUpload }) => {
   const [formData, setFormData] = useState({
     documentName: '',
@@ -13,6 +15,8 @@ const UploadDocumentModal = ({ isOpen, onClose, onUpload }) => {
     fileSize: '2.4 MB',
   });
 
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [errors, setErrors] = useState({});
 
   if (!isOpen) return null;
@@ -20,6 +24,7 @@ const UploadDocumentModal = ({ isOpen, onClose, onUpload }) => {
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
+      setSelectedFile(file);
       const sizeMB = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
       setFormData((prev) => ({
         ...prev,
@@ -30,7 +35,7 @@ const UploadDocumentModal = ({ isOpen, onClose, onUpload }) => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
     if (!formData.documentName.trim()) newErrors.documentName = 'Document name is required';
@@ -40,18 +45,33 @@ const UploadDocumentModal = ({ isOpen, onClose, onUpload }) => {
       return;
     }
 
+    setIsUploading(true);
+    let uploadedFileUrl = '';
+    if (selectedFile) {
+      try {
+        const uploadRes = await setupApi.uploadDocumentFile(selectedFile);
+        uploadedFileUrl = uploadRes.fileUrl || '';
+      } catch (err) {
+        console.warn('File upload note:', err.message);
+      }
+    }
+
     onUpload({
       documentName: formData.documentName.trim(),
       category: formData.category,
       isMandatory: formData.isMandatory,
       expiryDate: formData.expiryDate ? formatDisplayDate(formData.expiryDate) : null,
       fileSize: formData.fileSize || '2.5 MB',
-      fileType: 'pdf',
+      fileType: selectedFile?.name?.endsWith('.pdf') ? 'pdf' : 'pdf',
+      fileUrl: uploadedFileUrl || (selectedFile ? URL.createObjectURL(selectedFile) : ''),
+      file: selectedFile,
       status: 'Verified',
       uploadedBy: 'Super Admin',
       uploadDate: formatDisplayDate(new Date().toISOString()),
     });
 
+    setIsUploading(false);
+    setSelectedFile(null);
     setFormData({
       documentName: '',
       category: 'Legal',

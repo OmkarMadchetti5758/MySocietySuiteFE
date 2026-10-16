@@ -1,143 +1,187 @@
 /**
  * Setup Storage Service
- * Isolates local draft persistence, status retrieval, and activation.
- * Designed so that future REST API/DB calls can swap in cleanly without touching UI components.
+ * Fully dynamic — communicates directly with MongoDB via setupApi.
+ * NO wizard data or drafts are saved to localStorage.
  */
 
-import { STORAGE_KEYS, SETUP_STATUS } from '../constants/setupConstants';
-import {
-  INITIAL_SOCIETY_DETAILS,
-  INITIAL_PROPERTY_INFO,
-  INITIAL_RESIDENTIAL_INVENTORY,
-  INITIAL_COMMERCIAL_INVENTORY,
-  INITIAL_PARKING_CONFIG,
-  INITIAL_AMENITIES,
-  INITIAL_CONTACTS,
-  INITIAL_DOCUMENTS,
-} from '../data/mockSetupData';
+import { SETUP_STATUS } from '../constants/setupConstants';
+import { setupApi } from './setupApi';
+
+// Automatically purge any stale setup drafts from localStorage from previous versions
+const purgeLegacyStorage = (societyId) => {
+  try {
+    const keysToRemove = [
+      'msquare_society_setup_draft',
+      'msquare_society_setup_step',
+      `msquare_society_setup_draft_${societyId}`,
+      `msquare_society_setup_step_${societyId}`,
+    ];
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+  } catch (e) {
+    // ignore
+  }
+};
 
 export const setupStorageService = {
   /**
-   * Retrieves current setup status for the society
-   * Returns: "not_started" | "in_progress" | "completed"
+   * Retrieves current setup status for the society synchronously from user profile session
    */
   getSetupStatus: (societyId = 'default') => {
     try {
-      // TODO: replace with GET /api/societies/:societyId/setup-status
-      const stored = localStorage.getItem(`${STORAGE_KEYS.SETUP_STATUS}_${societyId}`);
-      if (stored) return stored;
-
-      // Check generic fallback
-      const generic = localStorage.getItem(STORAGE_KEYS.SETUP_STATUS);
-      if (generic) return generic;
-
-      // Default for new societies
+      purgeLegacyStorage(societyId);
+      const rawUser = localStorage.getItem('user');
+      if (rawUser) {
+        const user = JSON.parse(rawUser);
+        if (user.setupStatus) return user.setupStatus;
+      }
       return SETUP_STATUS.IN_PROGRESS;
     } catch (err) {
-      console.warn('Error reading setup status from localStorage:', err);
       return SETUP_STATUS.IN_PROGRESS;
     }
   },
 
   /**
-   * Updates the setup status
+   * Fetches real-time status from backend MongoDB
+   */
+  fetchSetupStatus: async (societyId = 'default') => {
+    try {
+      purgeLegacyStorage(societyId);
+      const res = await setupApi.getStatus();
+      return res;
+    } catch (err) {
+      console.warn('Error fetching setup status from API:', err.message);
+      return { setupStatus: setupStorageService.getSetupStatus(societyId) };
+    }
+  },
+
+  /**
+   * Updates the setup status in session user object
    */
   setSetupStatus: (societyId = 'default', status) => {
     try {
-      // TODO: replace with PUT /api/societies/:societyId/setup-status
-      localStorage.setItem(`${STORAGE_KEYS.SETUP_STATUS}_${societyId}`, status);
-      localStorage.setItem(STORAGE_KEYS.SETUP_STATUS, status);
+      const rawUser = localStorage.getItem('user');
+      if (rawUser) {
+        const user = JSON.parse(rawUser);
+        user.setupStatus = status;
+        localStorage.setItem('user', JSON.stringify(user));
+      }
+      purgeLegacyStorage(societyId);
       return status;
     } catch (err) {
-      console.error('Error saving setup status to localStorage:', err);
       return status;
     }
   },
 
   /**
-   * Loads the current wizard draft.
-   * If no draft is saved yet, returns the default seed data.
+   * Loads the current wizard draft exclusively from MongoDB via setupApi.
+   * Does NOT read from or save to localStorage.
    */
-  loadSetupDraft: (societyId = 'default') => {
+  loadSetupDraft: async (societyId = 'default') => {
+    purgeLegacyStorage(societyId);
+
     try {
-      // TODO: replace with GET /api/societies/:societyId/setup-draft
-      const key = `${STORAGE_KEYS.SETUP_DRAFT}_${societyId}`;
-      const saved = localStorage.getItem(key) || localStorage.getItem(STORAGE_KEYS.SETUP_DRAFT);
-      if (saved) {
-        return JSON.parse(saved);
+      const apiDraft = await setupApi.getDraft();
+      console.log('[SetupDraft] API response:', JSON.stringify(apiDraft, null, 2));
+      // Always return the API draft if it's a valid object (societyDetails is always present)
+      if (apiDraft && typeof apiDraft === 'object') {
+        return apiDraft;
       }
     } catch (err) {
-      console.warn('Error reading setup draft from localStorage:', err);
+      console.error('[SetupDraft] Could not load draft from API:', err?.response?.status, err?.response?.data, err.message);
     }
 
-    // Default initial seed data matching the screenshots
+    // Default empty structure if no data in DB yet
     return {
-      currentStep: 2, // Matches Screenshot 1 (Property Inventory & Create in progress)
-      completedSteps: [1],
-      societyDetails: { ...INITIAL_SOCIETY_DETAILS },
-      propertyInfo: { ...INITIAL_PROPERTY_INFO },
-      residentialInventory: [...INITIAL_RESIDENTIAL_INVENTORY],
-      commercialInventory: [...INITIAL_COMMERCIAL_INVENTORY],
-      parkingConfig: { ...INITIAL_PARKING_CONFIG },
-      amenities: [...INITIAL_AMENITIES],
-      contacts: [...INITIAL_CONTACTS],
-      documents: [...INITIAL_DOCUMENTS],
+      currentStep: 1,
+      completedSteps: [],
+      societyDetails: {},
+      propertyInfo: {},
+      residentialInventory: [],
+      commercialInventory: [],
+      parkingConfig: {
+        fourWheeler: 0,
+        twoWheeler: 0,
+        visitor: 0,
+        evCharging: 0,
+        allocationMethod: 'By Society',
+      },
+      amenities: [],
+      contacts: [],
+      documents: [],
     };
   },
 
   /**
-   * Persists wizard draft state
+   * Persists wizard draft state directly to MongoDB via API.
+   * Does NOT write to localStorage.
    */
-  saveSetupDraft: (societyId = 'default', draftData) => {
+  saveSetupDraft: async (societyId = 'default', draftData) => {
+    purgeLegacyStorage(societyId);
     try {
-      // TODO: replace with PUT /api/societies/:societyId/setup-draft
-      const payload = JSON.stringify(draftData);
-      localStorage.setItem(`${STORAGE_KEYS.SETUP_DRAFT}_${societyId}`, payload);
-      localStorage.setItem(STORAGE_KEYS.SETUP_DRAFT, payload);
+      await setupApi.saveDraft(draftData);
       return true;
     } catch (err) {
-      console.error('Error saving setup draft to localStorage:', err);
-      return false;
+      console.error('Error saving setup draft to API:', err.message);
+      throw err;
     }
+  },
+
+  /**
+   * Save Step 1 directly to MongoDB
+   */
+  saveStep1: async (societyDetails) => {
+    return setupApi.saveStep1(societyDetails);
+  },
+
+  /**
+   * Save Step 2 directly to MongoDB
+   */
+  saveStep2: async (data) => {
+    return setupApi.saveStep2(data);
+  },
+
+  /**
+   * Save Step 3 directly to MongoDB
+   */
+  saveStep3: async (amenities) => {
+    return setupApi.saveStep3(amenities);
+  },
+
+  /**
+   * Save Step 4 directly to MongoDB
+   */
+  saveStep4: async (contacts) => {
+    return setupApi.saveStep4(contacts);
+  },
+
+  /**
+   * Save Step 5 directly to MongoDB
+   */
+  saveStep5: async (documents) => {
+    return setupApi.saveStep5(documents);
   },
 
   /**
    * Final activation step
-   * Sets setupStatus to "completed" and saves finalized society config
+   * Activates society in MongoDB and auto-generates flats in DB
    */
   activateSociety: async (societyId = 'default', finalizedData) => {
+    purgeLegacyStorage(societyId);
     try {
-      // TODO: replace with POST /api/societies/:societyId/setup/activate
+      const res = await setupApi.activateSociety(finalizedData);
       setupStorageService.setSetupStatus(societyId, SETUP_STATUS.COMPLETED);
-
-      // Save finalized snapshot
-      setupStorageService.saveSetupDraft(societyId, {
-        ...finalizedData,
-        currentStep: 6,
-        completedSteps: [1, 2, 3, 4, 5, 6],
-        activatedAt: new Date().toISOString(),
-      });
-
-      return { success: true };
+      return { success: true, data: res };
     } catch (err) {
       console.error('Error activating society:', err);
-      return { success: false, error: err.message };
+      return { success: false, error: err.response?.data?.message || err.message };
     }
   },
 
   /**
-   * Reset wizard draft (utility for testing / re-running)
+   * Reset wizard draft (utility for testing)
    */
   resetSetup: (societyId = 'default') => {
-    try {
-      localStorage.removeItem(`${STORAGE_KEYS.SETUP_DRAFT}_${societyId}`);
-      localStorage.removeItem(`${STORAGE_KEYS.SETUP_STATUS}_${societyId}`);
-      localStorage.removeItem(STORAGE_KEYS.SETUP_DRAFT);
-      localStorage.removeItem(STORAGE_KEYS.SETUP_STATUS);
-      return true;
-    } catch (err) {
-      console.error('Error resetting setup:', err);
-      return false;
-    }
+    purgeLegacyStorage(societyId);
+    return true;
   },
 };

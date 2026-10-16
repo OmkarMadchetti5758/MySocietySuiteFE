@@ -8,6 +8,7 @@ import GuardAppLayout from './pages/GuardApp/GuardAppLayout';
 import GuardLogin from './pages/GuardApp/GuardLogin';
 import SocietySetupWizardPage from './features/society-setup/SocietySetupWizardPage';
 import SetupGuard from './features/society-setup/components/SetupGuard';
+import PublicRoute from './components/PublicRoute';
 
 function App() {
   return (
@@ -25,9 +26,24 @@ function App() {
       />
       <Router>
         <Routes>
-          <Route path="/" element={<LoginPage />} />
+          {/* Public-only routes — redirect authenticated users away */}
+          <Route
+            path="/"
+            element={
+              <PublicRoute>
+                <LoginPage />
+              </PublicRoute>
+            }
+          />
           <Route path="/activate-account" element={<ActivateAccount />} />
-          <Route path="/guard-login" element={<GuardLogin />} />
+          <Route
+            path="/guard-login"
+            element={
+              <PublicRoute>
+                <GuardLogin />
+              </PublicRoute>
+            }
+          />
 
           {/* Register Society Setup Wizard (Guard redirects to dashboard if already completed) */}
           <Route
