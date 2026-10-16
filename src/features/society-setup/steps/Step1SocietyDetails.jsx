@@ -21,9 +21,9 @@ const Step1SocietyDetails = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Left 2 Cols: Form */}
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
+        {/* Left 3 Cols on XL: Form */}
+        <div className="lg:col-span-2 xl:col-span-3 space-y-6">
           {/* Main Card */}
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-xs">
             <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-6">
@@ -213,7 +213,7 @@ const Step1SocietyDetails = () => {
         </div>
 
         {/* Right Info Column */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 xl:col-span-1">
           <StepInfoCard
             title="About this step"
             description="Enter the core legal and identification details of your society. This information will appear on official certificates, invoices, and notices."

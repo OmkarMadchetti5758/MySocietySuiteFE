@@ -21,16 +21,14 @@ export const SetupGuard = ({ children, mode = 'require-completed' }) => {
     localStorage.getItem('societyDatabase') ||
     'default';
 
-  // Read current setup status from isolated service
-  const currentStatus = setupStorageService.getSetupStatus(societyId);
-  const isCompleted = currentStatus === SETUP_STATUS.COMPLETED;
-
   // Retrieve user session info if available
   let isAdmin = true;
+  let userSetupStatus = null;
   try {
     const userData = localStorage.getItem('user');
     if (userData) {
       const parsed = JSON.parse(userData);
+      userSetupStatus = parsed.setupStatus;
       const role = parsed.role;
       const roleKeys = parsed.roleKeys || [];
       // Only admins are required to complete setup; guards and vendors bypass setup wizard
@@ -47,6 +45,10 @@ export const SetupGuard = ({ children, mode = 'require-completed' }) => {
   } catch (e) {
     // default to admin
   }
+
+  // Read current setup status
+  const currentStatus = userSetupStatus || setupStorageService.getSetupStatus(societyId);
+  const isCompleted = currentStatus === SETUP_STATUS.COMPLETED;
 
   // 1. If guarding Dashboard routes ("require-completed"):
   if (mode === 'require-completed') {

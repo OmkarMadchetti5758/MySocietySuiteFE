@@ -39,22 +39,37 @@ export const SetupProvider = ({ children, initialSocietyId }) => {
   const [contacts, setContacts] = useState([]);
   const [documents, setDocuments] = useState([]);
 
-  // Initialize draft from storage
+  // Initialize draft from backend API & cache
   useEffect(() => {
-    const draft = setupStorageService.loadSetupDraft(societyId);
-    if (draft) {
-      setCurrentStep(draft.currentStep || 2);
-      setCompletedSteps(draft.completedSteps || [1]);
-      setSocietyDetails(draft.societyDetails || {});
-      setPropertyInfo(draft.propertyInfo || {});
-      setResidentialInventory(draft.residentialInventory || []);
-      setCommercialInventory(draft.commercialInventory || []);
-      setParkingConfig(draft.parkingConfig || {});
-      setAmenities(draft.amenities || []);
-      setContacts(draft.contacts || []);
-      setDocuments(draft.documents || []);
+    let isMounted = true;
+    async function initDraft() {
+      try {
+        const draft = await setupStorageService.loadSetupDraft(societyId);
+        if (isMounted && draft) {
+          setCurrentStep(draft.currentStep || 1);
+          setCompletedSteps(draft.completedSteps || []);
+          setSocietyDetails(draft.societyDetails || {});
+          setPropertyInfo(draft.propertyInfo || {});
+          setResidentialInventory(draft.residentialInventory || []);
+          setCommercialInventory(draft.commercialInventory || []);
+          setParkingConfig(draft.parkingConfig || { fourWheeler: 0, twoWheeler: 0, visitor: 0, evCharging: 0, allocationMethod: 'By Society' });
+          setAmenities(draft.amenities || []);
+          setContacts(draft.contacts || []);
+          setDocuments(draft.documents || []);
+          if (draft.setupStatus) {
+            setSetupStatusState(draft.setupStatus);
+          }
+        }
+      } catch (err) {
+        console.error('Error initializing draft:', err);
+      } finally {
+        if (isMounted) setDraftLoaded(true);
+      }
     }
-    setDraftLoaded(true);
+    initDraft();
+    return () => {
+      isMounted = false;
+    };
   }, [societyId]);
 
   // Derived calculations (purely memoized, no calculations inside JSX)
@@ -100,38 +115,6 @@ export const SetupProvider = ({ children, initialSocietyId }) => {
       setPropertyInfo((prev) => ({ ...prev, numberOfBuildings: residentialTotals.totalWings }));
     }
   }, [residentialTotals.totalWings, draftLoaded]);
-
-  // Sync draft to service helper
-  const syncToStorage = useCallback(
-    (overrides = {}) => {
-      const payload = {
-        currentStep: overrides.currentStep ?? currentStep,
-        completedSteps: overrides.completedSteps ?? completedSteps,
-        societyDetails: overrides.societyDetails ?? societyDetails,
-        propertyInfo: overrides.propertyInfo ?? propertyInfo,
-        residentialInventory: overrides.residentialInventory ?? residentialInventory,
-        commercialInventory: overrides.commercialInventory ?? commercialInventory,
-        parkingConfig: overrides.parkingConfig ?? parkingConfig,
-        amenities: overrides.amenities ?? amenities,
-        contacts: overrides.contacts ?? contacts,
-        documents: overrides.documents ?? documents,
-      };
-      setupStorageService.saveSetupDraft(societyId, payload);
-    },
-    [
-      societyId,
-      currentStep,
-      completedSteps,
-      societyDetails,
-      propertyInfo,
-      residentialInventory,
-      commercialInventory,
-      parkingConfig,
-      amenities,
-      contacts,
-      documents,
-    ]
-  );
 
   // Field updaters
   const updateSocietyDetails = useCallback((updates) => {
@@ -290,16 +273,15 @@ export const SetupProvider = ({ children, initialSocietyId }) => {
       const canJump = completedSteps.includes(targetStep) || targetStep <= Math.max(...completedSteps, 1) + 1;
       if (canJump && targetStep >= 1 && targetStep <= 6) {
         setCurrentStep(targetStep);
-        syncToStorage({ currentStep: targetStep });
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         toast.error('Please complete earlier steps before skipping forward.');
       }
     },
-    [currentStep, completedSteps, syncToStorage]
+    [currentStep, completedSteps]
   );
 
-  const nextStep = useCallback(() => {
+  const nextStep = useCallback(async () => {
     const errors = validateCurrentStep(currentStep);
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
@@ -312,29 +294,68 @@ export const SetupProvider = ({ children, initialSocietyId }) => {
     const newCompleted = Array.from(new Set([...completedSteps, currentStep]));
     setCompletedSteps(newCompleted);
 
+    // Persist current step directly to MongoDB via API
+    try {
+      if (currentStep === 1) {
+        await setupStorageService.saveStep1(societyDetails);
+      } else if (currentStep === 2) {
+        await setupStorageService.saveStep2({ propertyInfo, residentialInventory, commercialInventory, parkingConfig });
+      } else if (currentStep === 3) {
+        await setupStorageService.saveStep3(amenities);
+      } else if (currentStep === 4) {
+        await setupStorageService.saveStep4(contacts);
+      } else if (currentStep === 5) {
+        await setupStorageService.saveStep5(documents);
+      }
+    } catch (saveErr) {
+      console.warn('Step API save warning:', saveErr.message);
+    }
+
     if (currentStep < 6) {
       const next = currentStep + 1;
       setCurrentStep(next);
-      syncToStorage({ currentStep: next, completedSteps: newCompleted });
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return true;
     }
     return true;
-  }, [currentStep, completedSteps, validateCurrentStep, syncToStorage]);
+  }, [
+    currentStep,
+    completedSteps,
+    validateCurrentStep,
+    societyDetails,
+    propertyInfo,
+    residentialInventory,
+    commercialInventory,
+    parkingConfig,
+    amenities,
+    contacts,
+    documents,
+  ]);
 
   const prevStep = useCallback(() => {
     if (currentStep > 1) {
       const prev = currentStep - 1;
       setCurrentStep(prev);
-      syncToStorage({ currentStep: prev });
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [currentStep, syncToStorage]);
+  }, [currentStep]);
 
   const saveAsDraft = useCallback(async () => {
     setIsSavingDraft(true);
     try {
-      syncToStorage();
+      const payload = {
+        currentStep,
+        completedSteps,
+        societyDetails,
+        propertyInfo,
+        residentialInventory,
+        commercialInventory,
+        parkingConfig,
+        amenities,
+        contacts,
+        documents,
+      };
+      await setupStorageService.saveSetupDraft(societyId, payload);
       setupStorageService.setSetupStatus(societyId, SETUP_STATUS.IN_PROGRESS);
       setSetupStatusState(SETUP_STATUS.IN_PROGRESS);
       toast.success('Setup draft saved successfully!');
@@ -343,7 +364,19 @@ export const SetupProvider = ({ children, initialSocietyId }) => {
     } finally {
       setIsSavingDraft(false);
     }
-  }, [syncToStorage, societyId]);
+  }, [
+    societyId,
+    currentStep,
+    completedSteps,
+    societyDetails,
+    propertyInfo,
+    residentialInventory,
+    commercialInventory,
+    parkingConfig,
+    amenities,
+    contacts,
+    documents,
+  ]);
 
   const activateSociety = useCallback(async () => {
     setIsActivating(true);
@@ -403,6 +436,7 @@ export const SetupProvider = ({ children, initialSocietyId }) => {
     validationErrors,
     isSavingDraft,
     isActivating,
+    isDraftLoading: !draftLoaded,
     steps: SETUP_STEPS,
     // Entities
     societyDetails,
