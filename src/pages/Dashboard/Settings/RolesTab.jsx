@@ -20,9 +20,6 @@ const mapRolePermissionsToDraft = (role) => {
     backendMap[p.moduleKey] = p;
   });
 
-  // Default permissions if role is accountant matching screenshot
-  const isAccountant = role.roleKey === 'accountant';
-
   const allItems = [];
   MATRIX_STRUCTURE.forEach((entry) => {
     if (entry.type === 'group') {
@@ -41,17 +38,7 @@ const mapRolePermissionsToDraft = (role) => {
       }
     }
 
-    let isEnabled = matchedBackend ? matchedBackend.enabled : true;
-
-    // Accountant specific defaults matching screenshot:
-    // Polls & Settings are disabled, all others enabled
-    if (isAccountant) {
-      if (item.id === 'polls' || item.id === 'settings') {
-        isEnabled = false;
-      } else {
-        isEnabled = true;
-      }
-    }
+    const isEnabled = matchedBackend ? (matchedBackend.enabled && matchedBackend.access !== 'none') : false;
 
     if (!isEnabled) {
       draft[item.id] = {
@@ -63,17 +50,15 @@ const mapRolePermissionsToDraft = (role) => {
         export: false,
       };
     } else {
-      // In screenshot for Accountant:
-      // Documents has delete: true, all others have delete: false
-      const isDeleteChecked = isAccountant
-        ? item.id === 'documents'
-        : role.roleKey === 'admin';
+      const access = matchedBackend.access || 'view';
+      const isFull = ['full', 'manage', 'financial', 'manage_assigned'].includes(access);
+      const isDeleteChecked = isFull && (item.id === 'documents' || role.roleKey === 'admin');
 
       draft[item.id] = {
         enabled: true,
         view: true,
-        create: true,
-        edit: true,
+        create: isFull,
+        edit: isFull,
         delete: isDeleteChecked,
         export: true,
       };
@@ -84,7 +69,11 @@ const mapRolePermissionsToDraft = (role) => {
 };
 
 const RolesTab = () => {
-  const { societyId } = useParams();
+  const params = useParams();
+  const societyId = params.societyId ||
+    JSON.parse(localStorage.getItem('user') || '{}')?.societyId ||
+    localStorage.getItem('societyDatabase');
+
   const {
     roles,
     loading,
@@ -247,27 +236,52 @@ const RolesTab = () => {
 
     setSaving(true);
     try {
-      // Find diff in module enabled states for backend API
       const diff = {};
       if (selectedRole.permissions) {
         selectedRole.permissions.forEach((p) => {
-          for (const [modId, draft] of Object.entries(draftPermissions)) {
-            const structureItem = MATRIX_STRUCTURE.flatMap((e) =>
-              e.type === 'group' ? e.items : [e]
-            ).find((i) => i.id === modId);
+          // Find all UI items that match this backend moduleKey
+          const matchingItems = MATRIX_STRUCTURE.flatMap((e) =>
+            e.type === 'group' ? e.items : [e]
+          ).filter((i) => i.matchKeys.includes(p.moduleKey));
 
-            if (structureItem?.matchKeys.includes(p.moduleKey)) {
-              if (draft.enabled !== p.enabled) {
-                diff[p.moduleKey] = { enabled: draft.enabled };
-              }
-              break;
+          if (matchingItems.length === 0) return;
+
+          // If any matching UI item is enabled, the module is enabled
+          const isAnyEnabled = matchingItems.some((item) => draftPermissions[item.id]?.enabled);
+
+          // Check if any matching UI item has write permissions (create/edit/delete)
+          const hasWrite = matchingItems.some(
+            (item) => draftPermissions[item.id]?.enabled &&
+              (draftPermissions[item.id]?.create || draftPermissions[item.id]?.edit || draftPermissions[item.id]?.delete)
+          );
+
+          let resolvedAccess = 'none';
+          if (isAnyEnabled) {
+            const valid = p.validAccessLevels || ['none', 'view', 'full'];
+            if (hasWrite) {
+              if (valid.includes('full')) resolvedAccess = 'full';
+              else if (valid.includes('manage')) resolvedAccess = 'manage';
+              else if (valid.includes('financial')) resolvedAccess = 'financial';
+              else if (valid.includes('manage_assigned')) resolvedAccess = 'manage_assigned';
+              else resolvedAccess = 'view';
+            } else {
+              if (valid.includes('view')) resolvedAccess = 'view';
+              else if (valid.includes('financial_queries')) resolvedAccess = 'financial_queries';
+              else resolvedAccess = 'view';
             }
+          }
+
+          const hasEnabledChanged = isAnyEnabled !== p.enabled;
+          const hasAccessChanged = resolvedAccess !== p.access;
+
+          if (hasEnabledChanged || hasAccessChanged) {
+            diff[p.moduleKey] = {
+              enabled: isAnyEnabled,
+              access: resolvedAccess,
+            };
           }
         });
       }
-
-      // TODO: backend support for action-level permissions (view, create, edit, delete, export)
-      // When the backend API is extended to store action permissions, pass the full draft matrix here.
 
       if (Object.keys(diff).length > 0) {
         const success = await updateRole(selectedRole.roleKey, diff);
@@ -281,8 +295,7 @@ const RolesTab = () => {
           await refreshPermissions({ silent: true });
         }
       } else {
-        // Even if only granular actions were changed locally without module changes:
-        toast.success('Role permissions updated successfully');
+        toast.success('No changes to save');
         setDraftPermissionsByRole((prev) => {
           const next = { ...prev };
           delete next[selectedRole.roleKey];

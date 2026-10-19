@@ -180,7 +180,6 @@ const DashboardLayout = () => {
   const isAccountant = roleKeys.includes('accountant');
 
   const allowedModules = MODULE_DEF.filter(mod => {
-    if (mod.id === 'billing_accounts' && (isResident || isAccountant || isAdmin)) return true;
     const perm = safePermissions[mod.id];
     if (!perm || perm.level < 1) return false;
     return true;

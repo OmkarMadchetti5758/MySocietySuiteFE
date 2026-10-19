@@ -1,7 +1,17 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { rolesApi } from '../services/rolesApi';
 
-export const useRoles = (societyId) => {
+export const useRoles = (societyIdProp) => {
+  const params = useParams();
+  const societyId = useMemo(() => {
+    return societyIdProp ||
+      params.societyId ||
+      JSON.parse(localStorage.getItem('user') || '{}')?.societyId ||
+      localStorage.getItem('societyDatabase');
+  }, [societyIdProp, params.societyId]);
+
   const [roles, setRoles] = useState([]);
   const [selectedRole, setSelectedRole] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -36,7 +46,10 @@ export const useRoles = (societyId) => {
   }, [societyId]);
 
   const updateRole = async (roleKey, permissions) => {
-    if (!societyId || !roleKey) return;
+    if (!societyId || !roleKey) {
+      toast.error('Unable to update: society ID or role is missing');
+      return false;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -45,7 +58,9 @@ export const useRoles = (societyId) => {
       await fetchRoles(); // Refresh the list
       return true;
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update role');
+      const msg = err.response?.data?.message || 'Failed to update role';
+      setError(msg);
+      toast.error(msg);
       return false;
     } finally {
       setLoading(false);
@@ -53,7 +68,10 @@ export const useRoles = (societyId) => {
   };
 
   const resetRole = async (roleKey) => {
-    if (!societyId || !roleKey) return;
+    if (!societyId || !roleKey) {
+      toast.error('Unable to reset: society ID or role is missing');
+      return false;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -62,7 +80,9 @@ export const useRoles = (societyId) => {
       await fetchRoles(); // Refresh the list
       return true;
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to reset role');
+      const msg = err.response?.data?.message || 'Failed to reset role';
+      setError(msg);
+      toast.error(msg);
       return false;
     } finally {
       setLoading(false);

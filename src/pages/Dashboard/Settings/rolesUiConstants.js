@@ -104,12 +104,21 @@ export const getRoleTheme = (roleKey = '') => {
 export const MATRIX_STRUCTURE = [
   {
     type: 'group',
+    id: 'society_management',
+    label: 'Society & Members',
+    items: [
+      { id: 'society_setup', label: 'Society & Flats', icon: FaHome, matchKeys: ['societyFlatSetup', 'society_flat_setup', 'society_setup'] },
+      { id: 'residents', label: 'Residents', icon: FaUsers, matchKeys: ['residents', 'society_flat_setup', 'societyFlatSetup'] },
+    ],
+  },
+  {
+    type: 'group',
     id: 'community',
     label: 'Community',
     items: [
       { id: 'notices', label: 'Notices', icon: FaClipboardList, matchKeys: ['notices', 'noticeBoardPolls', 'notice_board_polls'] },
-      { id: 'polls', label: 'Polls', icon: FaChartBar, matchKeys: ['polls', 'noticeBoardPolls'] },
-      { id: 'festivals', label: 'Festivals', icon: FaGift, matchKeys: ['festivals', 'community_events', 'festivalCollectionManagement'] },
+      { id: 'polls', label: 'Polls', icon: FaChartBar, matchKeys: ['polls', 'noticeBoardPolls', 'notice_board_polls'] },
+      { id: 'festivals', label: 'Festivals', icon: FaGift, matchKeys: ['festivals', 'community_events', 'festivalCollectionManagement', 'festival_collection'] },
       { id: 'events', label: 'Events', icon: FaCalendarAlt, matchKeys: ['events', 'community_events'] },
     ],
   },
@@ -128,7 +137,7 @@ export const MATRIX_STRUCTURE = [
     label: 'Administration',
     items: [
       { id: 'documents', label: 'Documents', icon: FaFolderOpen, matchKeys: ['documents', 'documentsManager', 'documents_manager'] },
-      { id: 'settings', label: 'Settings', icon: FaCog, matchKeys: ['settings', 'societyFlatSetup', 'society_flat_setup'] },
+      { id: 'settings', label: 'Settings', icon: FaCog, matchKeys: ['settings'] },
     ],
   },
   {
@@ -164,6 +173,28 @@ export const MATRIX_STRUCTURE = [
     matchKeys: ['billing', 'billingAccounts', 'billing_accounts'],
   },
 ];
+
+export const getFilteredMatrix = (role) => {
+  if (!role) return MATRIX_STRUCTURE;
+
+  const allowed = role.activePlan?.modules
+    ? new Set(role.activePlan.modules)
+    : (role.permissions?.length ? new Set(role.permissions.map((p) => p.moduleKey)) : null);
+
+  if (!allowed) return MATRIX_STRUCTURE;
+
+  return MATRIX_STRUCTURE.map((entry) => {
+    if (entry.type === 'group') {
+      const filteredItems = entry.items.filter((item) =>
+        item.matchKeys.some((mk) => allowed.has(mk))
+      );
+      if (filteredItems.length === 0) return null;
+      return { ...entry, items: filteredItems };
+    }
+    const isAllowed = entry.matchKeys.some((mk) => allowed.has(mk));
+    return isAllowed ? entry : null;
+  }).filter(Boolean);
+};
 
 export const formatAuditInfo = (lastAudit) => {
   if (lastAudit?.changedAt) {
