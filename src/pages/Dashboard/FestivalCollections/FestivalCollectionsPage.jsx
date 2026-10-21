@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaPlus, FaCalendarAlt, FaMoneyBillWave, FaUsers, FaEye, FaSearch, FaCheckCircle, FaExclamationCircle, FaGift } from 'react-icons/fa';
 import { festivalCollectionApi } from '../../../services/festivalCollectionApi';
 import { usePermissions } from '../../../context/PermissionsContext';
+import { PERMISSION_LEVELS } from '../../../utils/permissions';
 import toast from 'react-hot-toast';
 import CreateCollectionModal from './CreateCollectionModal';
 import CollectionDetailsDrawer from './CollectionDetailsDrawer';
@@ -11,13 +12,16 @@ const FestivalCollectionsPage = () => {
   const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const { permissions } = usePermissions();
+  const { hasModuleAccess, permissions } = usePermissions();
   
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingCollection, setEditingCollection] = useState(null);
   const [selectedCollection, setSelectedCollection] = useState(null);
   
-  const canManage = permissions?.community_events?.level >= 2; 
+  const canManage = hasModuleAccess('festival_collection', PERMISSION_LEVELS.MANAGE) ||
+                    hasModuleAccess('community_events', PERMISSION_LEVELS.MANAGE) ||
+                    (permissions?.festival_collection?.level >= 2) ||
+                    (permissions?.community_events?.level >= 2); 
 
   const fetchCollections = async () => {
     try {

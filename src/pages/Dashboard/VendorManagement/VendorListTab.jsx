@@ -2,10 +2,14 @@ import React, { useState } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaHistory } from 'react-icons/fa';
 import VendorFormModal from './VendorFormModal';
 import vendorApi from '../../../services/vendorApi';
+import { usePermissions } from '../../../context/PermissionsContext';
+import { PERMISSION_LEVELS } from '../../../utils/permissions';
 
 const VendorListTab = ({ vendorData, refresh, loading }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState(null);
+
+  const { hasModuleAccess } = usePermissions();
 
   const user = (() => {
     try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; }
@@ -14,6 +18,10 @@ const VendorListTab = ({ vendorData, refresh, loading }) => {
   const isAdmin = ['admin', 'committee_member', 'super_admin'].some(
     (r) => user.role === r || roleKeys.includes(r)
   );
+
+  const canCreate = hasModuleAccess('vendor_management', PERMISSION_LEVELS.MANAGE) || isAdmin;
+  const canEdit = hasModuleAccess('vendor_management', PERMISSION_LEVELS.MANAGE) || isAdmin;
+  const canDelete = hasModuleAccess('vendor_management', PERMISSION_LEVELS.FULL) || isAdmin;
 
   const handleAdd = () => {
     setSelectedVendor(null);
@@ -51,7 +59,7 @@ const VendorListTab = ({ vendorData, refresh, loading }) => {
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
       <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/50">
         <h3 className="font-semibold text-gray-800">All Vendors</h3>
-        {isAdmin && (
+        {canCreate && (
           <button
             onClick={handleAdd}
             className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
@@ -118,20 +126,24 @@ const VendorListTab = ({ vendorData, refresh, loading }) => {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => handleEdit(vendor)}
-                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Edit"
-                      >
-                        <FaEdit size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(vendor)}
-                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete"
-                      >
-                        <FaTrash size={14} />
-                      </button>
+                      {canEdit && (
+                        <button
+                          onClick={() => handleEdit(vendor)}
+                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <FaEdit size={14} />
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button
+                          onClick={() => handleDelete(vendor)}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <FaTrash size={14} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

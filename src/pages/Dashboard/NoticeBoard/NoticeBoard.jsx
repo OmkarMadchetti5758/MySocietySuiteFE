@@ -5,6 +5,8 @@ import CreateNoticeModal from './CreateNoticeModal';
 import NoticeDetailsModal from './NoticeDetailsModal';
 import ConfirmModal from '../../../components/common/ConfirmModal';
 import { isImageAttachment, resolveMediaUrl } from '../../../utils/mediaUrl';
+import { usePermissions } from '../../../context/PermissionsContext';
+import { PERMISSION_LEVELS } from '../../../utils/permissions';
 
 const NoticeBoard = () => {
   const [notices, setNotices] = useState([]);
@@ -13,16 +15,11 @@ const NoticeBoard = () => {
   const [noticeToDelete, setNoticeToDelete] = useState(null);
   const [selectedNotice, setSelectedNotice] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
-  }, []);
-
-  const isAdmin = user?.role === 'admin' || user?.role === 'committee_member' || user?.role === 'super_admin';
+  const { hasModuleAccess } = usePermissions();
+  const canCreate = hasModuleAccess('notice_board_polls', PERMISSION_LEVELS.MANAGE);
+  const canEdit = hasModuleAccess('notice_board_polls', PERMISSION_LEVELS.MANAGE);
+  const canDelete = hasModuleAccess('notice_board_polls', PERMISSION_LEVELS.FULL);
 
   const fetchNotices = async () => {
     try {
@@ -70,7 +67,7 @@ const NoticeBoard = () => {
           <h2 className="text-2xl font-bold text-gray-800">Notice Board</h2>
           <p className="text-gray-500 text-sm mt-1">Stay updated with society announcements and circulars.</p>
         </div>
-        {isAdmin && (
+        {canCreate && (
           <button
             onClick={() => setIsCreateModalOpen(true)}
             className="bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-xl text-sm font-semibold transition-colors shadow-sm flex items-center gap-2"
@@ -119,8 +116,8 @@ const NoticeBoard = () => {
                     <span className="text-xs text-gray-400">
                       {new Date(notice.createdAt).toLocaleDateString()}
                     </span>
-                    {isAdmin && (
-                      <div className="flex gap-2">
+                    <div className="flex gap-2">
+                      {canEdit && (
                         <button
                           onClick={() => { setNoticeToEdit(notice); setIsCreateModalOpen(true); }}
                           className="text-gray-400 hover:text-blue-500 transition-colors"
@@ -128,6 +125,8 @@ const NoticeBoard = () => {
                         >
                           <FaEdit />
                         </button>
+                      )}
+                      {canDelete && (
                         <button
                           onClick={() => handleDeleteClick(notice._id)}
                           className="text-gray-400 hover:text-red-500 transition-colors"
@@ -135,8 +134,8 @@ const NoticeBoard = () => {
                         >
                           <FaTrash />
                         </button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                   <h3 className="text-lg font-bold text-gray-800 line-clamp-2">{notice.title}</h3>
                   <p className="text-gray-500 text-sm line-clamp-3 flex-1">{notice.description}</p>

@@ -73,7 +73,7 @@ const MODULE_DEF = [
   { id: 'documents_manager', label: 'Documents', icon: FaFolderOpen, path: 'documents', group: 'ADMINISTRATION' },
   { id: 'reports_dashboard', label: 'Reports', icon: FaChartBar, path: 'reports', group: 'REPORTS' },
   { id: 'ai_assistant', label: 'AI Assistant', icon: FaRobot, path: 'ai', group: 'AI ASSISTANT' },
-  { id: 'community_events', label: 'Festivals', icon: FaGift, path: 'festivals-collection', routeKey: 'festivals_collection', group: 'COMMUNITY' },
+  { id: 'festival_collection', label: 'Festivals', icon: FaGift, path: 'festivals-collection', routeKey: 'festivals_collection', group: 'COMMUNITY' },
   { id: 'community_events', label: 'Events', icon: FaCalendarAlt, path: 'festivals', group: 'COMMUNITY' },
   { id: 'settings', label: 'Settings', icon: FaCog, path: 'settings', group: 'ADMINISTRATION' }
 ];
@@ -113,7 +113,7 @@ function readAuthSession(societyId) {
 const DashboardLayout = () => {
   const navigate = useNavigate();
   const { societyId } = useParams();
-  const { permissions } = usePermissions();
+  const { permissions, hasModuleAccess } = usePermissions();
   // const [user, setUser] = useState(null);
   // const [societyName, setSocietyName] = useState('');
   // const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -180,9 +180,7 @@ const DashboardLayout = () => {
   const isAccountant = roleKeys.includes('accountant');
 
   const allowedModules = MODULE_DEF.filter(mod => {
-    const perm = safePermissions[mod.id];
-    if (!perm || perm.level < 1) return false;
-    return true;
+    return hasModuleAccess ? hasModuleAccess(mod.id, 1) : Boolean(safePermissions[mod.id]?.level >= 1);
   });
 
   // Vendor-only nav tabs

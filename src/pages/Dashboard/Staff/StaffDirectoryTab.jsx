@@ -3,12 +3,19 @@ import { MoreVertical, Plus, Edit2, Trash2, AlertTriangle } from 'lucide-react';
 import AddStaffModal from './AddStaffModal';
 import staffApi from '../../../services/staffApi';
 import toast from 'react-hot-toast';
+import { usePermissions } from '../../../context/PermissionsContext';
+import { PERMISSION_LEVELS } from '../../../utils/permissions';
 
 const StaffDirectoryTab = ({ staffData, refresh, loading }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editData, setEditData] = useState(null);
   const [deleteData, setDeleteData] = useState(null);
   const [roleFilter, setRoleFilter] = useState('All roles');
+
+  const { hasModuleAccess } = usePermissions();
+  const canCreate = hasModuleAccess('staff_management', PERMISSION_LEVELS.MANAGE);
+  const canEdit = hasModuleAccess('staff_management', PERMISSION_LEVELS.MANAGE);
+  const canDelete = hasModuleAccess('staff_management', PERMISSION_LEVELS.FULL);
 
   const filteredData = roleFilter === 'All roles'
     ? staffData
@@ -51,13 +58,15 @@ const StaffDirectoryTab = ({ staffData, refresh, loading }) => {
             <option>Electrician</option>
             <option>Plumber</option>
           </select>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            Add staff
-          </button>
+          {canCreate && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Add staff
+            </button>
+          )}
         </div>
       </div>
 
@@ -118,23 +127,27 @@ const StaffDirectoryTab = ({ staffData, refresh, loading }) => {
                   </td>
                   <td className="px-5 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button 
-                        onClick={() => {
-                          setEditData(staff);
-                          setShowAddModal(true);
-                        }}
-                        className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
-                        title="Edit"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={() => setDeleteData(staff)}
-                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {canEdit && (
+                        <button 
+                          onClick={() => {
+                            setEditData(staff);
+                            setShowAddModal(true);
+                          }}
+                          className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button 
+                          onClick={() => setDeleteData(staff)}
+                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

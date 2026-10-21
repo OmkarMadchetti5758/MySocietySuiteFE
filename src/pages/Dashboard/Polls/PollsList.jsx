@@ -3,6 +3,8 @@ import { FaPlus, FaPoll, FaCheckCircle, FaChartBar, FaCalendarTimes, FaClock, Fa
 import { pollApi } from '../../../services/pollApi';
 import CreatePollModal from './CreatePollModal';
 import ConfirmModal from '../../../components/common/ConfirmModal';
+import { usePermissions } from '../../../context/PermissionsContext';
+import { PERMISSION_LEVELS } from '../../../utils/permissions';
 
 // Returns { label, expired } based on how much time is left until closingDate
 const useCountdown = (closingDate) => {
@@ -117,12 +119,9 @@ const PollsList = () => {
   const [user, setUser] = useState(null);
   const [voteLoading, setVoteLoading] = useState(null); // pollId being voted on
 
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) setUser(JSON.parse(userData));
-  }, []);
-
-  const isAdmin = user?.role === 'admin' || user?.role === 'committee_member' || user?.role === 'super_admin';
+  const { hasModuleAccess } = usePermissions();
+  const canCreate = hasModuleAccess('notice_board_polls', PERMISSION_LEVELS.MANAGE);
+  const canDelete = hasModuleAccess('notice_board_polls', PERMISSION_LEVELS.FULL);
 
   const fetchPolls = useCallback(async () => {
     try {
@@ -193,7 +192,7 @@ const PollsList = () => {
           <h2 className="text-2xl font-bold text-gray-800">Community Polls</h2>
           <p className="text-gray-500 text-sm mt-1">Participate in decisions and view community opinions.</p>
         </div>
-        {isAdmin && (
+        {canCreate && (
           <button
             onClick={() => setIsCreateModalOpen(true)}
             className="bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-xl text-sm font-semibold transition-colors shadow-sm flex items-center gap-2"
@@ -220,7 +219,7 @@ const PollsList = () => {
               onVote={handleVote}
               onViewResults={viewResults}
               onDelete={handleDeleteClick}
-              isAdmin={isAdmin}
+              isAdmin={canDelete}
             />
           ))}
         </div>
