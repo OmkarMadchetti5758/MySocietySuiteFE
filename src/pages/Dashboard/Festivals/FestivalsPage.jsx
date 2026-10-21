@@ -9,6 +9,8 @@ import FestivalModal from './FestivalModal';
 import FestivalDetailsModal from './FestivalDetailsModal';
 import ConfirmModal from '../../../components/common/ConfirmModal';
 import { resolveMediaUrl } from '../../../utils/mediaUrl';
+import { usePermissions } from '../../../context/PermissionsContext';
+import { PERMISSION_LEVELS } from '../../../utils/permissions';
 
 const STATUS_CONFIG = {
   DRAFT:     { label: 'Draft',     bg: 'bg-yellow-100', text: 'text-yellow-700', icon: FaFileAlt },
@@ -36,15 +38,10 @@ const FestivalsPage = () => {
   const [page, setPage] = useState(1);
   const [meta, setMeta] = useState({ total: 0, totalPages: 1 });
 
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) setUser(JSON.parse(userData));
-  }, []);
-
-  const isAdmin = user?.role === 'admin' || user?.role === 'committee_member' ||
-                  user?.role === 'super_admin' || user?.role === 'committee_admin';
+  const { hasModuleAccess } = usePermissions();
+  const canCreate = hasModuleAccess(['community_events', 'festival_collection'], PERMISSION_LEVELS.MANAGE);
+  const canEdit   = hasModuleAccess(['community_events', 'festival_collection'], PERMISSION_LEVELS.MANAGE);
+  const canDelete = hasModuleAccess(['community_events', 'festival_collection'], PERMISSION_LEVELS.FULL);
 
   const fetchFestivals = useCallback(async () => {
     try {
@@ -143,7 +140,7 @@ const FestivalsPage = () => {
             Manage and publish community events for your society.
           </p>
         </div>
-        {isAdmin && (
+        {canCreate && (
           <button
             onClick={() => { setFestivalToEdit(null); setIsModalOpen(true); }}
             className="bg-orange-500 hover:bg-orange-600 text-white py-2.5 px-5 rounded-xl text-sm font-semibold transition-colors shadow-sm flex items-center gap-2 shrink-0"
@@ -185,7 +182,7 @@ const FestivalsPage = () => {
         </div>
 
         {/* Status Filter (admin only) */}
-        {isAdmin && (
+        {canCreate && (
           <div className="relative shrink-0">
             <FaFilter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
             <select
@@ -228,7 +225,7 @@ const FestivalsPage = () => {
           <p className="text-gray-400 text-sm">
             {search ? 'Try adjusting your search or filters.' : 'No festivals have been created yet.'}
           </p>
-          {isAdmin && !search && (
+          {canCreate && !search && (
             <button
               onClick={() => { setFestivalToEdit(null); setIsModalOpen(true); }}
               className="mt-4 bg-orange-500 hover:bg-orange-600 text-white py-2 px-5 rounded-xl text-sm font-semibold transition-colors"
@@ -305,10 +302,10 @@ const FestivalsPage = () => {
                         <FaEye /> View Details
                       </button>
 
-                      {isAdmin && (
+                      {(canEdit || canDelete) && (
                         <div className="flex items-center gap-1">
                           {/* Publish / Unpublish */}
-                          {festival.status === 'DRAFT' && (
+                          {canEdit && festival.status === 'DRAFT' && (
                             <button
                               onClick={() => handleStatusAction(festival, 'publish')}
                               disabled={isLoading}
@@ -318,7 +315,7 @@ const FestivalsPage = () => {
                               <FaGlobe className="text-sm" />
                             </button>
                           )}
-                          {festival.status === 'PUBLISHED' && (
+                          {canEdit && festival.status === 'PUBLISHED' && (
                             <>
                               <button
                                 onClick={() => handleStatusAction(festival, 'unpublish')}
@@ -339,7 +336,7 @@ const FestivalsPage = () => {
                             </>
                           )}
                           {/* Edit */}
-                          {(festival.status === 'DRAFT' || festival.status === 'PUBLISHED') && (
+                          {canEdit && (festival.status === 'DRAFT' || festival.status === 'PUBLISHED') && (
                             <button
                               onClick={() => handleEditClick(festival)}
                               disabled={isLoading}
@@ -350,7 +347,7 @@ const FestivalsPage = () => {
                             </button>
                           )}
                           {/* Delete (DRAFT only) */}
-                          {festival.status === 'DRAFT' && (
+                          {canDelete && festival.status === 'DRAFT' && (
                             <button
                               onClick={() => handleDeleteClick(festival)}
                               disabled={isLoading}
@@ -404,7 +401,7 @@ const FestivalsPage = () => {
       {selectedFestival && (
         <FestivalDetailsModal
           festival={selectedFestival}
-          isAdmin={isAdmin}
+          isAdmin={canEdit}
           onClose={() => setSelectedFestival(null)}
           onStatusAction={handleStatusAction}
           onEdit={handleEditClick}
