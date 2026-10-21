@@ -20,6 +20,34 @@ const CollectionDetailsDrawer = ({ isOpen, onClose, collection, canManage, onRef
 
   const authStr = localStorage.getItem('user');
   const user = authStr ? JSON.parse(authStr) : null;
+  const roleKeys = Array.isArray(user?.roleKeys)
+    ? user.roleKeys
+    : (() => {
+        try {
+          return JSON.parse(localStorage.getItem('roleKeys') || '[]');
+        } catch {
+          return [];
+        }
+      })();
+
+  const isAdminOrAccountant =
+    user?.role === 'admin' ||
+    user?.role === 'super_admin' ||
+    user?.role === 'accountant' ||
+    roleKeys.includes('admin') ||
+    roleKeys.includes('super_admin') ||
+    roleKeys.includes('accountant');
+
+  const isResidentUser =
+    !isAdminOrAccountant &&
+    (user?.role === 'resident_owner' ||
+      user?.role === 'resident_tenant' ||
+      user?.role === 'resident' ||
+      roleKeys.includes('resident_owner') ||
+      roleKeys.includes('resident_tenant') ||
+      roleKeys.includes('resident'));
+
+  const isManager = !isResidentUser && Boolean(canManage || isAdminOrAccountant);
   const flatId = user?.flatId || user?.flats?.[0]?.flatId?._id || user?.flats?.[0]?.flatId;
 
   useEffect(() => {
@@ -32,9 +60,9 @@ const CollectionDetailsDrawer = ({ isOpen, onClose, collection, canManage, onRef
       setAmount(defaultAmt.toString());
       setPayStep('idle');
       setResidentStatus(null);
-      if (!canManage) fetchResidentStatus();
+      if (!isManager || flatId) fetchResidentStatus();
     }
-  }, [isOpen, collection, canManage]);
+  }, [isOpen, collection, isManager, flatId]);
 
   const fetchResidentStatus = async () => {
     try {
@@ -75,13 +103,15 @@ const CollectionDetailsDrawer = ({ isOpen, onClose, collection, canManage, onRef
   const handlePayNow = async () => {
     const payAmt = Number(amount);
     if (!payAmt || payAmt <= 0) { toast.error('Please enter a valid amount.'); return; }
-    if (!flatId) { toast.error('Your flat is not linked. Contact admin.'); return; }
 
     try {
       setPayLoading(true);
       setPayStep('paying');
 
-      const initRes = await festivalCollectionApi.initiateOnlinePayment(collection._id, { amount: payAmt, flatId });
+      const initRes = await festivalCollectionApi.initiateOnlinePayment(collection._id, {
+        amount: payAmt,
+        ...(flatId ? { flatId } : {})
+      });
       const { key: keyId, order, contributionId } = initRes.data || {};
       if (!order?.id) throw new Error('Failed to create payment order.');
 
@@ -219,10 +249,12 @@ const CollectionDetailsDrawer = ({ isOpen, onClose, collection, canManage, onRef
                 <p className="text-gray-500 text-sm p-3 bg-gray-50 rounded-xl border border-gray-100 leading-relaxed">{collection.description}</p>
               )}
 
-              {/* ── RESIDENT: Payment Section ── */}
-              {!canManage && (
+              {/* ── RESIDENT / FLAT: Payment Section ── */}
+              {(!isManager || flatId) && (
                 <div className="border-t border-gray-100 pt-5">
-                  <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4">Your Contribution</h4>
+                  <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4">
+                    {isManager ? 'Your Flat Contribution' : 'YOUR CONTRIBUTION'}
+                  </h4>
 
                   {loading ? (
                     <div className="animate-pulse bg-gray-100 h-24 rounded-xl" />
@@ -329,8 +361,8 @@ const CollectionDetailsDrawer = ({ isOpen, onClose, collection, canManage, onRef
                 </div>
               )}
 
-              {/* ── ADMIN: Actions ── */}
-              {canManage && (
+              {/* ── ADMIN: Actions (Strictly for Admins) ── */}
+              {isManager && (
                 <div className="border-t border-gray-100 pt-5 flex flex-col gap-3">
                   <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-1">Admin Actions</h4>
                   <button

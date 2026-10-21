@@ -11,20 +11,66 @@ const FestivalCollectionsPage = () => {
   const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const { permissions } = usePermissions();
-  
+  const { permissions, hasModuleScope } = usePermissions();
+
+  const user = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}');
+    } catch {
+      return {};
+    }
+  })();
+  const roleKeys = Array.isArray(user?.roleKeys)
+    ? user.roleKeys
+    : (() => {
+        try {
+          return JSON.parse(localStorage.getItem('roleKeys') || '[]');
+        } catch {
+          return [];
+        }
+      })();
+
+  const isAdminOrAccountant =
+    user?.role === 'admin' ||
+    user?.role === 'super_admin' ||
+    user?.role === 'accountant' ||
+    roleKeys.includes('admin') ||
+    roleKeys.includes('super_admin') ||
+    roleKeys.includes('accountant');
+
+  const hasManagementPermission =
+    Boolean(hasModuleScope && (hasModuleScope('community_events', 2) || hasModuleScope('festival_collection', 2))) ||
+    Boolean(
+      (permissions?.community_events?.level >= 2 && permissions?.community_events?.scope !== 'own') ||
+      (permissions?.festival_collection?.level >= 2 && permissions?.festival_collection?.scope !== 'own')
+    );
+
+  const isResident =
+    !isAdminOrAccountant &&
+    (user?.role === 'resident_owner' ||
+      user?.role === 'resident_tenant' ||
+      user?.role === 'resident' ||
+      roleKeys.includes('resident_owner') ||
+      roleKeys.includes('resident_tenant') ||
+      roleKeys.includes('resident'));
+
+  const canManage = !isResident && (isAdminOrAccountant || hasManagementPermission);
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingCollection, setEditingCollection] = useState(null);
   const [selectedCollection, setSelectedCollection] = useState(null);
-  
-  const canManage = permissions?.community_events?.level >= 2; 
 
   const fetchCollections = async () => {
     try {
       setLoading(true);
       const res = await festivalCollectionApi.getCollections();
       if (res.status === 'success' || res.success) {
-        setCollections(res.data);
+        const list = Array.isArray(res.data) ? res.data : [];
+        setCollections(list);
+        setSelectedCollection(prev => {
+          if (!prev) return null;
+          return list.find(c => c._id === prev._id) || prev;
+        });
       }
     } catch (error) {
       toast.error('Failed to load collections');

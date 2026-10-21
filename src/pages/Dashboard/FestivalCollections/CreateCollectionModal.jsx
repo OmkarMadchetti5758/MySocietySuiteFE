@@ -65,7 +65,9 @@ const CreateCollectionModal = ({ isOpen, onClose, onSuccess, editData }) => {
   const fetchFlats = async () => {
     try {
       const res = await flatApi.getFlats();
-      if (res.status === 'success' || res.success) setFlats(res.data);
+      const body = res?.data || res;
+      const list = body?.data?.flats || body?.flats || (Array.isArray(body?.data) ? body.data : (Array.isArray(body) ? body : []));
+      setFlats(list);
     } catch (err) {
       console.error(err);
     }
