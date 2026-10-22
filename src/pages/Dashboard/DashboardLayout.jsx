@@ -59,23 +59,39 @@ import ResidentDashboard from './ResidentDashboard';
 import ReportsPage from './Reports/ReportPage';
 
 const MODULE_DEF = [
-  { id: 'society_flat_setup', label: 'Society & Flats', icon: FaBuilding, path: 'setup', group: 'SOCIETY' },
-  { id: 'society_flat_setup', label: 'Residents', icon: FaUsers, path: 'residents', routeKey: 'residents', group: 'SOCIETY' },
-  { id: 'billing_accounts', label: 'Billing & Accounts', icon: FaMoneyBillWave, path: 'billing', group: 'FINANCE' },
-  { id: 'visitor_management', label: 'Visitors', icon: FaIdBadge, path: 'visitors', group: 'SECURITY' },
-  { id: 'complaints_helpdesk', label: 'Helpdesk', icon: FaExclamationCircle, path: 'helpdesk', group: 'OPERATIONS' },
+  // Society & Members
+  { id: 'society_flat_setup', label: 'Society & Flats', icon: FaBuilding, path: 'setup', group: 'SOCIETY & MEMBERS' },
+  { id: 'society_flat_setup', label: 'Residents', icon: FaUsers, path: 'residents', routeKey: 'residents', group: 'SOCIETY & MEMBERS' },
+
+  // Community
   { id: 'notice_board_polls', label: 'Notices', icon: FaClipboardList, path: 'notices', group: 'COMMUNITY' },
   { id: 'notice_board_polls', label: 'Polls', icon: FaChartBar, path: 'polls', group: 'COMMUNITY' },
-  { id: 'amenity_booking', label: 'Amenities', icon: FaCalendarAlt, path: 'amenities', group: 'OPERATIONS' },
-  { id: 'parking_management', label: 'Parking', icon: FaCar, path: 'parking', group: 'OPERATIONS' },
-  { id: 'vendor_management', label: 'Vendors', icon: FaStore, path: 'vendors', group: 'OPERATIONS' },
+  { id: 'festival_collection', label: 'Festivals', icon: FaGift, path: 'festivals-collection', routeKey: 'festivals_collection', group: 'COMMUNITY' },
+  { id: 'community_events', label: 'Events', icon: FaCalendarAlt, path: 'festivals', group: 'COMMUNITY' },
+
+  // Staff
   { id: 'staff_management', label: 'Staff', icon: FaUserTie, path: 'staff', group: 'STAFF' },
+  { id: 'vendor_management', label: 'Vendors', icon: FaStore, path: 'vendors', group: 'STAFF' },
+
+  // Administration
   { id: 'documents_manager', label: 'Documents', icon: FaFolderOpen, path: 'documents', group: 'ADMINISTRATION' },
+  { id: 'settings', label: 'Settings', icon: FaCog, path: 'settings', group: 'ADMINISTRATION' },
+
+  // Operations & Security
+  { id: 'visitor_management', label: 'Visitors', icon: FaIdBadge, path: 'visitors', group: 'OPERATIONS & SECURITY' },
+  { id: 'complaints_helpdesk', label: 'Helpdesk', icon: FaExclamationCircle, path: 'helpdesk', group: 'OPERATIONS & SECURITY' },
+  { id: 'amenity_booking', label: 'Amenities', icon: FaCalendarAlt, path: 'amenities', group: 'OPERATIONS & SECURITY' },
+  { id: 'parking_management', label: 'Parking', icon: FaCar, path: 'parking', group: 'OPERATIONS & SECURITY' },
+
+  // Finance, Reports & AI (Tier specific)
+  { id: 'billing_accounts', label: 'Billing & Accounts', icon: FaMoneyBillWave, path: 'billing', group: 'FINANCE' },
   { id: 'reports_dashboard', label: 'Reports', icon: FaChartBar, path: 'reports', group: 'REPORTS' },
   { id: 'ai_assistant', label: 'AI Assistant', icon: FaRobot, path: 'ai', group: 'AI ASSISTANT' },
+
   { id: 'festival_collection', label: 'Festivals', icon: FaGift, path: 'festivals-collection', routeKey: 'festivals_collection', group: 'COMMUNITY' },
   { id: 'community_events', label: 'Events', icon: FaCalendarAlt, path: 'festivals', group: 'COMMUNITY' },
   { id: 'settings', label: 'Settings', icon: FaCog, path: 'settings', group: 'ADMINISTRATION' }
+
 ];
 
 const Placeholder = ({ title }) => (
@@ -123,7 +139,10 @@ const DashboardLayout = () => {
 
   useEffect(() => {
     if (!auth) navigate('/', { replace: true });
-  }, [auth, navigate]);
+    else {
+      refreshPermissions({ silent: true }).catch(() => { });
+    }
+  }, [auth, navigate, refreshPermissions]);
 
   // useEffect(() => {
   //   const token = localStorage.getItem('accessToken');
@@ -263,6 +282,36 @@ const DashboardLayout = () => {
                   <item.icon className="mr-3 text-lg opacity-80" />
                   {item.label}
                 </NavLink>
+              ))}
+
+              {/* Enabled modules for security guard */}
+              {Object.entries(allowedModules.reduce((acc, mod) => {
+                const group = mod.group || 'GENERAL';
+                if (!acc[group]) acc[group] = [];
+                acc[group].push(mod);
+                return acc;
+              }, {})).map(([groupName, mods]) => (
+                <div key={groupName} className="mb-4 mt-4">
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">
+                    {groupName}
+                  </div>
+                  {mods.map(mod => (
+                    <NavLink
+                      key={mod.routeKey || mod.path}
+                      to={`/${societyId}/dashboard/${mod.path}`}
+                      onClick={handleNavClick}
+                      className={({ isActive }) =>
+                        `flex items-center px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${isActive
+                          ? 'bg-orange-50 text-orange-600 shadow-sm'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        }`
+                      }
+                    >
+                      <mod.icon className="mr-3 text-lg opacity-80" />
+                      {mod.label}
+                    </NavLink>
+                  ))}
+                </div>
               ))}
             </>
           ) : (
