@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import {
+    FaClipboardList,
+    FaChartBar,
+    FaExclamationCircle,
+    FaCar,
+    FaIdBadge,
+    FaCalendarAlt,
+    FaFolderOpen
+} from 'react-icons/fa';
 import api from '../../services/apiClient';
 import toast from 'react-hot-toast';
+import { usePermissions } from '../../context/PermissionsContext';
 
 const WalkInIcon = () => (
     <svg className="w-10 h-10 text-blue-500 drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,6 +107,70 @@ const GuardDashboard = () => {
         }
     ];
 
+    const { permissions } = usePermissions();
+
+    const additionalModules = [
+        {
+            moduleId: 'notice_board_polls',
+            title: 'Notices & Circulars',
+            subtitle: 'View society circulars, announcements and official notices',
+            icon: FaClipboardList,
+            color: 'bg-amber-50 text-amber-600 border-amber-100',
+            link: `/${societyId}/dashboard/notices`
+        },
+        {
+            moduleId: 'notice_board_polls',
+            title: 'Society Polls',
+            subtitle: 'Participate and review active society opinion polls',
+            icon: FaChartBar,
+            color: 'bg-indigo-50 text-indigo-600 border-indigo-100',
+            link: `/${societyId}/dashboard/polls`
+        },
+        {
+            moduleId: 'complaints_helpdesk',
+            title: 'Helpdesk & Complaints',
+            subtitle: 'Track maintenance requests and raise service tickets',
+            icon: FaExclamationCircle,
+            color: 'bg-rose-50 text-rose-600 border-rose-100',
+            link: `/${societyId}/dashboard/helpdesk`
+        },
+        {
+            moduleId: 'parking_management',
+            title: 'Parking Management',
+            subtitle: 'Manage parking allocations, visitor slots & violations',
+            icon: FaCar,
+            color: 'bg-teal-50 text-teal-600 border-teal-100',
+            link: `/${societyId}/dashboard/parking`
+        },
+        {
+            moduleId: 'visitor_management',
+            title: 'Visitor Records & Approvals',
+            subtitle: 'Review visitor logs, pre-approvals and check-in history',
+            icon: FaIdBadge,
+            color: 'bg-sky-50 text-sky-600 border-sky-100',
+            link: `/${societyId}/dashboard/visitors`
+        },
+        {
+            moduleId: 'amenity_booking',
+            title: 'Amenity Bookings',
+            subtitle: 'View society amenities and facility reservations',
+            icon: FaCalendarAlt,
+            color: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+            link: `/${societyId}/dashboard/amenities`
+        },
+        {
+            moduleId: 'documents_manager',
+            title: 'Documents',
+            subtitle: 'Access society documents and circular records',
+            icon: FaFolderOpen,
+            color: 'bg-cyan-50 text-cyan-600 border-cyan-100',
+            link: `/${societyId}/dashboard/documents`
+        },
+    ].filter(m => {
+        const perm = permissions?.[m.moduleId];
+        return perm && perm.level >= 1;
+    });
+
     return (
         <div className="space-y-6 animate-fade-in max-w-5xl mx-auto py-2">
             {/* Header Banner */}
@@ -151,6 +225,34 @@ const GuardDashboard = () => {
                     })}
                 </div>
             </div>
+
+            {/* Additional Enabled Society Modules */}
+            {additionalModules.length > 0 && (
+                <div className="pt-2">
+                    <h2 className="text-lg font-bold text-gray-900 mb-4 px-1">Society Modules</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                        {additionalModules.map((mod, idx) => {
+                            const IconComponent = mod.icon;
+                            return (
+                                <Link key={idx} to={mod.link} className="block">
+                                    <div className="flex items-start gap-4 p-5 sm:p-6 bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all group cursor-pointer h-full">
+                                        <div className={`p-3.5 rounded-2xl border ${mod.color} shrink-0 group-hover:scale-105 transition-transform flex items-center justify-center text-2xl`}>
+                                            <IconComponent />
+                                        </div>
+                                        <div className="flex-1 min-w-0 pt-1">
+                                            <h3 className="text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors flex items-center justify-between">
+                                                {mod.title}
+                                                <svg className="w-5 h-5 text-gray-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                                            </h3>
+                                            <p className="text-xs text-gray-500 mt-1 font-medium leading-relaxed">{mod.subtitle}</p>
+                                        </div>
+                                    </div>
+                                </Link>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

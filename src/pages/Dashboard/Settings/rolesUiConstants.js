@@ -118,8 +118,8 @@ export const MATRIX_STRUCTURE = [
     items: [
       { id: 'notices', label: 'Notices', icon: FaClipboardList, matchKeys: ['notices', 'noticeBoardPolls', 'notice_board_polls'] },
       { id: 'polls', label: 'Polls', icon: FaChartBar, matchKeys: ['polls', 'noticeBoardPolls', 'notice_board_polls'] },
-      { id: 'festivals', label: 'Festivals', icon: FaGift, matchKeys: ['festivals', 'community_events', 'festivalCollectionManagement', 'festival_collection'] },
-      { id: 'events', label: 'Events', icon: FaCalendarAlt, matchKeys: ['events', 'community_events'] },
+      { id: 'festivals', label: 'Festivals', icon: FaGift, matchKeys: ['festivals', 'festivalCollectionManagement', 'festival_collection'] },
+      { id: 'events', label: 'Events', icon: FaCalendarAlt, matchKeys: ['events', 'communityEvents', 'community_events'] },
     ],
   },
   {
@@ -177,24 +177,30 @@ export const MATRIX_STRUCTURE = [
 export const getFilteredMatrix = (role) => {
   if (!role) return MATRIX_STRUCTURE;
 
-  const allowed = role.activePlan?.modules
+  const planAllowed = (role.activePlan?.modules && role.activePlan.modules.length > 0)
     ? new Set(role.activePlan.modules)
-    : (role.permissions?.length ? new Set(role.permissions.map((p) => p.moduleKey)) : null);
+    : null;
 
-  if (!allowed) return MATRIX_STRUCTURE;
+  const roleAllowed = (role.permissions && role.permissions.length > 0)
+    ? new Set(role.permissions.map((p) => p.moduleKey))
+    : null;
 
   return MATRIX_STRUCTURE.map((entry) => {
     if (entry.type === 'group') {
-      const filteredItems = entry.items.filter((item) =>
-        item.matchKeys.some((mk) => allowed.has(mk))
-      );
+      const filteredItems = entry.items.filter((item) => {
+        const inPlan = !planAllowed || item.matchKeys.some((mk) => planAllowed.has(mk));
+        const inRole = !roleAllowed || item.matchKeys.some((mk) => roleAllowed.has(mk));
+        return inPlan && inRole;
+      });
       if (filteredItems.length === 0) return null;
       return { ...entry, items: filteredItems };
     }
-    const isAllowed = entry.matchKeys.some((mk) => allowed.has(mk));
-    return isAllowed ? entry : null;
+    const inPlan = !planAllowed || entry.matchKeys.some((mk) => planAllowed.has(mk));
+    const inRole = !roleAllowed || entry.matchKeys.some((mk) => roleAllowed.has(mk));
+    return (inPlan && inRole) ? entry : null;
   }).filter(Boolean);
 };
+
 
 export const formatAuditInfo = (lastAudit) => {
   if (lastAudit?.changedAt) {

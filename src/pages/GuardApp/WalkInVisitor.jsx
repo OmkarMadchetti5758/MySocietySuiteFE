@@ -241,7 +241,7 @@ const WalkInVisitor = () => {
                         </div>
                     </div>
 
-                    {societies.length > 1 && (
+                    {/* {societies.length > 1 && (
                         <div className="flex-shrink-0 ml-2">
                             <select
                                 value={societyId}
@@ -255,7 +255,7 @@ const WalkInVisitor = () => {
                                 ))}
                             </select>
                         </div>
-                    )}
+                    )} */}
                 </div>
             </div>
 
