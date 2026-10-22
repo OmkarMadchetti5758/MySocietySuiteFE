@@ -87,36 +87,54 @@ const CreateManagerModal = ({ isOpen, onClose, onSubmit, role }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[92vh] border border-slate-100">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-orange-50/60 to-white">
           <div>
-            <h3 className="text-lg font-bold text-gray-900">Assign {role.roleName}</h3>
-            <p className="text-sm text-gray-500">{role.department} Department</p>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-orange-100 text-orange-800 border border-orange-200">
+                {role.department}
+              </span>
+              <span className="text-xs text-slate-400">•</span>
+              <span className="text-xs text-slate-500 font-medium">Department Head</span>
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 mt-1">Assign {role.roleName}</h3>
           </div>
-          <button onClick={handleClose} className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors">
-            <X className="w-5 h-5" />
+          <button
+            onClick={handleClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+          >
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Stepper (Only show up to step 3) */}
         {step < 4 && (
-          <div className="px-6 py-4 border-b border-gray-50 bg-gray-50/50 flex items-center gap-2">
-            <div className={`flex items-center gap-2 text-sm font-medium ${step >= 1 ? 'text-blue-600' : 'text-gray-400'}`}>
-              <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs ${step >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>1</span>
-              Method
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-300 mx-1" />
-            <div className={`flex items-center gap-2 text-sm font-medium ${step >= 2 ? 'text-blue-600' : 'text-gray-400'}`}>
-              <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs ${step >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>2</span>
-              Details
-            </div>
-            <ChevronRight className="w-4 h-4 text-gray-300 mx-1" />
-            <div className={`flex items-center gap-2 text-sm font-medium ${step >= 3 ? 'text-blue-600' : 'text-gray-400'}`}>
-              <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs ${step >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>3</span>
-              Confirm
-            </div>
+          <div className="px-6 py-3.5 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between">
+            {[
+              { num: 1, label: 'Method' },
+              { num: 2, label: 'Details' },
+              { num: 3, label: 'Confirm' },
+            ].map((s, idx) => (
+              <React.Fragment key={s.num}>
+                <div className={`flex items-center gap-2 text-xs font-semibold ${step >= s.num ? 'text-orange-600' : 'text-slate-400'}`}>
+                  <span
+                    className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold transition-all ${
+                      step > s.num
+                        ? 'bg-emerald-500 text-white shadow-sm'
+                        : step === s.num
+                        ? 'bg-gradient-to-r from-[#ea580c] to-[#f97316] text-white shadow-md shadow-orange-500/20'
+                        : 'bg-slate-200 text-slate-500'
+                    }`}
+                  >
+                    {step > s.num ? '✓' : s.num}
+                  </span>
+                  <span>{s.label}</span>
+                </div>
+                {idx < 2 && <ChevronRight className="w-3.5 h-3.5 text-slate-300" />}
+              </React.Fragment>
+            ))}
           </div>
         )}
 
@@ -125,30 +143,30 @@ const CreateManagerModal = ({ isOpen, onClose, onSubmit, role }) => {
 
           {/* Step 1: Select Path */}
           {step === 1 && (
-            <div className="space-y-4">
+            <div className="space-y-3.5">
               <button
                 onClick={() => { setPath('existing'); setStep(2); }}
-                className="w-full text-left p-4 rounded-xl border border-gray-200 hover:border-blue-500 hover:bg-blue-50/50 transition-all group flex items-start gap-4"
+                className="w-full text-left p-4 rounded-xl border-1.5 border-slate-200 hover:border-orange-500 hover:bg-orange-50/40 transition-all group flex items-start gap-4 cursor-pointer"
               >
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <div className="w-11 h-11 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 group-hover:bg-gradient-to-br group-hover:from-[#ea580c] group-hover:to-[#f97316] group-hover:text-white transition-all shadow-xs">
                   <Search className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-1">Promote Existing Resident</h4>
-                  <p className="text-sm text-gray-500">Search from active residents in the society and assign them this role.</p>
+                  <h4 className="font-bold text-slate-900 mb-0.5 group-hover:text-orange-950">Promote Existing Resident</h4>
+                  <p className="text-xs text-slate-500 leading-relaxed">Search from verified residents in the society and delegate this managerial responsibility.</p>
                 </div>
               </button>
 
               <button
                 onClick={() => { setPath('new'); setStep(2); }}
-                className="w-full text-left p-4 rounded-xl border border-gray-200 hover:border-blue-500 hover:bg-blue-50/50 transition-all group flex items-start gap-4"
+                className="w-full text-left p-4 rounded-xl border-1.5 border-slate-200 hover:border-orange-500 hover:bg-orange-50/40 transition-all group flex items-start gap-4 cursor-pointer"
               >
-                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 shrink-0 group-hover:bg-green-600 group-hover:text-white transition-colors">
+                <div className="w-11 h-11 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 group-hover:bg-gradient-to-br group-hover:from-amber-600 group-hover:to-orange-500 group-hover:text-white transition-all shadow-xs">
                   <UserPlus className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-1">Invite New User</h4>
-                  <p className="text-sm text-gray-500">Send an onboarding invite to a brand-new manager (requires email/phone verification).</p>
+                  <h4 className="font-bold text-slate-900 mb-0.5 group-hover:text-amber-950">Invite New Manager</h4>
+                  <p className="text-xs text-slate-500 leading-relaxed">Send an email/SMS onboarding invitation link for a new external department head.</p>
                 </div>
               </button>
             </div>
@@ -156,49 +174,58 @@ const CreateManagerModal = ({ isOpen, onClose, onSubmit, role }) => {
 
           {/* Step 2: Details */}
           {step === 2 && path === 'existing' && (
-            <div className="space-y-6 min-h-[250px]">
+            <div className="space-y-4 min-h-[240px]">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Search Resident</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">Search Resident</label>
                 <ResidentSearchInput
                   societyId={JSON.parse(localStorage.getItem('user'))?.societyId}
                   onSelect={handleResidentSelect}
                 />
               </div>
+              <p className="text-xs text-slate-400 mt-2">
+                Tip: Search by resident's full name, flat number, or registered email.
+              </p>
             </div>
           )}
 
           {step === 2 && path === 'new' && (
-            <form id="new-user-form" onSubmit={handleNewUserSubmit} className="space-y-4 min-h-[250px]">
+            <form id="new-user-form" onSubmit={handleNewUserSubmit} className="space-y-4 min-h-[240px]">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Full Name <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  placeholder="e.g. John Doe"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-[#ea580c] outline-none text-sm text-slate-800 transition-all"
+                  placeholder="e.g. Rahul Sharma"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Email Address
+                </label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  placeholder="Required if phone is empty"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-[#ea580c] outline-none text-sm text-slate-800 transition-all"
+                  placeholder="rahul.sharma@example.com (Required if phone empty)"
                   autoComplete="off"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Phone Number
+                </label>
                 <input
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                  placeholder="Required if email is empty"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-[#ea580c] outline-none text-sm text-slate-800 transition-all"
+                  placeholder="+91 98765 43210 (Required if email empty)"
                 />
               </div>
             </form>
@@ -206,39 +233,46 @@ const CreateManagerModal = ({ isOpen, onClose, onSubmit, role }) => {
 
           {/* Step 3: Confirm */}
           {step === 3 && (
-            <div className="space-y-6">
-              <div className="bg-blue-50 rounded-xl p-4 flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-blue-600 mt-0.5" />
+            <div className="space-y-5">
+              <div className="bg-gradient-to-r from-orange-50 to-amber-50/50 border border-orange-200/80 rounded-xl p-4 flex items-start gap-3.5">
+                <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 shrink-0 mt-0.5">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
                 <div>
-                  <h4 className="font-semibold text-blue-900">Confirm Assignment</h4>
-                  <p className="text-sm text-blue-700 mt-1">
-                    You are about to assign <span className="font-bold">{formData.name}</span> as the new <span className="font-bold">{role.roleName}</span>.
+                  <h4 className="font-bold text-orange-950 text-sm">Confirm Role Assignment</h4>
+                  <p className="text-xs text-orange-800 mt-1 leading-relaxed">
+                    You are assigning <span className="font-bold text-orange-950">{formData.name}</span> as the <span className="font-bold text-orange-950">{role.roleName}</span> for the <span className="font-semibold">{role.department}</span> department.
                   </p>
                   {path === 'new' && (
-                    <p className="text-xs text-blue-600 mt-2 font-medium bg-blue-100 inline-block px-2 py-1 rounded">
-                      An onboarding invite will be sent.
-                    </p>
+                    <span className="inline-block mt-2 text-[11px] font-semibold text-orange-700 bg-white/80 border border-orange-200 px-2 py-0.5 rounded-md">
+                      Onboarding invitation will be sent immediately
+                    </span>
                   )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="block text-xs text-gray-500 mb-1">Email</span>
-                  <span className="text-sm font-medium text-gray-900">{formData.email || '-'}</span>
+              <div className="bg-slate-50/80 border border-slate-200/80 rounded-xl p-4 space-y-3">
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span className="block text-slate-400 font-semibold uppercase tracking-wider text-[10px] mb-1">Email</span>
+                    <span className="font-medium text-slate-800">{formData.email || '—'}</span>
+                  </div>
+                  <div>
+                    <span className="block text-slate-400 font-semibold uppercase tracking-wider text-[10px] mb-1">Phone</span>
+                    <span className="font-medium text-slate-800">{formData.phone || '—'}</span>
+                  </div>
                 </div>
-                <div>
-                  <span className="block text-xs text-gray-500 mb-1">Phone</span>
-                  <span className="text-sm font-medium text-gray-900">{formData.phone || '-'}</span>
-                </div>
-                <div className="col-span-2">
-                  <label className="block text-xs text-gray-500 mb-1">Joining Date</label>
+
+                <div className="pt-3 border-t border-slate-200">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                    Assignment Joining Date
+                  </label>
                   <input
                     type="date"
                     required
                     value={formData.joiningDate}
                     onChange={(e) => setFormData({ ...formData, joiningDate: e.target.value })}
-                    className="w-full max-w-[200px] px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                    className="w-full max-w-[220px] px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-orange-500/20 focus:border-[#ea580c] outline-none text-xs text-slate-800 font-medium"
                   />
                 </div>
               </div>
@@ -247,19 +281,19 @@ const CreateManagerModal = ({ isOpen, onClose, onSubmit, role }) => {
 
           {/* Step 4: Success (Invite Link) */}
           {step === 4 && (
-            <div className="p-4 text-center space-y-6">
-              <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
-                <Check className="w-8 h-8" />
+            <div className="p-3 text-center space-y-5">
+              <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
+                <Check className="w-7 h-7" />
               </div>
               <div>
-                <h4 className="text-xl font-bold text-gray-900">Manager Invited Successfully</h4>
-                <p className="text-gray-500 mt-2">
-                  The manager account has been created. They must activate their account using the invite link.
+                <h4 className="text-lg font-bold text-slate-900">Manager Invited Successfully</h4>
+                <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                  The manager record was created. They can activate their account using the invite sent to their contact details.
                 </p>
               </div>
 
-              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-left">
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-left">
+                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
                   Development Invite Link
                 </p>
                 <div className="flex items-center gap-2">
@@ -267,18 +301,18 @@ const CreateManagerModal = ({ isOpen, onClose, onSubmit, role }) => {
                     type="text"
                     readOnly
                     value={inviteLink}
-                    className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none"
+                    className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-700 font-mono focus:outline-none"
                   />
                   <button
                     onClick={copyToClipboard}
-                    className="p-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors shrink-0 flex items-center gap-2 text-sm font-medium"
+                    className="px-3 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors shrink-0 flex items-center gap-1.5 text-xs font-semibold"
                   >
-                    {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                     {copied ? 'Copied' : 'Copy'}
                   </button>
                 </div>
-                <p className="text-xs text-amber-600 mt-2 font-medium bg-amber-50 p-2 rounded inline-block">
-                  Note: This link is only shown because the server is running in development mode.
+                <p className="text-[11px] text-amber-700 mt-2 font-medium bg-amber-50/80 border border-amber-200/60 p-2 rounded-md">
+                  Note: This link is provided for convenience during development mode.
                 </p>
               </div>
             </div>
@@ -287,13 +321,13 @@ const CreateManagerModal = ({ isOpen, onClose, onSubmit, role }) => {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-100 flex justify-between bg-gray-50/50">
+        <div className="px-6 py-4 border-t border-slate-100 flex justify-between items-center bg-slate-50/60">
           {step < 4 ? (
             <>
               <button
                 onClick={() => step > 1 ? setStep(step - 1) : handleClose()}
                 disabled={loading}
-                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 disabled:opacity-50"
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-lg transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {step > 1 ? 'Back' : 'Cancel'}
               </button>
@@ -303,7 +337,7 @@ const CreateManagerModal = ({ isOpen, onClose, onSubmit, role }) => {
                   type="submit"
                   form="new-user-form"
                   disabled={!formData.name || (!formData.email && !formData.phone) || loading}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 flex items-center gap-2"
+                  className="px-5 py-2 text-xs font-bold text-white bg-gradient-to-r from-[#ea580c] to-[#f97316] hover:opacity-95 shadow-md shadow-orange-500/20 rounded-xl disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                 >
                   Continue
                 </button>
@@ -311,7 +345,7 @@ const CreateManagerModal = ({ isOpen, onClose, onSubmit, role }) => {
                 <button
                   onClick={handleFinalSubmit}
                   disabled={loading}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 flex items-center gap-2"
+                  className="px-5 py-2 text-xs font-bold text-white bg-gradient-to-r from-[#ea580c] to-[#f97316] hover:opacity-95 shadow-md shadow-orange-500/20 rounded-xl disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                 >
                   {loading ? 'Processing...' : 'Confirm & Assign'}
                 </button>
@@ -321,7 +355,7 @@ const CreateManagerModal = ({ isOpen, onClose, onSubmit, role }) => {
             <div className="w-full flex justify-center">
               <button
                 onClick={handleClose}
-                className="px-8 py-2.5 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-xl transition-colors w-full"
+                className="px-8 py-2.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-colors w-full cursor-pointer"
               >
                 Done
               </button>

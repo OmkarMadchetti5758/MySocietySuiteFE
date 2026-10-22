@@ -46,7 +46,7 @@ const ResidentSearchInput = ({ societyId, onSelect }) => {
   return (
     <div ref={wrapperRef} className="relative w-full">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
         <input
           type="text"
           value={query}
@@ -55,22 +55,22 @@ const ResidentSearchInput = ({ societyId, onSelect }) => {
             setIsOpen(true);
           }}
           onFocus={() => setIsOpen(true)}
-          className="w-full pl-10 pr-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+          className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-orange-500/20 focus:border-[#ea580c] outline-none transition-all text-sm text-slate-800 placeholder-slate-400"
           placeholder="Search by name, email, or phone..."
         />
         {isSearching && (
-          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-blue-500" />
+          <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-[#ea580c]" />
         )}
       </div>
 
       {isOpen && (debouncedQuery.length !== 1) && (
-        <div className="absolute z-10 w-full mt-1 bg-white rounded-xl shadow-lg border border-gray-100 max-h-60 overflow-y-auto">
+        <div className="absolute z-20 w-full mt-1.5 bg-white rounded-xl shadow-xl border border-slate-100 max-h-60 overflow-y-auto divide-y divide-slate-50">
           {results.length > 0 ? (
-            <ul className="py-2">
+            <ul className="py-1">
               {results.map((resident) => (
                 <li
                   key={resident._id}
-                  className="px-4 py-2 hover:bg-gray-50 cursor-pointer flex flex-col gap-0.5 transition-colors"
+                  className="px-4 py-2.5 hover:bg-orange-50/60 cursor-pointer flex flex-col gap-1 transition-colors"
                   onClick={() => {
                     onSelect(resident);
                     setIsOpen(false);
@@ -78,14 +78,14 @@ const ResidentSearchInput = ({ societyId, onSelect }) => {
                   }}
                 >
                   <div className="flex justify-between items-center">
-                    <span className="font-medium text-gray-900 text-sm">{resident.name}</span>
+                    <span className="font-semibold text-slate-900 text-sm">{resident.name}</span>
                     {resident.flatNumber && (
-                      <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                        {resident.flatNumber}
+                      <span className="text-xs font-semibold text-orange-700 bg-orange-100/70 border border-orange-200 px-2 py-0.5 rounded-md">
+                        Flat {resident.flatNumber}
                       </span>
                     )}
                   </div>
-                  <div className="text-xs text-gray-500 flex flex-wrap gap-x-2">
+                  <div className="text-xs text-slate-500 flex flex-wrap gap-x-3">
                     {resident.email && <span>{resident.email}</span>}
                     {resident.mobile && <span>{resident.mobile}</span>}
                   </div>
@@ -93,7 +93,7 @@ const ResidentSearchInput = ({ societyId, onSelect }) => {
               ))}
             </ul>
           ) : !isSearching ? (
-            <div className="px-4 py-3 text-sm text-gray-500 text-center">
+            <div className="px-4 py-4 text-sm text-slate-500 text-center">
               No residents found matching "{query}"
             </div>
           ) : null}
