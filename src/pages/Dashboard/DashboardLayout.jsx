@@ -88,10 +88,6 @@ const MODULE_DEF = [
   { id: 'reports_dashboard', label: 'Reports', icon: FaChartBar, path: 'reports', group: 'REPORTS' },
   { id: 'ai_assistant', label: 'AI Assistant', icon: FaRobot, path: 'ai', group: 'AI ASSISTANT' },
 
-  { id: 'festival_collection', label: 'Festivals', icon: FaGift, path: 'festivals-collection', routeKey: 'festivals_collection', group: 'COMMUNITY' },
-  { id: 'community_events', label: 'Events', icon: FaCalendarAlt, path: 'festivals', group: 'COMMUNITY' },
-  { id: 'settings', label: 'Settings', icon: FaCog, path: 'settings', group: 'ADMINISTRATION' }
-
 ];
 
 const Placeholder = ({ title }) => (
@@ -129,7 +125,7 @@ function readAuthSession(societyId) {
 const DashboardLayout = () => {
   const navigate = useNavigate();
   const { societyId } = useParams();
-  const { permissions, hasModuleAccess } = usePermissions();
+  const { permissions, hasModuleAccess, refreshPermissions } = usePermissions();
   // const [user, setUser] = useState(null);
   // const [societyName, setSocietyName] = useState('');
   // const [sidebarOpen, setSidebarOpen] = useState(true);
