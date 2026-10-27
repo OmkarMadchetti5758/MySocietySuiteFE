@@ -5,6 +5,7 @@ import RolesTab from './RolesTab';
 import ManageRolesTab from './ManageRolesTab';
 import WingDetailsTab from './WingDetailsTab';
 import SocietySetupDetailsTab from './SocietySetupDetailsTab';
+import InventoryTab from './InventoryTab';
 import { usePermissions } from '../../../context/PermissionsContext';
 
 const DEFAULT_TAB = 'setup_details';
@@ -47,6 +48,12 @@ const SettingsPage = () => {
         {activeTab === 'setup_details' && (
           <div className="bg-white rounded-[20px] border border-[#F1F1F1] p-6 shadow-xs">
             <SocietySetupDetailsTab />
+          </div>
+        )}
+
+        {activeTab === 'inventory' && (
+          <div className="bg-white rounded-[20px] border border-[#F1F1F1] p-6 shadow-xs">
+            <InventoryTab />
           </div>
         )}
 
