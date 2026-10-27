@@ -1,3 +1,7 @@
+import { FaLayerGroup, FaUserTie, FaShieldAlt, FaClipboardCheck } from 'react-icons/fa';
+
+const TABS = [
+  { id: 'setup_details', label: 'Society Setup Details', icon: FaClipboardCheck },
 import { FaBuilding, FaBoxes, FaLayerGroup, FaUserTie, FaShieldAlt } from 'react-icons/fa';
 
 const TABS = [
