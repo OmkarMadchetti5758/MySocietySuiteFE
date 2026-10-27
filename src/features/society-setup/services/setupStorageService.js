@@ -81,7 +81,7 @@ export const setupStorageService = {
 
     try {
       const apiDraft = await setupApi.getDraft();
-      console.log('[SetupDraft] API response:', JSON.stringify(apiDraft, null, 2));
+      // console.log('[SetupDraft] API response:', JSON.stringify(apiDraft, null, 2));
       // Always return the API draft if it's a valid object (societyDetails is always present)
       if (apiDraft && typeof apiDraft === 'object') {
         return apiDraft;
