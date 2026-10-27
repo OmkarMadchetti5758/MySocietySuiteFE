@@ -1,10 +1,8 @@
 import { FaLayerGroup, FaUserTie, FaShieldAlt, FaClipboardCheck } from 'react-icons/fa';
+import { FaBuilding, FaBoxes } from 'react-icons/fa';
 
 const TABS = [
   { id: 'setup_details', label: 'Society Setup Details', icon: FaClipboardCheck },
-import { FaBuilding, FaBoxes, FaLayerGroup, FaUserTie, FaShieldAlt } from 'react-icons/fa';
-
-const TABS = [
   { id: 'society_details', label: 'Society Details', icon: FaBuilding },
   { id: 'inventory', label: 'Inventory', icon: FaBoxes },
   { id: 'wing_details', label: 'Wing Details', icon: FaLayerGroup },
@@ -17,7 +15,6 @@ const SettingsTabs = ({ activeTab, onTabChange, canManageRoles }) => {
 
   return (
     <div className="mb-6">
-      {/* Page Title & Subtitle */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0F172A] tracking-tight">
           Society Settings
@@ -38,11 +35,10 @@ const SettingsTabs = ({ activeTab, onTabChange, canManageRoles }) => {
               key={tab.id}
               type="button"
               onClick={() => onTabChange(tab.id)}
-              className={`rounded-full px-4 sm:px-5 py-2 text-xs sm:text-sm font-semibold transition-all duration-150 flex items-center gap-2 cursor-pointer ${
-                isActive
+              className={`rounded-full px-4 sm:px-5 py-2 text-xs sm:text-sm font-semibold transition-all duration-150 flex items-center gap-2 cursor-pointer ${isActive
                   ? 'bg-[#EA580C] text-white shadow-sm ring-2 ring-orange-400/30 font-bold'
                   : 'bg-[#F1F5F9] text-[#64748B] hover:text-[#0F172A] hover:bg-[#E2E8F0]'
-              }`}
+                }`}
             >
               <Icon className={`text-xs ${isActive ? 'text-white' : 'text-[#64748B]'}`} />
               <span>{tab.label}</span>
