@@ -1,7 +1,8 @@
-import { FaBuilding, FaLayerGroup, FaUserTie, FaShieldAlt } from 'react-icons/fa';
+import { FaBuilding, FaBoxes, FaLayerGroup, FaUserTie, FaShieldAlt } from 'react-icons/fa';
 
 const TABS = [
   { id: 'society_details', label: 'Society Details', icon: FaBuilding },
+  { id: 'inventory', label: 'Inventory', icon: FaBoxes },
   { id: 'wing_details', label: 'Wing Details', icon: FaLayerGroup },
   { id: 'managers', label: 'Managers', icon: FaUserTie, requiresPermission: true },
   { id: 'roles', label: 'Roles & Permissions', icon: FaShieldAlt, requiresPermission: true },

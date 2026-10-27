@@ -5,6 +5,7 @@ import RolesTab from './RolesTab';
 import ManageRolesTab from './ManageRolesTab';
 import SocietyDetailsTab from './SocietyDetailsTab';
 import WingDetailsTab from './WingDetailsTab';
+import InventoryTab from './InventoryTab';
 import { usePermissions } from '../../../context/PermissionsContext';
 
 const SettingsPage = () => {
@@ -36,6 +37,12 @@ const SettingsPage = () => {
         {activeTab === 'society_details' && (
           <div className="bg-white rounded-[20px] border border-[#F1F1F1] p-6 shadow-xs">
             <SocietyDetailsTab />
+          </div>
+        )}
+
+        {activeTab === 'inventory' && (
+          <div className="bg-white rounded-[20px] border border-[#F1F1F1] p-6 shadow-xs">
+            <InventoryTab />
           </div>
         )}
 
