@@ -18,6 +18,7 @@ const SettingsPage = () => {
   const tabParam = searchParams.get('tab');
   const isValidTab =
     tabParam === 'setup_details' ||
+    tabParam === 'inventory' ||
     tabParam === 'wing_details' ||
     ((tabParam === 'managers' || tabParam === 'roles') && canManageRoles);
 
