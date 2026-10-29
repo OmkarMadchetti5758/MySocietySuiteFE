@@ -282,6 +282,8 @@ const Step2PropertyInventory = () => {
                         <th className="py-2.5 px-2">Wing / Block</th>
                         <th className="py-2.5 px-2">Property Type</th>
                         <th className="py-2.5 px-2">Configuration</th>
+                        <th className="py-2.5 px-2 text-center">Floors</th>
+                        <th className="py-2.5 px-2 text-center">Flats / Floor</th>
                         <th className="py-2.5 px-2 text-center">Unit Count</th>
                         <th className="py-2.5 px-2 text-right">Carpet Area / Unit (sq.ft.)</th>
                         <th className="py-2.5 px-2 text-right">Built-up Area / Unit (sq.ft.)</th>
@@ -302,6 +304,8 @@ const Step2PropertyInventory = () => {
                               {row.configuration}
                             </span>
                           </td>
+                          <td className="py-2.5 px-2 text-center font-medium text-gray-700">{row.totalFloors || '—'}</td>
+                          <td className="py-2.5 px-2 text-center font-medium text-gray-700">{row.unitsPerFloor || '—'}</td>
                           <td className="py-2.5 px-2 text-center font-bold text-gray-900">{row.unitCount}</td>
                           <td className="py-2.5 px-2 text-right text-gray-700">{row.carpetArea}</td>
                           <td className="py-2.5 px-2 text-right text-gray-700">{row.builtUpArea}</td>
