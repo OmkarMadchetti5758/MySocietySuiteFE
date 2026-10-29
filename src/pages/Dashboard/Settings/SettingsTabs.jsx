@@ -2,7 +2,8 @@ import { FaLayerGroup, FaUserTie, FaShieldAlt, FaClipboardCheck, FaBoxes } from 
 
 const TABS = [
   { id: 'setup_details', label: 'Society Setup Details', icon: FaClipboardCheck },
-  { id: 'inventory', label: 'Inventory', icon: FaBoxes },
+  // { id: 'society_details', label: 'Society Details', icon: FaBuilding },
+  // { id: 'inventory', label: 'Inventory', icon: FaBoxes },
   { id: 'wing_details', label: 'Wing Details', icon: FaLayerGroup },
   { id: 'managers', label: 'Managers', icon: FaUserTie, requiresPermission: true },
   { id: 'roles', label: 'Roles & Permissions', icon: FaShieldAlt, requiresPermission: true },
@@ -34,8 +35,8 @@ const SettingsTabs = ({ activeTab, onTabChange, canManageRoles }) => {
               type="button"
               onClick={() => onTabChange(tab.id)}
               className={`rounded-full px-4 sm:px-5 py-2 text-xs sm:text-sm font-semibold transition-all duration-150 flex items-center gap-2 cursor-pointer ${isActive
-                  ? 'bg-[#EA580C] text-white shadow-sm ring-2 ring-orange-400/30 font-bold'
-                  : 'bg-[#F1F5F9] text-[#64748B] hover:text-[#0F172A] hover:bg-[#E2E8F0]'
+                ? 'bg-[#EA580C] text-white shadow-sm ring-2 ring-orange-400/30 font-bold'
+                : 'bg-[#F1F5F9] text-[#64748B] hover:text-[#0F172A] hover:bg-[#E2E8F0]'
                 }`}
             >
               <Icon className={`text-xs ${isActive ? 'text-white' : 'text-[#64748B]'}`} />
