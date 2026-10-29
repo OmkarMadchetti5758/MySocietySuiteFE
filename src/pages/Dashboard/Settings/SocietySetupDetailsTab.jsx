@@ -1391,6 +1391,7 @@ export default function SocietySetupDetailsTab() {
                           <tr className="border-b border-gray-100 bg-gray-50/50 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
                             <th className="py-3 px-3">Wing</th>
                             <th className="py-3 px-3 text-center">Floors</th>
+                            <th className="py-3 px-3 text-center">Flats / Floor</th>
                             <th className="py-3 px-3 text-center">Total Units</th>
                             <th className="py-3 px-3">Configuration</th>
                             <th className="py-3 px-3 text-right">Carpet Area</th>
@@ -1402,6 +1403,7 @@ export default function SocietySetupDetailsTab() {
                             <tr key={row.id || idx} className="hover:bg-orange-50/20 transition-colors">
                               <td className="py-3 px-3 font-bold text-gray-900">Wing {row.wing}</td>
                               <td className="py-3 px-3 text-center">{row.totalFloors || '—'}</td>
+                              <td className="py-3 px-3 text-center">{row.unitsPerFloor || '—'}</td>
                               <td className="py-3 px-3 text-center font-bold text-gray-900">{row.unitCount}</td>
                               <td className="py-3 px-3">
                                 <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-orange-50 text-[#EA580C] border border-orange-200">
