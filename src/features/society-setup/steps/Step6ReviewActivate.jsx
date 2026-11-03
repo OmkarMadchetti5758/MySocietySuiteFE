@@ -201,6 +201,8 @@ const Step6ReviewActivate = () => {
                     <th className="py-2 px-3">Wing / Block</th>
                     <th className="py-2 px-3">Property Type</th>
                     <th className="py-2 px-3">Configurations</th>
+                    <th className="py-2 px-3 text-center">Floors</th>
+                    <th className="py-2 px-3 text-center">Flats / Floor</th>
                     <th className="py-2 px-3 text-center">Unit Count</th>
                     <th className="py-2 px-3 text-right">Area / Unit (sq.ft.)</th>
                     <th className="py-2 px-3 text-center">Total Parking (4W)</th>
@@ -212,6 +214,8 @@ const Step6ReviewActivate = () => {
                       <td className="py-2 px-3 font-semibold text-gray-900">{row.wing}</td>
                       <td className="py-2 px-3 text-gray-600">{row.propertyType}</td>
                       <td className="py-2 px-3 font-medium text-gray-800">{row.configuration}</td>
+                      <td className="py-2 px-3 text-center text-gray-700">{row.totalFloors || '—'}</td>
+                      <td className="py-2 px-3 text-center text-gray-700">{row.unitsPerFloor || '—'}</td>
                       <td className="py-2 px-3 text-center font-bold text-gray-900">{row.unitCount}</td>
                       <td className="py-2 px-3 text-right text-gray-700">{row.carpetArea}</td>
                       <td className="py-2 px-3 text-center font-semibold text-gray-800">{row.parking4W}</td>

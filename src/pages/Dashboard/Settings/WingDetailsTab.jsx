@@ -23,6 +23,7 @@ const defaultWing = (name = '') => ({
   name,
   code: '',
   totalFloors: '',
+  unitsPerFloor: '',
   totalFlats: '',
   status: 'Active',
   assignedStaff: '',
@@ -73,6 +74,7 @@ const WingDetailsTab = () => {
         name: w.name,
         code: w.code || '',
         totalFloors: w.totalFloors ?? '',
+        unitsPerFloor: w.unitsPerFloor ?? '',
         totalFlats: w.totalFlats ?? '',
         status: w.status || 'Active',
         assignedStaff: w.assignedStaff?._id || w.assignedStaff || '',
@@ -325,6 +327,17 @@ const WingDetailsTab = () => {
                         />
                       </div>
                       <div className="wdt-field">
+                        <label className="wdt-label">Flats per Floor</label>
+                        <input
+                          className="wdt-input"
+                          type="number"
+                          min={1}
+                          value={wing.unitsPerFloor}
+                          onChange={(e) => handleWingChange(index, 'unitsPerFloor', e.target.value)}
+                          placeholder="e.g. 4"
+                        />
+                      </div>
+                      <div className="wdt-field">
                         <label className="wdt-label">Total Flats</label>
                         <input
                           className="wdt-input"
@@ -427,6 +440,11 @@ const WingDetailsTab = () => {
                         {wing.totalFloors && (
                           <div className="wdt-stat-pill">
                             <FaBuilding className="wdt-stat-icon" />{wing.totalFloors} Floors
+                          </div>
+                        )}
+                        {wing.unitsPerFloor && (
+                          <div className="wdt-stat-pill">
+                            <FaLayerGroup className="wdt-stat-icon" />{wing.unitsPerFloor} Flats/Floor
                           </div>
                         )}
                         {wing.totalFlats && (
