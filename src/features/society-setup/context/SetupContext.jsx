@@ -108,14 +108,6 @@ export const SetupProvider = ({ children, initialSocietyId }) => {
     [documents]
   );
 
-  // Auto-sync parking totals or wing counts when tables change
-  useEffect(() => {
-    if (!draftLoaded) return;
-    if (residentialTotals.totalWings > 0 && propertyInfo.numberOfBuildings !== residentialTotals.totalWings) {
-      setPropertyInfo((prev) => ({ ...prev, numberOfBuildings: residentialTotals.totalWings }));
-    }
-  }, [residentialTotals.totalWings, draftLoaded]);
-
   // Field updaters
   const updateSocietyDetails = useCallback((updates) => {
     setSocietyDetails((prev) => {
@@ -282,6 +274,25 @@ export const SetupProvider = ({ children, initialSocietyId }) => {
   );
 
   const nextStep = useCallback(async () => {
+    if (currentStep === 2) {
+      const configuredWingCount = Number(propertyInfo.numberOfBuildings);
+      if (configuredWingCount > 0 && configuredWingCount !== residentialTotals.totalWings) {
+        let message;
+        if (residentialTotals.totalWings < configuredWingCount) {
+          const currentCountMessage = residentialTotals.totalWings === 0
+            ? 'no Wings have been added'
+            : `only ${residentialTotals.totalWings} Wing${residentialTotals.totalWings === 1 ? '' : 's'} ${residentialTotals.totalWings === 1 ? 'has' : 'have'} been added`;
+          message = `Please add all ${configuredWingCount} configured Wings before proceeding. Currently, ${currentCountMessage}.`;
+        } else {
+          const excessCount = residentialTotals.totalWings - configuredWingCount;
+          message = `You have added ${residentialTotals.totalWings} Wings, but only ${configuredWingCount} are configured in Number of Buildings / Wings. Please remove ${excessCount} Wing${excessCount === 1 ? '' : 's'} before proceeding.`;
+        }
+        setValidationErrors({ residentialInventory: message });
+        toast.error(message);
+        return false;
+      }
+    }
+
     const errors = validateCurrentStep(currentStep);
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
@@ -325,6 +336,7 @@ export const SetupProvider = ({ children, initialSocietyId }) => {
     societyDetails,
     propertyInfo,
     residentialInventory,
+    residentialTotals.totalWings,
     commercialInventory,
     parkingConfig,
     amenities,
