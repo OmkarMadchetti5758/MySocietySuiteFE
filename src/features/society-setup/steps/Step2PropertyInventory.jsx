@@ -62,6 +62,19 @@ const Step2PropertyInventory = () => {
     updateParkingConfig({ [field]: value });
   };
 
+  const handleAddResidential = () => {
+    const configuredWingCount = Number(propertyInfo.numberOfBuildings);
+    if (configuredWingCount > 0 && residentialTotals.totalWings >= configuredWingCount) {
+      toast.error(
+        `You have already added the maximum ${configuredWingCount} Wings as configured. You cannot add more Wings.`
+      );
+      return;
+    }
+
+    setEditingResidential(null);
+    setResidentialModalOpen(true);
+  };
+
   return (
     <div className="space-y-8">
       {/* Step Header */}
@@ -256,10 +269,7 @@ const Step2PropertyInventory = () => {
                   </div>
                   <button
                     type="button"
-                    onClick={() => {
-                      setEditingResidential(null);
-                      setResidentialModalOpen(true);
-                    }}
+                    onClick={handleAddResidential}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-orange-200 text-[#EA580C] hover:bg-orange-50 font-semibold text-xs transition-colors"
                   >
                     <FiPlus className="text-sm stroke-[3]" />

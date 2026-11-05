@@ -486,6 +486,22 @@ export default function SocietySetupDetailsTab() {
   };
 
   const handleStepNavigation = (targetStep) => {
+    if (currentStep === 2 && targetStep > currentStep) {
+      const step2Data = editingStep === 2 ? editFormState : (draftData || {});
+      const configuredWingCount = Number(step2Data.propertyInfo?.numberOfBuildings);
+      const actualWingCount = calculateResidentialTotals(step2Data.residentialInventory || []).totalWings;
+
+      if (configuredWingCount > 0 && configuredWingCount !== actualWingCount) {
+        const message = actualWingCount < configuredWingCount
+          ? `Please add all ${configuredWingCount} configured Wings before proceeding. Currently, ${actualWingCount === 0 ? 'no Wings have been added' : `only ${actualWingCount} Wing${actualWingCount === 1 ? '' : 's'} ${actualWingCount === 1 ? 'has' : 'have'} been added`}.`
+          : `You have added ${actualWingCount} Wings, but only ${configuredWingCount} are configured in Number of Buildings / Wings. Please remove ${actualWingCount - configuredWingCount} Wing${actualWingCount - configuredWingCount === 1 ? '' : 's'} before proceeding.`;
+
+        setValidationErrors((prev) => ({ ...prev, residentialInventory: message }));
+        toast.error(message);
+        return;
+      }
+    }
+
     if (editingStep !== null && editingStep !== targetStep) {
       const confirmDiscard = window.confirm(
         `You have unsaved edits in Step ${editingStep}. Discard changes and proceed to Step ${targetStep}?`
@@ -1364,6 +1380,15 @@ export default function SocietySetupDetailsTab() {
                     <button
                       type="button"
                       onClick={() => {
+                        const configuredWingCount = Number(editFormState.propertyInfo?.numberOfBuildings);
+                        const actualWingCount = calculateResidentialTotals(editFormState.residentialInventory).totalWings;
+                        if (configuredWingCount > 0 && actualWingCount >= configuredWingCount) {
+                          toast.error(
+                            `You have already added the maximum ${configuredWingCount} Wings as configured. You cannot add more Wings.`
+                          );
+                          return;
+                        }
+
                         setEditingResidential(null);
                         setResidentialModalOpen(true);
                       }}
