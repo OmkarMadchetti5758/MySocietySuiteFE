@@ -243,15 +243,8 @@ export const SetupProvider = ({ children, initialSocietyId }) => {
         if (amenities.length === 0) {
           errors.amenities = 'Please add at least one amenity for your society';
         }
-      } else if (stepNum === 4) {
-        if (contacts.length === 0) {
-          errors.contacts = 'Please add at least one contact';
-        }
-      } else if (stepNum === 5) {
-        if (documents.length === 0) {
-          errors.documents = 'Please upload at least one document';
-        }
       }
+      // Step 4 (Society Contacts) and Step 5 (Documents) are optional
       return errors;
     },
     [societyDetails, propertyInfo, residentialInventory, amenities, contacts, documents]
