@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Routes, Route, useNavigate, useParams, NavLink } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useParams, NavLink } from 'react-router-dom';
 import {
   FaBuilding,
   FaMoneyBillWave,
@@ -19,6 +19,7 @@ import {
   FaUserCircle,
   FaCog,
   FaUsers,
+  FaHouseUser,
   FaSearch,
   FaBell,
   FaHome,
@@ -29,6 +30,8 @@ import {
 import logoImg from '../../assets/images/webp/MySocietySuite_FinalLogo.webp';
 import SettingsPage from './Settings/SettingsPage';
 import ResidentsPage from './Residents/ResidentsPage';
+import TenantPage from './TenantPage';
+import TenantRegistrationPage from './TenantRegistrationPage';
 import AdminDashboard from './AdminDashboard';
 import ProfilePage from './ProfilePage';
 import StaffPage from './Staff/StaffPage';
@@ -89,6 +92,70 @@ const MODULE_DEF = [
   { id: 'ai_assistant', label: 'AI Assistant', icon: FaRobot, path: 'ai', group: 'AI ASSISTANT' },
 
 ];
+
+const TENANT_NAV_ITEM = {
+  label: 'Tenant',
+  icon: FaHouseUser,
+  path: 'tenant',
+  routeKey: 'tenant',
+  group: 'SOCIETY & MEMBERS',
+};
+
+const TENANT_ROLE_ALIASES = {
+  committee_member: 'admin',
+  committee_admin: 'admin',
+  resident: 'resident_owner',
+};
+
+/**
+ * Checks whether the signed-in user holds Society Admin or Resident Owner access.
+ * Strictly excludes vendor, guard, resident_tenant, and all other non-permitted roles.
+ */
+function hasTenantAccess(user, roleKeys, { isAdmin, isVendor, isGuard, isResident }) {
+  if (isVendor || isGuard) return false;
+  if (isAdmin || isResident) return true;
+
+  const rawRoles = [user?.role, ...(Array.isArray(roleKeys) ? roleKeys : [])].filter(Boolean);
+  return rawRoles.some((role) => {
+    const normalized = TENANT_ROLE_ALIASES[role] || role;
+    return normalized === 'admin' || normalized === 'resident_owner';
+  });
+}
+
+/**
+ * Groups permitted sidebar modules by section and inserts the Tenant link
+ * immediately after Residents under SOCIETY & MEMBERS when permitted.
+ */
+function buildGroupedSidebarModules(allowedModules, includeTenant) {
+  const grouped = allowedModules.reduce((acc, mod) => {
+    const group = mod.group || 'GENERAL';
+    if (!acc[group]) acc[group] = [];
+    acc[group].push(mod);
+    return acc;
+  }, {});
+
+  if (!includeTenant) {
+    return grouped;
+  }
+
+  const targetGroup = TENANT_NAV_ITEM.group;
+  if (!grouped[targetGroup]) {
+    return { [targetGroup]: [TENANT_NAV_ITEM], ...grouped };
+  }
+
+  const groupItems = [...grouped[targetGroup]];
+  const residentsIndex = groupItems.findIndex((mod) => mod.path === 'residents');
+  if (residentsIndex !== -1) {
+    groupItems.splice(residentsIndex + 1, 0, TENANT_NAV_ITEM);
+  } else {
+    groupItems.push(TENANT_NAV_ITEM);
+  }
+
+  return {
+    ...grouped,
+    [targetGroup]: groupItems,
+  };
+}
 
 const Placeholder = ({ title }) => (
   <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 h-[60vh] flex flex-col items-center justify-center text-center">
@@ -197,6 +264,14 @@ const DashboardLayout = () => {
   const allowedModules = MODULE_DEF.filter(mod => {
     return hasModuleAccess ? hasModuleAccess(mod.id, 1) : Boolean(safePermissions[mod.id]?.level >= 1);
   });
+
+  const canAccessTenant = hasTenantAccess(user, roleKeys, {
+    isAdmin,
+    isVendor,
+    isGuard,
+    isResident,
+  });
+  const groupedSidebarModules = buildGroupedSidebarModules(allowedModules, canAccessTenant);
 
   // Vendor-only nav tabs
   const VENDOR_NAV = [
@@ -329,16 +404,11 @@ const DashboardLayout = () => {
                 </NavLink>
               )}
 
-              {allowedModules.length === 0 && (
+              {Object.keys(groupedSidebarModules).length === 0 && (
                 <div className="px-3 text-sm text-gray-500 italic">No access to any modules.</div>
               )}
 
-              {Object.entries(allowedModules.reduce((acc, mod) => {
-                const group = mod.group || 'GENERAL';
-                if (!acc[group]) acc[group] = [];
-                acc[group].push(mod);
-                return acc;
-              }, {})).map(([groupName, mods]) => (
+              {Object.entries(groupedSidebarModules).map(([groupName, mods]) => (
                 <div key={groupName} className="mb-4">
                   <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-3">
                     {groupName}
@@ -472,6 +542,28 @@ const DashboardLayout = () => {
               />
 
               <Route path="profile" element={<ProfilePage />} />
+
+              {/* ── Tenant module route (Society Admin & Resident Owner only) ── */}
+              <Route
+                path="tenant"
+                element={
+                  canAccessTenant ? (
+                    <TenantPage />
+                  ) : (
+                    <Navigate to={societyId ? `/${societyId}/dashboard` : '/dashboard'} replace />
+                  )
+                }
+              />
+              <Route
+                path="tenant/new"
+                element={
+                  canAccessTenant ? (
+                    <TenantRegistrationPage />
+                  ) : (
+                    <Navigate to={societyId ? `/${societyId}/dashboard` : '/dashboard'} replace />
+                  )
+                }
+              />
 
               {/* ── Vendor-specific routes ── */}
               {isVendor && (
