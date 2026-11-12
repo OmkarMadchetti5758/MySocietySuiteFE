@@ -8,7 +8,9 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Download,
   Eye,
+  FileText,
   LogOut,
   MoreVertical,
   PauseCircle,
@@ -22,6 +24,7 @@ import {
 } from 'lucide-react';
 import {
   buildTenantDetailSections,
+  formatDocumentFileSize,
   getAvatarTone,
   getInitials,
   getMockTenants,
@@ -68,16 +71,105 @@ const SECTION_ICONS = {
   professional: Briefcase,
   tenancy: Building2,
   reference: Users,
+  documents: FileText,
+};
+
+const hasAccessibleDocumentFile = (doc) =>
+  Boolean(
+    (typeof Blob !== 'undefined' && doc?.file instanceof Blob) ||
+      doc?.fileUrl ||
+      doc?.previewUrl
+  );
+
+const resolveDocumentObjectUrl = (doc) => {
+  if (
+    doc?.file &&
+    typeof Blob !== 'undefined' &&
+    doc.file instanceof Blob &&
+    typeof URL !== 'undefined' &&
+    typeof URL.createObjectURL === 'function'
+  ) {
+    return { url: URL.createObjectURL(doc.file), isOwnedObjectUrl: true };
+  }
+  const existingUrl = doc?.fileUrl || doc?.previewUrl || '';
+  return { url: existingUrl, isOwnedObjectUrl: false };
 };
 
 /**
  * Shared modal shell for View Details and Edit Tenant placeholder interactions.
  */
 const TenantActionModal = ({ mode, tenant, onClose }) => {
+  const [previewDoc, setPreviewDoc] = useState(null);
+  const ownedPreviewUrlRef = useRef('');
+
+  useEffect(() => {
+    return () => {
+      if (
+        ownedPreviewUrlRef.current &&
+        typeof URL !== 'undefined' &&
+        typeof URL.revokeObjectURL === 'function'
+      ) {
+        URL.revokeObjectURL(ownedPreviewUrlRef.current);
+        ownedPreviewUrlRef.current = '';
+      }
+    };
+  }, []);
+
   if (!tenant || !mode) return null;
 
   const isView = mode === 'view';
   const detailSections = isView ? buildTenantDetailSections(tenant) : [];
+
+  const closePreview = () => {
+    if (
+      ownedPreviewUrlRef.current &&
+      typeof URL !== 'undefined' &&
+      typeof URL.revokeObjectURL === 'function'
+    ) {
+      URL.revokeObjectURL(ownedPreviewUrlRef.current);
+      ownedPreviewUrlRef.current = '';
+    }
+    setPreviewDoc(null);
+  };
+
+  const handlePreviewDocument = (doc) => {
+    const { url, isOwnedObjectUrl } = resolveDocumentObjectUrl(doc);
+    if (!url) return;
+
+    if (
+      ownedPreviewUrlRef.current &&
+      typeof URL !== 'undefined' &&
+      typeof URL.revokeObjectURL === 'function'
+    ) {
+      URL.revokeObjectURL(ownedPreviewUrlRef.current);
+      ownedPreviewUrlRef.current = '';
+    }
+    if (isOwnedObjectUrl) {
+      ownedPreviewUrlRef.current = url;
+    }
+
+    setPreviewDoc({ ...doc, previewObjectUrl: url });
+  };
+
+  const handleDownloadDocument = (doc) => {
+    const { url, isOwnedObjectUrl } = resolveDocumentObjectUrl(doc);
+    if (!url) return;
+
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = doc.fileName || 'document';
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+
+    if (
+      isOwnedObjectUrl &&
+      typeof URL !== 'undefined' &&
+      typeof URL.revokeObjectURL === 'function'
+    ) {
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+  };
 
   return (
     <div
@@ -147,7 +239,106 @@ const TenantActionModal = ({ mode, tenant, onClose }) => {
                       </h4>
                     </div>
 
-                    {section.fields.length > 0 ? (
+                    {section.id === 'documents' ? (
+                      section.documents && section.documents.length > 0 ? (
+                        <div className="space-y-2.5">
+                          {section.documents.map((doc, idx) => {
+                            const docKey = doc.id || `${idx}-${doc.fileName || 'doc'}`;
+                            const docTypeLabel =
+                              doc.displayDocumentType ||
+                              (doc.documentType === 'Other Document' && doc.otherDocumentName
+                                ? `Other Document (${doc.otherDocumentName})`
+                                : doc.documentType || 'Document');
+                            const fileSizeLabel =
+                              doc.formattedFileSize ||
+                              (Number.isFinite(doc.fileSize)
+                                ? formatDocumentFileSize(doc.fileSize)
+                                : '');
+                            const fileTypeLabel =
+                              doc.fileType ||
+                              (doc.extension ? doc.extension.toUpperCase() : '') ||
+                              (doc.isImage ? 'IMAGE' : 'PDF');
+                            const canOpenFile = hasAccessibleDocumentFile(doc);
+
+                            return (
+                              <div
+                                key={docKey}
+                                data-tenant-doc={docKey}
+                                className="rounded-xl border border-gray-200/80 bg-white px-3.5 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                              >
+                                <div className="flex items-start sm:items-center gap-3 min-w-0">
+                                  <div
+                                    className={`w-10 h-10 rounded-lg border flex flex-col items-center justify-center shrink-0 ${
+                                      fileTypeLabel === 'PDF'
+                                        ? 'bg-red-50 border-red-100 text-red-600'
+                                        : 'bg-[#FFF3E8] border-orange-100 text-[#EA580C]'
+                                    }`}
+                                  >
+                                    <FileText className="w-4 h-4" />
+                                    <span className="text-[9px] font-bold uppercase leading-none mt-0.5">
+                                      {fileTypeLabel}
+                                    </span>
+                                  </div>
+
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-bold text-[#EA580C] truncate">
+                                      {docTypeLabel}
+                                    </p>
+                                    <p
+                                      title={doc.fileName}
+                                      className="text-sm font-semibold text-gray-800 truncate"
+                                    >
+                                      {doc.fileName}
+                                    </p>
+                                    <div className="flex flex-wrap items-center gap-2 mt-0.5 text-[11px] text-gray-500">
+                                      {fileSizeLabel && <span>{fileSizeLabel}</span>}
+                                      <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 font-semibold uppercase text-[10px]">
+                                        {fileTypeLabel}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                                  <button
+                                    type="button"
+                                    disabled={!canOpenFile}
+                                    onClick={() => handlePreviewDocument(doc)}
+                                    title={
+                                      canOpenFile
+                                        ? 'Preview document'
+                                        : 'File preview unavailable'
+                                    }
+                                    aria-label={`Preview ${doc.fileName || docTypeLabel}`}
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-orange-50 hover:border-orange-200 hover:text-[#EA580C] text-xs font-semibold text-gray-700 disabled:opacity-45 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                                  >
+                                    <Eye className="w-3.5 h-3.5" />
+                                    <span>Preview</span>
+                                  </button>
+
+                                  {canOpenFile && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDownloadDocument(doc)}
+                                      title="Download document"
+                                      aria-label={`Download ${doc.fileName || docTypeLabel}`}
+                                      className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-orange-50 hover:border-orange-200 hover:text-[#EA580C] text-xs font-semibold text-gray-700 transition-colors cursor-pointer"
+                                    >
+                                      <Download className="w-3.5 h-3.5" />
+                                      <span>Download</span>
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-xs italic text-gray-400">
+                          {section.emptyMessage || 'No documents uploaded.'}
+                        </p>
+                      )
+                    ) : section.fields.length > 0 ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3.5">
                         {section.fields.map((item) => (
                           <div
@@ -204,6 +395,71 @@ const TenantActionModal = ({ mode, tenant, onClose }) => {
           </button>
         </div>
       </div>
+
+      {previewDoc && previewDoc.previewObjectUrl && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Preview ${previewDoc.fileName}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            closePreview();
+          }}
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden"
+          >
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
+              <div className="min-w-0">
+                <h4 className="text-sm font-bold text-[#0F172A] truncate">
+                  {previewDoc.fileName}
+                </h4>
+                <p className="text-xs text-gray-500">
+                  {previewDoc.displayDocumentType || previewDoc.documentType || 'Tenant Document'}
+                  {previewDoc.formattedFileSize ? ` • ${previewDoc.formattedFileSize}` : ''}
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleDownloadDocument(previewDoc)}
+                  aria-label={`Download ${previewDoc.fileName}`}
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-orange-50 hover:border-orange-200 hover:text-[#EA580C] text-xs font-semibold text-gray-700 transition-colors cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={closePreview}
+                  aria-label="Close document preview"
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4 bg-gray-50 flex items-center justify-center max-h-[75vh] overflow-auto">
+              {previewDoc.isImage ? (
+                <img
+                  src={previewDoc.previewObjectUrl}
+                  alt={previewDoc.fileName}
+                  className="max-w-full max-h-[68vh] rounded-lg object-contain"
+                />
+              ) : (
+                <iframe
+                  title={previewDoc.fileName}
+                  src={previewDoc.previewObjectUrl}
+                  className="w-full h-[68vh] rounded-lg border border-gray-200 bg-white"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -727,6 +983,7 @@ const TenantPage = () => {
 
       {/* View / Edit Tenant Modal */}
       <TenantActionModal
+        key={modalState.tenant ? `${modalState.mode}-${modalState.tenant.id}` : 'closed'}
         mode={modalState.mode}
         tenant={modalState.tenant}
         onClose={() => setModalState({ mode: null, tenant: null })}

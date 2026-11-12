@@ -370,7 +370,10 @@ const TenantRegistrationPage = () => {
       return;
     }
 
-    const payload = buildTenantSubmissionPayload(formData, eligibleFlats);
+    const payload = buildTenantSubmissionPayload(
+      { ...formData, documents },
+      eligibleFlats
+    );
     const created = registerMockTenant(payload, viewContext);
     toast.success(`${created.name} registered for ${created.wing} / ${created.flatNumber}.`);
     navigate(listingPath);

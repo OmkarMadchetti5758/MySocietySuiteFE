@@ -473,6 +473,7 @@ export function registerMockTenant(submission, viewContext) {
     personalDetails: submission.personalDetails,
     professionalDetails: submission.professionalDetails,
     referenceDetails: submission.referenceDetails,
+    documents: Array.isArray(submission.documents) ? submission.documents : [],
     createdAt: new Date().toISOString(),
     registeredByFallbackOwner: isFallbackOwnerUser,
   };
@@ -802,6 +803,42 @@ export function buildTenantSubmissionPayload(formData, eligibleFlats = []) {
   const referenceRelation = formData.referenceRelation;
   const hasReference = Boolean(referenceName || referenceContactNumber || referenceRelation);
 
+  const uploadedDocuments = (Array.isArray(formData.documents) ? formData.documents : [])
+    .filter((doc) => doc && doc.file && doc.documentType)
+    .map((doc) => {
+      const documentType = doc.documentType.trim();
+      const otherDocumentName =
+        documentType === 'Other Document' ? (doc.otherDocumentName || '').trim() : '';
+      const fileName = doc.fileName || doc.file.name || 'document';
+      const fileSize = Number.isFinite(doc.fileSize) ? doc.fileSize : (doc.file.size || 0);
+      const inferredExtension =
+        doc.extension ||
+        (fileName.includes('.') ? fileName.split('.').pop().toLowerCase() : '') ||
+        ((doc.file.type || '').toLowerCase().includes('pdf') ? 'pdf' : '');
+      const mimeType = (doc.file.type || '').toLowerCase();
+      const isImage =
+        typeof doc.isImage === 'boolean'
+          ? doc.isImage
+          : inferredExtension !== 'pdf' && mimeType !== 'application/pdf';
+
+      return {
+        id: doc.id,
+        documentType,
+        otherDocumentName,
+        displayDocumentType:
+          documentType === 'Other Document' && otherDocumentName
+            ? `Other Document (${otherDocumentName})`
+            : documentType,
+        file: doc.file,
+        fileName,
+        fileSize,
+        formattedFileSize: formatDocumentFileSize(fileSize),
+        extension: inferredExtension,
+        fileType: inferredExtension ? inferredExtension.toUpperCase() : isImage ? 'IMAGE' : 'PDF',
+        isImage,
+      };
+    });
+
   return {
     fullName: formData.fullName.trim(),
     mobileNumber: normalizeIndianMobile(formData.mobileNumber),
@@ -826,6 +863,7 @@ export function buildTenantSubmissionPayload(formData, eligibleFlats = []) {
           referenceRelation,
         }
       : null,
+    documents: uploadedDocuments,
   };
 }
 
@@ -937,6 +975,13 @@ export function buildTenantDetailSections(tenant) {
         },
         { label: 'Reference Relation', value: ref.referenceRelation ?? tenant.referenceRelation },
       ],
+    },
+    {
+      id: 'documents',
+      title: 'Tenant Documents',
+      emptyMessage: 'No documents uploaded.',
+      documents: Array.isArray(tenant.documents) ? tenant.documents : [],
+      fields: [],
     },
   ];
 
