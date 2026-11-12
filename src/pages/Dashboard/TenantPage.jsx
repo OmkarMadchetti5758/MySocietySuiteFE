@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import {
   Briefcase,
   Building2,
@@ -12,32 +13,32 @@ import {
   Eye,
   FileText,
   LogOut,
+  Mail,
   MoreVertical,
   PauseCircle,
   Pencil,
   Plus,
+  RefreshCw,
   Search,
   User,
   UserPlus,
   Users,
   X,
 } from 'lucide-react';
+import { tenantApi } from '../../services/tenantApi';
 import {
   buildTenantDetailSections,
   formatDocumentFileSize,
   getAvatarTone,
   getInitials,
-  getMockTenants,
-  getRoleScopedTenants,
   resolveTenantViewContext,
-  updateMockTenantStatus,
 } from './tenantMockData';
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
 const TABS = [
-  { id: 'registration', label: 'Tenant Registration', icon: UserPlus },
-  { id: 'history', label: 'Tenant History', icon: CalendarClock },
+  { id: 'registration', label: 'Tenant Registrations', icon: UserPlus },
+  { id: 'history', label: 'Tenancy History', icon: CalendarClock },
 ];
 
 const STATUS_OPTIONS = ['Active', 'Inactive', 'Vacated'];
@@ -95,8 +96,45 @@ const resolveDocumentObjectUrl = (doc) => {
   return { url: existingUrl, isOwnedObjectUrl: false };
 };
 
+const normalizeTenantRecord = (item) => {
+  const name = item.fullName || item.name || '';
+  const contactNumber = item.mobileNumber || item.contactNumber || '';
+  const moveInStr = item.moveInDate
+    ? new Date(item.moveInDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })
+    : (item.allottedMonth || '-');
+  const moveOutStr = item.moveOutDate
+    ? new Date(item.moveOutDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '-';
+
+  return {
+    ...item,
+    id: item._id || item.id,
+    name,
+    fullName: name,
+    contactNumber,
+    mobileNumber: contactNumber,
+    allottedMonth: moveInStr,
+    moveOutDateFormatted: moveOutStr,
+    wing: item.wing || item.wingName || (item.flatId?.wing) || 'Wing',
+    flatNumber: item.flatNumber || item.flatId?.flatNumber || '',
+    ownerName: item.ownerName || item.ownerId?.name || '',
+    status: item.status || 'Active',
+    documents: (item.documents || []).map((doc) => ({
+      ...doc,
+      id: doc._id || doc.id,
+      fileName: doc.fileName || doc.label,
+      documentType: doc.label || doc.documentType,
+      displayDocumentType: doc.label || doc.documentType,
+      fileSize: doc.fileSize,
+      fileUrl: doc.fileUrl,
+      previewUrl: doc.fileUrl,
+      isImage: doc.mimeType?.startsWith('image/') || /\.(jpg|jpeg|png)$/i.test(doc.fileName || doc.fileUrl || ''),
+    })),
+  };
+};
+
 /**
- * Shared modal shell for View Details and Edit Tenant placeholder interactions.
+ * Shared modal shell for View Details and Edit Tenant interactions.
  */
 const TenantActionModal = ({ mode, tenant, onClose }) => {
   const [previewDoc, setPreviewDoc] = useState(null);
@@ -158,6 +196,7 @@ const TenantActionModal = ({ mode, tenant, onClose }) => {
     const anchor = document.createElement('a');
     anchor.href = url;
     anchor.download = doc.fileName || 'document';
+    anchor.target = '_blank';
     document.body.appendChild(anchor);
     anchor.click();
     document.body.removeChild(anchor);
@@ -204,10 +243,10 @@ const TenantActionModal = ({ mode, tenant, onClose }) => {
             <div
               className={`w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${getAvatarTone(tenant.id)}`}
             >
-              {getInitials(tenant.name)}
+              {getInitials(tenant.name || tenant.fullName)}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-base font-bold text-gray-900 truncate">{tenant.name}</p>
+              <p className="text-base font-bold text-gray-900 truncate">{tenant.name || tenant.fullName}</p>
               <p className="text-xs text-gray-500">
                 {tenant.wing} / {tenant.flatNumber}
               </p>
@@ -376,10 +415,10 @@ const TenantActionModal = ({ mode, tenant, onClose }) => {
           ) : (
             <div className="bg-orange-50/50 border border-orange-100 rounded-xl p-5 text-center space-y-2">
               <p className="text-sm font-semibold text-gray-800">
-                Edit Tenant Form Placeholder
+                Edit Tenant Registration
               </p>
               <p className="text-xs text-gray-500">
-                Editing details for <span className="font-semibold text-gray-700">{tenant.name}</span> will be available here once backend integration is connected.
+                Status changes are active via the action menu. Contact support or your administrator to edit legal tenancy documents.
               </p>
             </div>
           )}
@@ -465,25 +504,105 @@ const TenantActionModal = ({ mode, tenant, onClose }) => {
 };
 
 /**
- * Tenant Management module page displaying summary KPIs, registration/history tabs,
- * search and filter bar, paginated tenant listing table, and row UI actions.
+ * Tenant Management page connecting to backend APIs.
  */
 const TenantPage = () => {
   const navigate = useNavigate();
   const { societyId } = useParams();
 
-  const [tenants, setTenants] = useState(() => getMockTenants());
+  const [tenants, setTenants] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+
   const [activeTab, setActiveTab] = useState('registration');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [wingFilter, setWingFilter] = useState('All Wings / Blocks');
   const [currentPage, setCurrentPage] = useState(1);
 
+  // History tab states
+  const [ownerFlats, setOwnerFlats] = useState([]);
+  const [selectedHistoryFlatId, setSelectedHistoryFlatId] = useState('');
+  const [historyTenants, setHistoryTenants] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
   const [modalState, setModalState] = useState({ mode: null, tenant: null });
   const [openMenuId, setOpenMenuId] = useState(null);
   const menuContainerRef = useRef(null);
 
   const viewContext = useMemo(() => resolveTenantViewContext(), []);
+
+  // Fetch tenants from backend
+  const fetchTenants = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await tenantApi.getTenants({
+        page: currentPage,
+        limit: PAGE_SIZE,
+        search: searchQuery.trim(),
+        status: statusFilter !== 'All Status' ? statusFilter : '',
+      });
+
+      const rawRecords = res?.data?.records || res?.records || [];
+      const total = res?.data?.total ?? res?.total ?? 0;
+      const pages = res?.data?.totalPages ?? res?.totalPages ?? 1;
+
+      const normalized = rawRecords.map(normalizeTenantRecord);
+      setTenants(normalized);
+      setTotalCount(total);
+      setTotalPages(pages);
+    } catch (err) {
+      console.error('Failed to fetch tenants:', err);
+      toast.error('Failed to load tenants from server');
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, searchQuery, statusFilter]);
+
+  useEffect(() => {
+    fetchTenants();
+  }, [fetchTenants]);
+
+  // Load owner flats for history selector
+  const fetchOwnerFlats = useCallback(async () => {
+    try {
+      const res = await tenantApi.getOwnerFlats();
+      const flatsList = res?.data?.flats || res?.flats || [];
+      setOwnerFlats(flatsList);
+      if (flatsList.length > 0) {
+        setSelectedHistoryFlatId((prev) => {
+          const exists = flatsList.some((f) => (f._id || f.id) === prev);
+          return exists ? prev : (flatsList[0]._id || flatsList[0].id);
+        });
+      }
+    } catch (e) {
+      console.error('Failed to fetch flats for history tab', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchOwnerFlats();
+  }, [fetchOwnerFlats]);
+
+  // Fetch history when flat is selected
+  useEffect(() => {
+    if (activeTab === 'history' && selectedHistoryFlatId) {
+      const fetchHistory = async () => {
+        try {
+          setLoadingHistory(true);
+          const res = await tenantApi.getTenantHistory(selectedHistoryFlatId);
+          const list = res?.data?.history || res?.history || [];
+          setHistoryTenants(list.map(normalizeTenantRecord));
+        } catch (err) {
+          console.error('Failed to fetch tenant history:', err);
+        } finally {
+          setLoadingHistory(false);
+        }
+      };
+      fetchHistory();
+    }
+  }, [activeTab, selectedHistoryFlatId]);
 
   useEffect(() => {
     const handleDocumentClick = (event) => {
@@ -506,17 +625,12 @@ const TenantPage = () => {
     };
   }, []);
 
-  const scopedTenants = useMemo(
-    () => getRoleScopedTenants(tenants, viewContext),
-    [tenants, viewContext]
-  );
-
   const summaryStats = useMemo(() => {
     let active = 0;
     let inactive = 0;
     let vacated = 0;
 
-    for (const tenant of scopedTenants) {
+    for (const tenant of tenants) {
       if (tenant.status === 'Active') active += 1;
       else if (tenant.status === 'Inactive') inactive += 1;
       else if (tenant.status === 'Vacated') vacated += 1;
@@ -525,7 +639,7 @@ const TenantPage = () => {
     return [
       {
         title: 'Total Tenants',
-        value: scopedTenants.length,
+        value: totalCount,
         icon: Users,
         iconBgClass: 'bg-[#FFF3E8] text-[#EA580C]',
       },
@@ -548,50 +662,39 @@ const TenantPage = () => {
         iconBgClass: 'bg-[#FEECEB] text-[#DC2626]',
       },
     ];
-  }, [scopedTenants]);
+  }, [tenants, totalCount]);
 
   const wingOptions = useMemo(() => {
-    const wings = Array.from(new Set(scopedTenants.map((tenant) => tenant.wing).filter(Boolean))).sort();
+    const wings = Array.from(new Set(tenants.map((t) => t.wing).filter(Boolean))).sort();
     return ['All Wings / Blocks', ...wings];
-  }, [scopedTenants]);
+  }, [tenants]);
 
   const filteredTenants = useMemo(() => {
-    const normalizedQuery = searchQuery.trim().toLowerCase();
+    if (wingFilter === 'All Wings / Blocks') return tenants;
+    return tenants.filter((t) => t.wing === wingFilter);
+  }, [tenants, wingFilter]);
 
-    return scopedTenants.filter((tenant) => {
-      if (statusFilter !== 'All Status' && tenant.status !== statusFilter) {
-        return false;
-      }
+  const handleStatusChange = async (tenantId, nextStatus) => {
+    try {
+      await tenantApi.updateTenantStatus(tenantId, nextStatus);
+      toast.success(`Tenant marked as ${nextStatus}`);
+      fetchTenants();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to update tenant status');
+    } finally {
+      setOpenMenuId(null);
+    }
+  };
 
-      if (wingFilter !== 'All Wings / Blocks' && tenant.wing !== wingFilter) {
-        return false;
-      }
-
-      if (!normalizedQuery) return true;
-
-      const flatCombined = `${tenant.wing} / ${tenant.flatNumber}`.toLowerCase();
-      return (
-        tenant.name.toLowerCase().includes(normalizedQuery) ||
-        tenant.contactNumber.toLowerCase().includes(normalizedQuery) ||
-        (tenant.email || '').toLowerCase().includes(normalizedQuery) ||
-        tenant.flatNumber.toLowerCase().includes(normalizedQuery) ||
-        flatCombined.includes(normalizedQuery)
-      );
-    });
-  }, [scopedTenants, searchQuery, statusFilter, wingFilter]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredTenants.length / PAGE_SIZE));
-  const safePage = Math.min(currentPage, totalPages);
-  const startIndex = (safePage - 1) * PAGE_SIZE;
-  const paginatedTenants = filteredTenants.slice(startIndex, startIndex + PAGE_SIZE);
-  const showingFrom = filteredTenants.length === 0 ? 0 : startIndex + 1;
-  const showingTo = startIndex + paginatedTenants.length;
-
-  const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1);
-
-  const handleStatusChange = (tenantId, nextStatus) => {
-    setTenants(updateMockTenantStatus(tenantId, nextStatus));
+  const handleResendInvite = async (tenantId) => {
     setOpenMenuId(null);
+    const toastId = toast.loading('Resending invitation...');
+    try {
+      await tenantApi.resendInvite(tenantId);
+      toast.success('Invitation resent successfully! Check the tenant\'s email.', { id: toastId });
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to resend invitation', { id: toastId });
+    }
   };
 
   const handleNewTenantClick = () => {
@@ -606,6 +709,9 @@ const TenantPage = () => {
     return null;
   }
 
+  const showingFrom = totalCount === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const showingTo = Math.min(currentPage * PAGE_SIZE, totalCount);
+
   return (
     <div className="w-full space-y-5">
       {/* Compact Page Title */}
@@ -616,15 +722,28 @@ const TenantPage = () => {
           </h1>
           <p className="text-xs sm:text-sm text-[#475569] mt-0.5">
             {viewContext.isOwner
-              ? 'View tenants residing in flats owned by you.'
-              : 'Manage tenant profiles, flat allocations, and status across your society.'}
+              ? 'View and manage tenants residing in your flats.'
+              : 'Manage tenant profiles, flat allocations, and verification documents.'}
           </p>
         </div>
-        {viewContext.isOwner && (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-orange-50 text-[#EA580C] border border-orange-100 w-fit">
-            Owner Flat View
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {viewContext.isOwner && (
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-orange-50 text-[#EA580C] border border-orange-100 w-fit">
+              Owner Flat View
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              fetchTenants();
+              fetchOwnerFlats();
+            }}
+            className="p-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-600 transition-colors cursor-pointer"
+            title="Refresh"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-[#EA580C]' : ''}`} />
+          </button>
+        </div>
       </div>
 
       {/* 4 Summary Cards */}
@@ -640,7 +759,7 @@ const TenantPage = () => {
         ))}
       </div>
 
-      {/* Folder-Style Tabs + Connected Table Container */}
+      {/* Folder-Style Tabs */}
       <div>
         <div
           className="flex flex-wrap items-end gap-1.5 sm:gap-2 relative z-10"
@@ -690,7 +809,7 @@ const TenantPage = () => {
                       setSearchQuery(e.target.value);
                       setCurrentPage(1);
                     }}
-                    placeholder="Search by name, mobile, email or flat number..."
+                    placeholder="Search by tenant name, mobile, or email..."
                     aria-label="Search tenants"
                     className="w-full pl-10 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-xl text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-colors"
                   />
@@ -720,10 +839,7 @@ const TenantPage = () => {
                   <div className="relative">
                     <select
                       value={wingFilter}
-                      onChange={(e) => {
-                        setWingFilter(e.target.value);
-                        setCurrentPage(1);
-                      }}
+                      onChange={(e) => setWingFilter(e.target.value)}
                       aria-label="Filter by wing or block"
                       className="w-full sm:w-48 appearance-none bg-white border border-gray-200 rounded-xl pl-3.5 pr-9 py-2 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 cursor-pointer"
                     >
@@ -758,24 +874,32 @@ const TenantPage = () => {
                       <th className="px-4 py-3.5 whitespace-nowrap">Email</th>
                       <th className="px-4 py-3.5 whitespace-nowrap">Flat / Wing</th>
                       <th className="px-4 py-3.5 whitespace-nowrap">Owner Name</th>
-                      <th className="px-4 py-3.5 whitespace-nowrap">Allotted Month</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap">Move-in Date</th>
                       <th className="px-4 py-3.5 whitespace-nowrap">Status</th>
                       <th className="pl-4 pr-5 py-3.5 text-center whitespace-nowrap">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 text-sm text-gray-700">
-                    {paginatedTenants.length === 0 ? (
+                    {loading ? (
+                      [1, 2, 3].map((n) => (
+                        <tr key={n} className="animate-pulse">
+                          <td colSpan="9" className="px-6 py-4">
+                            <div className="h-4 bg-gray-200 rounded w-full"></div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : filteredTenants.length === 0 ? (
                       <tr>
                         <td colSpan="9" className="px-6 py-12 text-center text-gray-500">
-                          No tenants found matching your search or filter criteria.
+                          No tenant registrations found matching your criteria.
                         </td>
                       </tr>
                     ) : (
-                      paginatedTenants.map((tenant, index) => {
-                        const rowNumber = startIndex + index + 1;
+                      filteredTenants.map((tenant, index) => {
+                        const rowNumber = (currentPage - 1) * PAGE_SIZE + index + 1;
                         const isMenuOpen = openMenuId === tenant.id;
                         const openUpwards =
-                          paginatedTenants.length > 2 && index >= paginatedTenants.length - 2;
+                          filteredTenants.length > 2 && index >= filteredTenants.length - 2;
 
                         return (
                           <tr
@@ -790,22 +914,22 @@ const TenantPage = () => {
                                 <div
                                   className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${getAvatarTone(tenant.id)}`}
                                 >
-                                  {getInitials(tenant.name)}
+                                  {getInitials(tenant.fullName || tenant.name)}
                                 </div>
-                                <span className="font-semibold text-gray-900">{tenant.name}</span>
+                                <span className="font-semibold text-gray-900">{tenant.fullName || tenant.name}</span>
                               </div>
                             </td>
                             <td className="px-4 py-3.5 text-gray-600 whitespace-nowrap tabular-nums">
-                              {tenant.contactNumber}
+                              {tenant.mobileNumber || tenant.contactNumber}
                             </td>
                             <td className="px-4 py-3.5 text-gray-600 whitespace-nowrap">
                               {tenant.email || '-'}
                             </td>
-                            <td className="px-4 py-3.5 text-gray-700 whitespace-nowrap">
+                            <td className="px-4 py-3.5 text-gray-700 whitespace-nowrap font-medium">
                               {tenant.wing} / {tenant.flatNumber}
                             </td>
                             <td className="px-4 py-3.5 text-gray-700 whitespace-nowrap">
-                              {tenant.ownerName}
+                              {tenant.ownerName || '-'}
                             </td>
                             <td className="px-4 py-3.5 text-gray-600 whitespace-nowrap">
                               {tenant.allottedMonth}
@@ -832,19 +956,6 @@ const TenantPage = () => {
                                   className="p-1.5 rounded-lg text-gray-500 hover:text-[#EA580C] hover:bg-orange-50 transition-colors cursor-pointer"
                                 >
                                   <Eye className="w-4 h-4" />
-                                </button>
-
-                                <button
-                                  type="button"
-                                  title="Edit Tenant"
-                                  aria-label={`Edit ${tenant.name}`}
-                                  onClick={() => {
-                                    setOpenMenuId(null);
-                                    setModalState({ mode: 'edit', tenant });
-                                  }}
-                                  className="p-1.5 rounded-lg text-gray-500 hover:text-[#EA580C] hover:bg-orange-50 transition-colors cursor-pointer"
-                                >
-                                  <Pencil className="w-4 h-4" />
                                 </button>
 
                                 <button
@@ -903,6 +1014,17 @@ const TenantPage = () => {
                                       <Eye className="w-3.5 h-3.5 text-gray-400" />
                                       View Details
                                     </button>
+                                    {tenant.status !== 'Vacated' && (
+                                      <button
+                                        type="button"
+                                        role="menuitem"
+                                        onClick={() => handleResendInvite(tenant.id)}
+                                        className="w-full px-3 py-1.5 text-left text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center gap-2 transition-colors cursor-pointer"
+                                      >
+                                        <Mail className="w-3.5 h-3.5 text-gray-400" />
+                                        Resend Invite
+                                      </button>
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -918,64 +1040,147 @@ const TenantPage = () => {
               {/* Pagination Footer */}
               <div className="px-5 py-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <p className="text-xs sm:text-sm text-gray-500">
-                  {filteredTenants.length === 0
+                  {totalCount === 0
                     ? 'Showing 0 tenants'
-                    : `Showing ${showingFrom} to ${showingTo} of ${filteredTenants.length} tenants`}
+                    : `Showing ${showingFrom} to ${showingTo} of ${totalCount} tenants`}
                 </p>
 
-                <div className="flex items-center gap-1.5 self-start sm:self-auto">
-                  <button
-                    type="button"
-                    aria-label="Previous page"
-                    disabled={safePage <= 1}
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    className="w-8 h-8 rounded-lg border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
+                {totalPages > 1 && (
+                  <div className="flex items-center gap-1.5 self-start sm:self-auto">
+                    <button
+                      type="button"
+                      aria-label="Previous page"
+                      disabled={currentPage <= 1}
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      className="w-8 h-8 rounded-lg border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
 
-                  {pageNumbers.map((pageNum) => {
-                    const isCurrent = pageNum === safePage;
-                    return (
-                      <button
-                        key={pageNum}
-                        type="button"
-                        aria-current={isCurrent ? 'page' : undefined}
-                        onClick={() => setCurrentPage(pageNum)}
-                        className={`w-8 h-8 rounded-lg border text-xs font-semibold flex items-center justify-center transition-colors cursor-pointer ${
-                          isCurrent
-                            ? 'bg-[#EA580C] border-[#EA580C] text-white shadow-xs'
-                            : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
+                    <span className="text-xs font-semibold px-2 text-gray-700">
+                      Page {currentPage} of {totalPages}
+                    </span>
 
-                  <button
-                    type="button"
-                    aria-label="Next page"
-                    disabled={safePage >= totalPages}
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    className="w-8 h-8 rounded-lg border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
+                    <button
+                      type="button"
+                      aria-label="Next page"
+                      disabled={currentPage >= totalPages}
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      className="w-8 h-8 rounded-lg border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           ) : (
-            <div className="p-8 sm:p-12 min-h-[340px] flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 bg-[#FFF3E8] text-[#EA580C] rounded-full flex items-center justify-center mb-4 shadow-inner">
-                <CalendarClock className="w-7 h-7" />
+            /* --- TAB 2: TENANCY HISTORY --- */
+            <div className="p-5 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900">Past & Active Tenancy History</h3>
+                  <p className="text-xs text-gray-500">
+                    Restricted to flats owned by you. Select a flat to view its complete chronological lease records.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <label htmlFor="history-flat-select" className="text-xs font-semibold text-gray-700">
+                    Select Flat:
+                  </label>
+                  <select
+                    id="history-flat-select"
+                    value={selectedHistoryFlatId}
+                    onChange={(e) => setSelectedHistoryFlatId(e.target.value)}
+                    className="appearance-none bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 cursor-pointer"
+                  >
+                    {ownerFlats.length === 0 ? (
+                      <option value="">No flats found</option>
+                    ) : (
+                      ownerFlats.map((flat) => (
+                        <option key={flat._id || flat.id} value={flat._id || flat.id}>
+                          {flat.flatNumber} — {flat.wing || flat.wingName || 'Wing'}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
               </div>
-              <h2 className="text-lg font-bold text-[#0F172A] mb-1.5">
-                Tenant History
-              </h2>
-              <p className="text-sm text-[#475569] max-w-md">
-                Past tenant records, lease timelines, and move-out history will be available here.
-              </p>
+
+              <div className="overflow-x-auto min-h-[200px]">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50/80 border-y border-gray-100 text-xs font-semibold text-gray-800">
+                      <th className="pl-4 pr-3 py-3 w-12">#</th>
+                      <th className="px-4 py-3 whitespace-nowrap">Tenant Name</th>
+                      <th className="px-4 py-3 whitespace-nowrap">Contact Number</th>
+                      <th className="px-4 py-3 whitespace-nowrap">Move-in Date</th>
+                      <th className="px-4 py-3 whitespace-nowrap">Move-out Date</th>
+                      <th className="px-4 py-3 whitespace-nowrap">Monthly Rent</th>
+                      <th className="px-4 py-3 whitespace-nowrap">Status</th>
+                      <th className="pl-4 pr-5 py-3 text-center whitespace-nowrap">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 text-sm text-gray-700">
+                    {loadingHistory ? (
+                      [1, 2].map((n) => (
+                        <tr key={n} className="animate-pulse">
+                          <td colSpan="8" className="px-4 py-4">
+                            <div className="h-4 bg-gray-200 rounded w-full"></div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : historyTenants.length === 0 ? (
+                      <tr>
+                        <td colSpan="8" className="px-6 py-10 text-center text-gray-500">
+                          No tenant history records found for the selected flat.
+                        </td>
+                      </tr>
+                    ) : (
+                      historyTenants.map((item, idx) => (
+                        <tr key={item.id} className="hover:bg-orange-50/25 transition-colors">
+                          <td className="pl-4 pr-3 py-3 text-gray-500 font-medium">{idx + 1}</td>
+                          <td className="px-4 py-3 whitespace-nowrap font-semibold text-gray-900">
+                            {item.name || item.fullName}
+                          </td>
+                          <td className="px-4 py-3 text-gray-600 whitespace-nowrap tabular-nums">
+                            {item.contactNumber || item.mobileNumber}
+                          </td>
+                          <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                            {item.allottedMonth}
+                          </td>
+                          <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                            {item.moveOutDateFormatted || (item.status === 'Active' ? 'Present' : '-')}
+                          </td>
+                          <td className="px-4 py-3 text-gray-700 whitespace-nowrap font-medium">
+                            {item.monthlyRent ? `₹${item.monthlyRent.toLocaleString('en-IN')}` : '-'}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                                STATUS_BADGE_CLASSES[item.status] || STATUS_BADGE_CLASSES.Vacated
+                              }`}
+                            >
+                              {item.status}
+                            </span>
+                          </td>
+                          <td className="pl-4 pr-5 py-3 text-center whitespace-nowrap">
+                            <button
+                              type="button"
+                              onClick={() => setModalState({ mode: 'view', tenant: item })}
+                              className="p-1.5 rounded-lg text-gray-500 hover:text-[#EA580C] hover:bg-orange-50 transition-colors cursor-pointer"
+                              title="View Record Details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>

@@ -6,7 +6,9 @@ import {
   ArrowLeft,
   Briefcase,
   Building2,
+  CheckCircle2,
   Eye,
+  FileCheck2,
   FileText,
   Plus,
   Trash2,
@@ -17,20 +19,55 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import { tenantApi } from '../../services/tenantApi';
 import {
-  INITIAL_REGISTRATION_FORM,
   TENANT_FORM_OPTIONS,
-  buildTenantSubmissionPayload,
   formatDocumentFileSize,
-  getEligibleFlatsForUser,
-  getMockFlats,
-  registerMockTenant,
   resolveTenantViewContext,
-  validateTenantDocumentFile,
-  validateTenantRegistration,
 } from './tenantMockData';
 
-const createEmptyDocumentRow = (id) => ({
+const MAX_DOCUMENT_SIZE = 15 * 1024 * 1024; // 15 MB
+const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'pdf'];
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+
+const OPTIONAL_DOC_TYPES = [
+  'Aadhaar Card',
+  'PAN Card',
+  'Passport',
+  'Voter ID',
+  'Driving Licence',
+  'Address Proof',
+  'Police Verification Certificate',
+  'Owner NOC / Permission Letter',
+  'Tenant Photograph',
+  'Other Document',
+];
+
+const validateFile = (file) => {
+  if (!file) return { valid: false, error: 'Please select a file.' };
+  const ext = file.name.split('.').pop()?.toLowerCase() || '';
+  if (!ALLOWED_EXTENSIONS.includes(ext) || (file.type && !ALLOWED_MIME_TYPES.includes(file.type.toLowerCase()))) {
+    return { valid: false, error: 'Only JPG, JPEG, PNG, and PDF files are allowed.' };
+  }
+  if (file.size > MAX_DOCUMENT_SIZE) {
+    return { valid: false, error: 'File size exceeds maximum limit of 15 MB.' };
+  }
+  const isImage = ext !== 'pdf' && file.type !== 'application/pdf';
+  return { valid: true, error: '', isImage, extension: ext };
+};
+
+const createEmptyRequiredDoc = (label) => ({
+  label,
+  file: null,
+  fileName: '',
+  fileSize: 0,
+  isImage: false,
+  extension: '',
+  previewUrl: '',
+  fileError: '',
+});
+
+const createEmptyOptionalDoc = (id) => ({
   id,
   documentType: '',
   otherDocumentName: '',
@@ -43,7 +80,7 @@ const createEmptyDocumentRow = (id) => ({
   fileError: '',
 });
 
-const revokePreviewUrl = (url) => {
+const revokeUrl = (url) => {
   if (url && typeof URL !== 'undefined' && typeof URL.revokeObjectURL === 'function') {
     URL.revokeObjectURL(url);
   }
@@ -97,34 +134,98 @@ const SectionCard = ({ stepNumber, title, subtitle, optional = false, icon: Icon
   </section>
 );
 
-/**
- * Complete 5-section Tenant Registration Form UI (mock-data backed, frontend only).
- */
+const INITIAL_FORM_DATA = {
+  // Section 1: Personal Details
+  fullName: '',
+  mobileNumber: '',
+  email: '',
+  dateOfBirth: '',
+  gender: '',
+  numberOfOccupants: '',
+  completeAddress: '',
+  emergencyContactNumber: '',
+
+  // Section 2: Professional Details (Optional)
+  employmentType: '',
+  companyName: '',
+  companyDescription: '',
+  organizationName: '',
+  organizationAddress: '',
+  yearOfIncorporation: '',
+
+  // Section 3: Tenancy Details
+  flatId: '',
+  moveInDate: '',
+  monthlyRent: '',
+  securityDeposit: '',
+  rentDueDay: '',
+  petAllowed: false,
+  status: 'Active',
+
+  // Section 4: Reference Details (Optional)
+  referenceName: '',
+  referenceContactNumber: '',
+  referenceRelation: '',
+};
+
 const TenantRegistrationPage = () => {
   const navigate = useNavigate();
   const { societyId } = useParams();
 
   const viewContext = useMemo(() => resolveTenantViewContext(), []);
-  const eligibleFlats = useMemo(
-    () => getEligibleFlatsForUser(getMockFlats(), viewContext),
-    [viewContext]
-  );
 
-  const [formData, setFormData] = useState(INITIAL_REGISTRATION_FORM);
-  const [documents, setDocuments] = useState(() => [createEmptyDocumentRow('doc-1')]);
-  const [previewDoc, setPreviewDoc] = useState(null);
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+  const [eligibleFlats, setEligibleFlats] = useState([]);
+  const [loadingFlats, setLoadingFlats] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
-  const nextDocIdRef = useRef(2);
+  // Documents state: 2 REQUIRED by default, plus dynamic optional
+  const [requiredDocs, setRequiredDocs] = useState({
+    identityProof: createEmptyRequiredDoc('Identity Proof'),
+    rentalAgreement: createEmptyRequiredDoc('Rental Agreement'),
+  });
+  const [optionalDocs, setOptionalDocs] = useState([]);
+  const [previewDoc, setPreviewDoc] = useState(null);
+
+  const nextOptionalDocIdRef = useRef(1);
   const previewUrlsRef = useRef(new Set());
 
+  // Clean up object URLs
   useEffect(() => {
-    const trackedUrls = previewUrlsRef.current;
+    const urls = previewUrlsRef.current;
     return () => {
-      trackedUrls.forEach(revokePreviewUrl);
-      trackedUrls.clear();
+      urls.forEach(revokeUrl);
+      urls.clear();
     };
   }, []);
+
+  // Fetch eligible vacant flats owned by user
+  useEffect(() => {
+    let isMounted = true;
+    const fetchFlats = async () => {
+      try {
+        setLoadingFlats(true);
+        const res = await tenantApi.getEligibleFlats();
+        if (isMounted) {
+          const flatsList = res?.data?.flats || res?.flats || [];
+          setEligibleFlats(flatsList);
+        }
+      } catch (err) {
+        console.error('Failed to load eligible flats:', err);
+        if (isMounted) {
+          toast.error('Failed to load eligible flats. Please check your connection.');
+        }
+      } finally {
+        if (isMounted) setLoadingFlats(false);
+      }
+    };
+
+    fetchFlats();
+    return () => {
+      isMounted = false;
+    };
+  }, [societyId]);
 
   const targetSocietyId = societyId || localStorage.getItem('societyDatabase');
   const listingPath = targetSocietyId
@@ -135,7 +236,9 @@ const TenantRegistrationPage = () => {
     return null;
   }
 
-  const selectedFlat = eligibleFlats.find((flat) => flat.id === formData.flatId) || null;
+  const selectedFlat = eligibleFlats.find(
+    (flat) => flat._id === formData.flatId || flat.id === formData.flatId
+  ) || null;
 
   const updateField = (field, value, errorKey = field) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -148,207 +251,10 @@ const TenantRegistrationPage = () => {
     }
   };
 
-  const clearDocumentRowErrors = (rowId, fieldsToClear) => {
-    setErrors((prev) => {
-      if (!prev.documents?.[rowId]) return prev;
-      const nextRowErrors = { ...prev.documents[rowId] };
-      if (fieldsToClear === '*') {
-        // Drop the entire row error entry below
-      } else {
-        fieldsToClear.forEach((field) => {
-          delete nextRowErrors[field];
-        });
-      }
-
-      const nextDocErrors = { ...prev.documents };
-      if (fieldsToClear === '*' || Object.keys(nextRowErrors).length === 0) {
-        delete nextDocErrors[rowId];
-      } else {
-        nextDocErrors[rowId] = nextRowErrors;
-      }
-
-      const nextErrors = { ...prev };
-      if (Object.keys(nextDocErrors).length === 0) {
-        delete nextErrors.documents;
-      } else {
-        nextErrors.documents = nextDocErrors;
-      }
-      return nextErrors;
-    });
-  };
-
-  const handleAddDocumentRow = () => {
-    if (documents.length >= TENANT_FORM_OPTIONS.documentTypes.length) {
-      return;
-    }
-    const nextId = `doc-${nextDocIdRef.current++}`;
-    setDocuments((prev) => [...prev, createEmptyDocumentRow(nextId)]);
-  };
-
-  const handleRemoveDocumentRow = (rowId) => {
-    if (documents.length <= 1) return;
-    const targetRow = documents.find((row) => row.id === rowId);
-    if (targetRow?.previewUrl) {
-      revokePreviewUrl(targetRow.previewUrl);
-      previewUrlsRef.current.delete(targetRow.previewUrl);
-    }
-    if (previewDoc?.id === rowId) {
-      setPreviewDoc(null);
-    }
-    setDocuments((prev) => prev.filter((row) => row.id !== rowId));
-    clearDocumentRowErrors(rowId, '*');
-  };
-
-  const handleClearDocumentRow = (rowId) => {
-    const targetRow = documents.find((row) => row.id === rowId);
-    if (targetRow?.previewUrl) {
-      revokePreviewUrl(targetRow.previewUrl);
-      previewUrlsRef.current.delete(targetRow.previewUrl);
-    }
-    if (previewDoc?.id === rowId) {
-      setPreviewDoc(null);
-    }
-    setDocuments((prev) =>
-      prev.map((row) => (row.id === rowId ? createEmptyDocumentRow(row.id) : row))
-    );
-    clearDocumentRowErrors(rowId, '*');
-  };
-
-  const handleDocumentTypeChange = (rowId, nextType) => {
-    if (
-      nextType &&
-      documents.some((row) => row.id !== rowId && row.documentType === nextType)
-    ) {
-      setErrors((prev) => ({
-        ...prev,
-        documents: {
-          ...(prev.documents || {}),
-          [rowId]: {
-            ...(prev.documents?.[rowId] || {}),
-            documentType: 'This document type is already selected in another row',
-          },
-        },
-      }));
-      return;
-    }
-
-    setDocuments((prev) =>
-      prev.map((row) =>
-        row.id === rowId
-          ? {
-              ...row,
-              documentType: nextType,
-              otherDocumentName: nextType === 'Other Document' ? row.otherDocumentName : '',
-            }
-          : row
-      )
-    );
-    clearDocumentRowErrors(
-      rowId,
-      nextType === 'Other Document'
-        ? ['documentType']
-        : ['documentType', 'otherDocumentName']
-    );
-  };
-
-  const handleOtherDocumentNameChange = (rowId, value) => {
-    setDocuments((prev) =>
-      prev.map((row) => (row.id === rowId ? { ...row, otherDocumentName: value } : row))
-    );
-    clearDocumentRowErrors(rowId, ['otherDocumentName']);
-  };
-
-  const processRowFileSelection = (rowId, file) => {
-    if (!file) return;
-    const result = validateTenantDocumentFile(file);
-
-    if (!result.valid) {
-      setDocuments((prev) =>
-        prev.map((row) => {
-          if (row.id !== rowId) return row;
-          if (row.previewUrl) {
-            revokePreviewUrl(row.previewUrl);
-            previewUrlsRef.current.delete(row.previewUrl);
-          }
-          return {
-            ...row,
-            file: null,
-            fileName: '',
-            fileSize: 0,
-            isImage: false,
-            extension: '',
-            previewUrl: '',
-            fileError: result.error,
-          };
-        })
-      );
-      clearDocumentRowErrors(rowId, ['file']);
-      return;
-    }
-
-    const nextPreviewUrl =
-      typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function'
-        ? URL.createObjectURL(file)
-        : '';
-    if (nextPreviewUrl) {
-      previewUrlsRef.current.add(nextPreviewUrl);
-    }
-
-    setDocuments((prev) =>
-      prev.map((row) => {
-        if (row.id !== rowId) return row;
-        if (row.previewUrl) {
-          revokePreviewUrl(row.previewUrl);
-          previewUrlsRef.current.delete(row.previewUrl);
-        }
-        return {
-          ...row,
-          file,
-          fileName: file.name,
-          fileSize: file.size,
-          isImage: result.isImage,
-          extension: result.extension,
-          previewUrl: nextPreviewUrl,
-          fileError: '',
-        };
-      })
-    );
-    clearDocumentRowErrors(rowId, ['file']);
-  };
-
-  const handleRemoveDocumentFile = (rowId) => {
-    const targetRow = documents.find((row) => row.id === rowId);
-    if (targetRow?.previewUrl) {
-      revokePreviewUrl(targetRow.previewUrl);
-      previewUrlsRef.current.delete(targetRow.previewUrl);
-    }
-    if (previewDoc?.id === rowId) {
-      setPreviewDoc(null);
-    }
-    setDocuments((prev) =>
-      prev.map((row) =>
-        row.id === rowId
-          ? {
-              ...row,
-              file: null,
-              fileName: '',
-              fileSize: 0,
-              isImage: false,
-              extension: '',
-              previewUrl: '',
-              fileError: '',
-            }
-          : row
-      )
-    );
-    clearDocumentRowErrors(rowId, ['file']);
-  };
-
   const handleEmploymentTypeChange = (nextType) => {
     setFormData((prev) => ({
       ...prev,
       employmentType: nextType,
-      // Explicitly clear fields belonging to any unselected employment type
       companyName: nextType === 'Salaried' ? prev.companyName : '',
       companyDescription: nextType === 'Salaried' ? prev.companyDescription : '',
       organizationName: nextType === 'Self Employed' ? prev.organizationName : '',
@@ -357,26 +263,323 @@ const TenantRegistrationPage = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const validationErrors = validateTenantRegistration(
-      { ...formData, documents },
-      eligibleFlats
-    );
+  // --- Required Docs Handling ---
+  const handleRequiredFileSelection = (docKey, file) => {
+    if (!file) return;
+    const result = validateFile(file);
+    if (!result.valid) {
+      setRequiredDocs((prev) => ({
+        ...prev,
+        [docKey]: { ...prev[docKey], file: null, fileError: result.error },
+      }));
+      return;
+    }
 
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
+    const previewUrl =
+      typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function'
+        ? URL.createObjectURL(file)
+        : '';
+    if (previewUrl) {
+      previewUrlsRef.current.add(previewUrl);
+    }
+
+    setRequiredDocs((prev) => {
+      if (prev[docKey]?.previewUrl) {
+        revokeUrl(prev[docKey].previewUrl);
+        previewUrlsRef.current.delete(prev[docKey].previewUrl);
+      }
+      return {
+        ...prev,
+        [docKey]: {
+          ...prev[docKey],
+          file,
+          fileName: file.name,
+          fileSize: file.size,
+          isImage: result.isImage,
+          extension: result.extension,
+          previewUrl,
+          fileError: '',
+        },
+      };
+    });
+
+    // Clear error
+    if (errors[docKey]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[docKey];
+        return next;
+      });
+    }
+  };
+
+  const handleRemoveRequiredFile = (docKey) => {
+    setRequiredDocs((prev) => {
+      const current = prev[docKey];
+      if (current?.previewUrl) {
+        revokeUrl(current.previewUrl);
+        previewUrlsRef.current.delete(current.previewUrl);
+      }
+      return {
+        ...prev,
+        [docKey]: createEmptyRequiredDoc(current.label),
+      };
+    });
+  };
+
+  // --- Optional Docs Handling ---
+  const handleAddOptionalDoc = () => {
+    if (optionalDocs.length >= 5) return;
+    const newId = `opt-${nextOptionalDocIdRef.current++}`;
+    setOptionalDocs((prev) => [...prev, createEmptyOptionalDoc(newId)]);
+  };
+
+  const handleRemoveOptionalDoc = (id) => {
+    setOptionalDocs((prev) => {
+      const target = prev.find((d) => d.id === id);
+      if (target?.previewUrl) {
+        revokeUrl(target.previewUrl);
+        previewUrlsRef.current.delete(target.previewUrl);
+      }
+      return prev.filter((d) => d.id !== id);
+    });
+  };
+
+  const handleOptionalDocTypeChange = (id, nextType) => {
+    setOptionalDocs((prev) =>
+      prev.map((d) =>
+        d.id === id
+          ? {
+              ...d,
+              documentType: nextType,
+              otherDocumentName: nextType === 'Other Document' ? d.otherDocumentName : '',
+            }
+          : d
+      )
+    );
+  };
+
+  const handleOptionalDocNameChange = (id, name) => {
+    setOptionalDocs((prev) =>
+      prev.map((d) => (d.id === id ? { ...d, otherDocumentName: name } : d))
+    );
+  };
+
+  const handleOptionalFileSelection = (id, file) => {
+    if (!file) return;
+    const result = validateFile(file);
+    if (!result.valid) {
+      setOptionalDocs((prev) =>
+        prev.map((d) => (d.id === id ? { ...d, file: null, fileError: result.error } : d))
+      );
+      return;
+    }
+
+    const previewUrl =
+      typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function'
+        ? URL.createObjectURL(file)
+        : '';
+    if (previewUrl) {
+      previewUrlsRef.current.add(previewUrl);
+    }
+
+    setOptionalDocs((prev) =>
+      prev.map((d) => {
+        if (d.id !== id) return d;
+        if (d.previewUrl) {
+          revokeUrl(d.previewUrl);
+          previewUrlsRef.current.delete(d.previewUrl);
+        }
+        return {
+          ...d,
+          file,
+          fileName: file.name,
+          fileSize: file.size,
+          isImage: result.isImage,
+          extension: result.extension,
+          previewUrl,
+          fileError: '',
+        };
+      })
+    );
+  };
+
+  const handleRemoveOptionalFile = (id) => {
+    setOptionalDocs((prev) =>
+      prev.map((d) => {
+        if (d.id !== id) return d;
+        if (d.previewUrl) {
+          revokeUrl(d.previewUrl);
+          previewUrlsRef.current.delete(d.previewUrl);
+        }
+        return {
+          ...d,
+          file: null,
+          fileName: '',
+          fileSize: 0,
+          isImage: false,
+          extension: '',
+          previewUrl: '',
+          fileError: '',
+        };
+      })
+    );
+  };
+
+  // --- Form Submission ---
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const newErrors = {};
+
+    if (!formData.fullName.trim()) newErrors.fullName = 'Full Name is required';
+
+    const cleanMobile = formData.mobileNumber.replace(/[\s-]/g, '').replace(/^\+91/, '');
+    if (!cleanMobile) newErrors.mobileNumber = 'Mobile Number is required';
+    else if (!/^[6-9]\d{9}$/.test(cleanMobile)) {
+      newErrors.mobileNumber = 'Enter a valid 10-digit Indian mobile number';
+    }
+
+    const cleanEmail = formData.email.trim();
+    if (!cleanEmail) newErrors.email = 'Email is required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cleanEmail)) {
+      newErrors.email = 'Enter a valid email address';
+    }
+
+    if (!formData.flatId) newErrors.flatId = 'Please select an eligible vacant flat';
+    if (!formData.moveInDate) newErrors.moveInDate = 'Move-in date is required';
+
+    if (formData.emergencyContactNumber) {
+      const cleanEm = formData.emergencyContactNumber.replace(/[\s-]/g, '').replace(/^\+91/, '');
+      if (!/^[6-9]\d{9}$/.test(cleanEm)) {
+        newErrors.emergencyContactNumber = 'Enter a valid 10-digit Indian mobile number';
+      }
+    }
+
+    if (formData.referenceContactNumber) {
+      const cleanRef = formData.referenceContactNumber.replace(/[\s-]/g, '').replace(/^\+91/, '');
+      if (!/^[6-9]\d{9}$/.test(cleanRef)) {
+        newErrors.referenceContactNumber = 'Enter a valid 10-digit Indian mobile number';
+      }
+    }
+
+    if (formData.rentDueDay) {
+      const day = Number(formData.rentDueDay);
+      if (isNaN(day) || day < 1 || day > 28) {
+        newErrors.rentDueDay = 'Rent due day must be between 1 and 28';
+      }
+    }
+
+    // Required Documents Check
+    if (!requiredDocs.identityProof.file) {
+      newErrors.identityProof = 'Identity Proof document is required';
+    }
+    if (!requiredDocs.rentalAgreement.file) {
+      newErrors.rentalAgreement = 'Rental Agreement document is required';
+    }
+
+    // Optional docs check
+    const optionalErrors = {};
+    optionalDocs.forEach((doc) => {
+      const rowErr = {};
+      if (!doc.documentType) rowErr.documentType = 'Select document type';
+      if (doc.documentType === 'Other Document' && !doc.otherDocumentName?.trim()) {
+        rowErr.otherDocumentName = 'Document name is required';
+      }
+      if (!doc.file) rowErr.file = 'Please upload a file';
+      if (Object.keys(rowErr).length > 0) {
+        optionalErrors[doc.id] = rowErr;
+      }
+    });
+
+    if (Object.keys(optionalErrors).length > 0) {
+      newErrors.optionalDocs = optionalErrors;
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       toast.error('Please fix the highlighted validation errors.');
       return;
     }
 
-    const payload = buildTenantSubmissionPayload(
-      { ...formData, documents },
-      eligibleFlats
-    );
-    const created = registerMockTenant(payload, viewContext);
-    toast.success(`${created.name} registered for ${created.wing} / ${created.flatNumber}.`);
-    navigate(listingPath);
+    // Prepare Multipart FormData
+    const fd = new FormData();
+    fd.append('fullName', formData.fullName.trim());
+    fd.append('mobileNumber', cleanMobile);
+    fd.append('email', cleanEmail);
+    fd.append('flatId', formData.flatId);
+    fd.append('moveInDate', formData.moveInDate);
+    fd.append('status', formData.status || 'Active');
+
+    if (formData.dateOfBirth) fd.append('dateOfBirth', formData.dateOfBirth);
+    if (formData.gender) fd.append('gender', formData.gender);
+    if (formData.numberOfOccupants) fd.append('numberOfOccupants', formData.numberOfOccupants);
+    if (formData.completeAddress?.trim()) fd.append('completeAddress', formData.completeAddress.trim());
+    if (formData.emergencyContactNumber?.trim()) {
+      fd.append('emergencyContactNumber', formData.emergencyContactNumber.trim());
+    }
+
+    if (formData.employmentType) {
+      fd.append('employmentType', formData.employmentType);
+      if (formData.employmentType === 'Salaried') {
+        if (formData.companyName?.trim()) fd.append('companyName', formData.companyName.trim());
+        if (formData.companyDescription?.trim()) {
+          fd.append('companyDescription', formData.companyDescription.trim());
+        }
+      } else if (formData.employmentType === 'Self Employed') {
+        if (formData.organizationName?.trim()) {
+          fd.append('organizationName', formData.organizationName.trim());
+        }
+        if (formData.organizationAddress?.trim()) {
+          fd.append('organizationAddress', formData.organizationAddress.trim());
+        }
+        if (formData.yearOfIncorporation?.trim()) {
+          fd.append('yearOfIncorporation', formData.yearOfIncorporation.trim());
+        }
+      }
+    }
+
+    if (formData.monthlyRent) fd.append('monthlyRent', formData.monthlyRent);
+    if (formData.securityDeposit) fd.append('securityDeposit', formData.securityDeposit);
+    if (formData.rentDueDay) fd.append('rentDueDay', formData.rentDueDay);
+    fd.append('petAllowed', formData.petAllowed ? 'true' : 'false');
+
+    if (formData.referenceName?.trim()) fd.append('referenceName', formData.referenceName.trim());
+    if (formData.referenceContactNumber?.trim()) {
+      fd.append('referenceContactNumber', formData.referenceContactNumber.trim());
+    }
+    if (formData.referenceRelation) fd.append('referenceRelation', formData.referenceRelation);
+
+    // Append Required Files
+    fd.append('identityProof', requiredDocs.identityProof.file);
+    fd.append('rentalAgreement', requiredDocs.rentalAgreement.file);
+
+    // Append Optional Files
+    const optionalMeta = [];
+    optionalDocs.forEach((doc) => {
+      if (doc.file) {
+        fd.append('optionalDocs', doc.file);
+        optionalMeta.push({
+          documentType: doc.documentType,
+          otherDocumentName: doc.otherDocumentName || '',
+        });
+      }
+    });
+    if (optionalMeta.length > 0) {
+      fd.append('optionalDocsMeta', JSON.stringify(optionalMeta));
+    }
+
+    try {
+      setSubmitting(true);
+      await tenantApi.registerTenant(fd);
+      toast.success(`${formData.fullName} registered successfully! Activation link sent.`);
+      navigate(listingPath);
+    } catch (err) {
+      console.error('Registration failed:', err);
+      const msg = err?.response?.data?.message || err?.message || 'Tenant registration failed';
+      toast.error(msg);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -396,7 +599,7 @@ const TenantRegistrationPage = () => {
             New Tenant Registration
           </h1>
           <p className="text-sm text-[#475569] mt-1">
-            Register a new tenant and assign an eligible vacant flat.
+            Register a new tenant for your flat, upload mandatory documents, and send account invitation.
           </p>
         </div>
 
@@ -486,6 +689,19 @@ const TenantRegistrationPage = () => {
               </div>
 
               <div>
+                <FieldLabel htmlFor="tenant-occupants" label="Number of Occupants" />
+                <input
+                  id="tenant-occupants"
+                  type="number"
+                  min="1"
+                  placeholder="e.g. 3"
+                  value={formData.numberOfOccupants}
+                  onChange={(e) => updateField('numberOfOccupants', e.target.value)}
+                  className={getControlClass(false)}
+                />
+              </div>
+
+              <div>
                 <FieldLabel htmlFor="tenant-emergency-contact" label="Emergency Contact Number" />
                 <input
                   id="tenant-emergency-contact"
@@ -501,11 +717,11 @@ const TenantRegistrationPage = () => {
             </div>
 
             <div>
-              <FieldLabel htmlFor="tenant-address" label="Complete Address" />
+              <FieldLabel htmlFor="tenant-address" label="Permanent / Previous Address" />
               <textarea
                 id="tenant-address"
                 rows={3}
-                placeholder="Permanent or previous residential address..."
+                placeholder="Permanent address or previous residential address..."
                 value={formData.completeAddress}
                 onChange={(e) => updateField('completeAddress', e.target.value)}
                 className={getControlClass(false)}
@@ -554,11 +770,11 @@ const TenantRegistrationPage = () => {
                   />
                 </div>
                 <div>
-                  <FieldLabel htmlFor="tenant-company-desc" label="Company Description" />
+                  <FieldLabel htmlFor="tenant-company-desc" label="Company Description / Designation" />
                   <input
                     id="tenant-company-desc"
                     type="text"
-                    placeholder="e.g. IT Services / Role & Department"
+                    placeholder="e.g. Software Engineer, IT Services"
                     value={formData.companyDescription}
                     onChange={(e) => updateField('companyDescription', e.target.value)}
                     className={getControlClass(false)}
@@ -570,7 +786,7 @@ const TenantRegistrationPage = () => {
             {formData.employmentType === 'Self Employed' && (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 pt-1">
                 <div>
-                  <FieldLabel htmlFor="tenant-org-name" label="Organization Name" />
+                  <FieldLabel htmlFor="tenant-org-name" label="Organization / Business Name" />
                   <input
                     id="tenant-org-name"
                     type="text"
@@ -613,20 +829,20 @@ const TenantRegistrationPage = () => {
         <SectionCard
           stepNumber={3}
           title="Tenancy Details"
-          subtitle="Assign an owner-allocated vacant flat, allotment month, and current status."
+          subtitle="Assign an owner-allocated vacant flat, move-in date, rent, and occupancy terms."
           icon={Building2}
         >
           <div className="space-y-5">
-            {eligibleFlats.length === 0 && (
+            {!loadingFlats && eligibleFlats.length === 0 && (
               <div
                 role="status"
                 className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-xs text-amber-800"
               >
                 <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold">No eligible vacant flats available</p>
+                  <p className="font-semibold">No eligible vacant flats found</p>
                   <p className="mt-0.5 text-amber-700">
-                    Only flats with an assigned Owner and Vacant occupancy status can be allotted to a new tenant.
+                    Only flats owned by you with a "Vacant" status can be allocated to a new tenant.
                   </p>
                 </div>
               </div>
@@ -638,18 +854,20 @@ const TenantRegistrationPage = () => {
                 <select
                   id="tenant-flat-select"
                   value={formData.flatId}
-                  disabled={eligibleFlats.length === 0}
+                  disabled={loadingFlats || eligibleFlats.length === 0}
                   onChange={(e) => updateField('flatId', e.target.value)}
                   className={`${getControlClass(Boolean(errors.flatId))} disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed`}
                 >
                   <option value="">
-                    {eligibleFlats.length === 0
+                    {loadingFlats
+                      ? 'Loading eligible flats...'
+                      : eligibleFlats.length === 0
                       ? 'No eligible vacant flats available'
-                      : 'Select an eligible vacant flat'}
+                      : 'Select your vacant flat'}
                   </option>
                   {eligibleFlats.map((flat) => (
-                    <option key={flat.id} value={flat.id}>
-                      {flat.flatNumber} — {flat.wing} (Owner: {flat.ownerName})
+                    <option key={flat._id || flat.id} value={flat._id || flat.id}>
+                      {flat.flatNumber} — {flat.wing || flat.wingName || 'Wing'} ({flat.occupancyStatus})
                     </option>
                   ))}
                 </select>
@@ -657,70 +875,95 @@ const TenantRegistrationPage = () => {
               </div>
 
               <div>
-                <FieldLabel htmlFor="tenant-allotted-month" label="Allotted Month" required />
-                <div className="grid grid-cols-2 gap-2.5">
-                  <select
-                    id="tenant-allotted-month"
-                    aria-label="Allotted Month"
-                    value={formData.allottedMonthName}
-                    onChange={(e) =>
-                      updateField('allottedMonthName', e.target.value, 'allottedMonth')
-                    }
-                    className={getControlClass(Boolean(errors.allottedMonth))}
-                  >
-                    <option value="">Month</option>
-                    {TENANT_FORM_OPTIONS.months.map((m) => (
-                      <option key={m.value} value={m.value}>
-                        {m.label}
-                      </option>
-                    ))}
-                  </select>
-
-                  <select
-                    id="tenant-allotted-year"
-                    aria-label="Allotted Year"
-                    value={formData.allottedYear}
-                    onChange={(e) => updateField('allottedYear', e.target.value, 'allottedMonth')}
-                    className={getControlClass(Boolean(errors.allottedMonth))}
-                  >
-                    <option value="">Year</option>
-                    {TENANT_FORM_OPTIONS.years.map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <FieldError message={errors.allottedMonth} />
+                <FieldLabel htmlFor="tenant-move-in-date" label="Move-in Date" required />
+                <input
+                  id="tenant-move-in-date"
+                  type="date"
+                  value={formData.moveInDate}
+                  onChange={(e) => updateField('moveInDate', e.target.value)}
+                  className={getControlClass(Boolean(errors.moveInDate))}
+                />
+                <FieldError message={errors.moveInDate} />
               </div>
 
               <div>
-                <FieldLabel htmlFor="tenant-status" label="Current Status" />
+                <FieldLabel htmlFor="tenant-status" label="Tenancy Status" />
                 <select
                   id="tenant-status"
                   value={formData.status}
                   onChange={(e) => updateField('status', e.target.value)}
                   className={getControlClass(false)}
                 >
-                  {TENANT_FORM_OPTIONS.statuses.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
                 </select>
               </div>
+
+              <div>
+                <FieldLabel htmlFor="tenant-monthly-rent" label="Monthly Rent (₹)" />
+                <input
+                  id="tenant-monthly-rent"
+                  type="number"
+                  min="0"
+                  placeholder="e.g. 20000"
+                  value={formData.monthlyRent}
+                  onChange={(e) => updateField('monthlyRent', e.target.value)}
+                  className={getControlClass(false)}
+                />
+              </div>
+
+              <div>
+                <FieldLabel htmlFor="tenant-security-deposit" label="Security Deposit (₹)" />
+                <input
+                  id="tenant-security-deposit"
+                  type="number"
+                  min="0"
+                  placeholder="e.g. 50000"
+                  value={formData.securityDeposit}
+                  onChange={(e) => updateField('securityDeposit', e.target.value)}
+                  className={getControlClass(false)}
+                />
+              </div>
+
+              <div>
+                <FieldLabel htmlFor="tenant-rent-due-day" label="Rent Due Day of Month (1–28)" />
+                <input
+                  id="tenant-rent-due-day"
+                  type="number"
+                  min="1"
+                  max="28"
+                  placeholder="e.g. 5"
+                  value={formData.rentDueDay}
+                  onChange={(e) => updateField('rentDueDay', e.target.value)}
+                  className={getControlClass(Boolean(errors.rentDueDay))}
+                />
+                <FieldError message={errors.rentDueDay} />
+              </div>
+            </div>
+
+            <div className="pt-1 flex items-center gap-3">
+              <input
+                id="tenant-pet-allowed"
+                type="checkbox"
+                checked={formData.petAllowed}
+                onChange={(e) => updateField('petAllowed', e.target.checked)}
+                className="w-4 h-4 text-[#EA580C] border-gray-300 rounded focus:ring-orange-500 cursor-pointer"
+              />
+              <label htmlFor="tenant-pet-allowed" className="text-sm font-medium text-gray-700 cursor-pointer select-none">
+                Pet(s) allowed in the flat
+              </label>
             </div>
 
             {selectedFlat && (
               <div className="rounded-xl border border-orange-100 bg-orange-50/40 px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-gray-700">
                 <span className="inline-flex items-center gap-1.5 font-semibold text-gray-800">
                   <UserCheck className="w-4 h-4 text-[#EA580C]" />
-                  Flat Owner: {selectedFlat.ownerName}
+                  Owner: {selectedFlat.ownerName || viewContext.user?.name || 'You'}
                 </span>
-                <span>Wing / Block: {selectedFlat.wing}</span>
+                <span>Wing: {selectedFlat.wing || selectedFlat.wingName || 'Wing'}</span>
                 <span>Flat Number: {selectedFlat.flatNumber}</span>
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-semibold">
-                  Current Occupancy: {selectedFlat.occupancyStatus}
+                  Status: {selectedFlat.occupancyStatus}
                 </span>
               </div>
             )}
@@ -781,251 +1024,409 @@ const TenantRegistrationPage = () => {
           </div>
         </SectionCard>
 
-        {/* Section 5: Tenant Documents (Optional) */}
+        {/* Section 5: Tenant Documents (2 Required by default + Optional extras) */}
         <SectionCard
           stepNumber={5}
           title="Tenant Documents"
-          subtitle="Upload KYC, rental agreement, or verification documents (JPG, JPEG, PNG, PDF up to 5 MB each)."
-          optional
+          subtitle="Upload required verification documents and rental agreement (JPG, JPEG, PNG, PDF up to 15 MB each)."
           icon={FileText}
         >
-          <div className="space-y-4">
-            {documents.map((doc, index) => {
-              const rowErrors = errors.documents?.[doc.id] || {};
-              const fileErrorMessage = doc.fileError || rowErrors.file;
-              const selectedElsewhere = new Set(
-                documents
-                  .filter((other) => other.id !== doc.id && other.documentType)
-                  .map((other) => other.documentType)
-              );
-              const isRowDirty = Boolean(
-                doc.documentType || doc.otherDocumentName || doc.file || doc.fileError
-              );
+          <div className="space-y-6">
+            {/* --- ZONE A: 2 MANDATORY DOCUMENTS --- */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700">
+                  Required Documents (2 Required)
+                </h3>
+              </div>
 
-              return (
-                <div
-                  key={doc.id}
-                  data-doc-row={doc.id}
-                  className="rounded-xl border border-gray-200/90 bg-gray-50/40 p-4 sm:p-5 space-y-4"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-50 text-[#EA580C] border border-orange-100">
-                      Document {index + 1}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* 1. Identity Proof Slot */}
+                <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                      <FileCheck2 className="w-4 h-4 text-[#EA580C]" />
+                      1. Identity Proof <span className="text-red-500">*</span>
                     </span>
-
-                    {documents.length > 1 ? (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveDocumentRow(doc.id)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Remove Row</span>
-                      </button>
-                    ) : (
-                      isRowDirty && (
-                        <button
-                          type="button"
-                          onClick={() => handleClearDocumentRow(doc.id)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                          <span>Clear</span>
-                        </button>
-                      )
-                    )}
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-red-50 text-red-600 border border-red-100">
+                      Required
+                    </span>
                   </div>
+                  <p className="text-[11px] text-gray-500">
+                    Aadhaar, Passport, PAN Card, or Voter ID of the tenant.
+                  </p>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-                    <div className="lg:col-span-5 space-y-4">
-                      <div>
-                        <FieldLabel htmlFor={`tenant-doc-type-${doc.id}`} label="Document Type" />
-                        <select
-                          id={`tenant-doc-type-${doc.id}`}
-                          value={doc.documentType}
-                          onChange={(e) => handleDocumentTypeChange(doc.id, e.target.value)}
-                          className={getControlClass(Boolean(rowErrors.documentType))}
-                        >
-                          <option value="">Select Document Type</option>
-                          {TENANT_FORM_OPTIONS.documentTypes.map((type) => {
-                            const isDisabled = selectedElsewhere.has(type);
-                            return (
-                              <option key={type} value={type} disabled={isDisabled}>
-                                {isDisabled ? `${type} (Already selected)` : type}
-                              </option>
-                            );
-                          })}
-                        </select>
-                        <FieldError message={rowErrors.documentType} />
+                  {!requiredDocs.identityProof.file ? (
+                    <div>
+                      <div
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          const f = e.dataTransfer?.files?.[0];
+                          if (f) handleRequiredFileSelection('identityProof', f);
+                        }}
+                        className={`border-2 border-dashed rounded-xl p-4 transition-colors text-center ${
+                          errors.identityProof || requiredDocs.identityProof.fileError
+                            ? 'border-red-300 bg-red-50/40'
+                            : 'border-orange-200 bg-orange-50/20 hover:bg-orange-50/40'
+                        }`}
+                      >
+                        <input
+                          id="id-proof-upload"
+                          type="file"
+                          accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) handleRequiredFileSelection('identityProof', f);
+                            e.target.value = '';
+                          }}
+                          className="hidden"
+                        />
+                        <label htmlFor="id-proof-upload" className="cursor-pointer block space-y-1">
+                          <UploadCloud className="w-7 h-7 mx-auto text-[#EA580C]" />
+                          <p className="text-xs font-semibold text-gray-800">
+                            <span className="text-[#EA580C]">Click to upload</span> or drag & drop
+                          </p>
+                          <p className="text-[10px] text-gray-400">PDF, JPG, PNG up to 15 MB</p>
+                        </label>
+                      </div>
+                      <FieldError message={requiredDocs.identityProof.fileError || errors.identityProof} />
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-gray-200 bg-gray-50/60 p-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {requiredDocs.identityProof.isImage && requiredDocs.identityProof.previewUrl ? (
+                          <img
+                            src={requiredDocs.identityProof.previewUrl}
+                            alt="Identity Proof"
+                            className="w-10 h-10 rounded-lg object-cover border border-gray-200 shrink-0"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-red-50 border border-red-100 text-red-600 flex flex-col items-center justify-center shrink-0">
+                            <FileText className="w-4 h-4" />
+                            <span className="text-[8px] font-bold uppercase leading-none mt-0.5">
+                              {requiredDocs.identityProof.extension || 'PDF'}
+                            </span>
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p title={requiredDocs.identityProof.fileName} className="text-xs font-semibold text-gray-800 truncate">
+                            {requiredDocs.identityProof.fileName}
+                          </p>
+                          <p className="text-[10px] text-gray-500 mt-0.5">
+                            {formatDocumentFileSize(requiredDocs.identityProof.fileSize)}
+                          </p>
+                        </div>
                       </div>
 
-                      {doc.documentType === 'Other Document' && (
-                        <div>
-                          <FieldLabel
-                            htmlFor={`tenant-doc-other-name-${doc.id}`}
-                            label="Document Name"
-                            required
-                          />
-                          <input
-                            id={`tenant-doc-other-name-${doc.id}`}
-                            type="text"
-                            placeholder="e.g. Company ID Card, Salary Slip"
-                            value={doc.otherDocumentName}
-                            onChange={(e) => handleOtherDocumentNameChange(doc.id, e.target.value)}
-                            className={getControlClass(Boolean(rowErrors.otherDocumentName))}
-                          />
-                          <FieldError message={rowErrors.otherDocumentName} />
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="lg:col-span-7">
-                      {!doc.file ? (
-                        <label
-                          htmlFor={`tenant-doc-file-${doc.id}`}
-                          className="block text-xs font-bold text-gray-700 mb-1.5"
-                        >
-                          Upload Document{' '}
-                          <span className="font-normal text-gray-400">
-                            (JPG, JPEG, PNG, PDF &bull; Max 5 MB)
-                          </span>
-                        </label>
-                      ) : (
-                        <span className="block text-xs font-bold text-gray-700 mb-1.5">
-                          Upload Document{' '}
-                          <span className="font-normal text-gray-400">
-                            (JPG, JPEG, PNG, PDF &bull; Max 5 MB)
-                          </span>
-                        </span>
-                      )}
-
-                      {!doc.file ? (
-                        <div
-                          onDragOver={(e) => e.preventDefault()}
-                          onDrop={(e) => {
-                            e.preventDefault();
-                            const droppedFile = e.dataTransfer?.files?.[0];
-                            if (droppedFile) {
-                              processRowFileSelection(doc.id, droppedFile);
-                            }
-                          }}
-                          className={`relative border-2 border-dashed rounded-xl px-4 py-4 transition-colors ${
-                            fileErrorMessage
-                              ? 'border-red-300 bg-red-50/40 hover:bg-red-50/60'
-                              : 'border-orange-200 bg-orange-50/20 hover:bg-orange-50/40'
-                          }`}
-                        >
-                          <input
-                            id={`tenant-doc-file-${doc.id}`}
-                            type="file"
-                            accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
-                            onChange={(e) => {
-                              const pickedFile = e.target.files?.[0];
-                              if (pickedFile) {
-                                processRowFileSelection(doc.id, pickedFile);
-                              }
-                              e.target.value = '';
-                            }}
-                            className="sr-only"
-                          />
-                          <label
-                            htmlFor={`tenant-doc-file-${doc.id}`}
-                            className="flex items-center gap-3.5 cursor-pointer"
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {requiredDocs.identityProof.previewUrl && (
+                          <button
+                            type="button"
+                            onClick={() => setPreviewDoc(requiredDocs.identityProof)}
+                            className="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-orange-50 text-gray-700 hover:text-[#EA580C] cursor-pointer"
+                            title="Preview"
                           >
-                            <div className="w-10 h-10 rounded-full bg-[#FFF3E8] text-[#EA580C] flex items-center justify-center shrink-0">
-                              <UploadCloud className="w-5 h-5" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-xs sm:text-sm font-semibold text-gray-800">
-                                <span className="text-[#EA580C]">Click to upload</span> or drag and drop
-                              </p>
-                              <p className="text-[11px] text-gray-500 mt-0.5">
-                                Accepted formats: JPG, JPEG, PNG, PDF (up to 5 MB)
-                              </p>
-                            </div>
-                          </label>
-                        </div>
-                      ) : (
-                        <div className="rounded-xl border border-gray-200 bg-white p-3 flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-3 min-w-0">
-                            {doc.isImage && doc.previewUrl ? (
-                              <img
-                                src={doc.previewUrl}
-                                alt={doc.fileName}
-                                className="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 rounded-lg bg-red-50 border border-red-100 text-red-600 flex flex-col items-center justify-center shrink-0">
-                                <FileText className="w-5 h-5" />
-                                <span className="text-[9px] font-bold uppercase leading-none mt-0.5">
-                                  {doc.extension || 'PDF'}
-                                </span>
-                              </div>
-                            )}
-
-                            <div className="min-w-0">
-                              <p
-                                title={doc.fileName}
-                                className="text-sm font-semibold text-gray-800 truncate"
-                              >
-                                {doc.fileName}
-                              </p>
-                              <div className="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-gray-500">
-                                <span>{formatDocumentFileSize(doc.fileSize)}</span>
-                                <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-semibold text-[10px] uppercase">
-                                  {doc.extension}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            {doc.previewUrl && (
-                              <button
-                                type="button"
-                                onClick={() => setPreviewDoc(doc)}
-                                aria-label={`Preview ${doc.fileName}`}
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-orange-50 hover:border-orange-200 hover:text-[#EA580C] text-xs font-semibold text-gray-700 transition-colors cursor-pointer"
-                              >
-                                <Eye className="w-3.5 h-3.5" />
-                                <span className="hidden sm:inline">Preview</span>
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveDocumentFile(doc.id)}
-                              aria-label={`Remove ${doc.fileName}`}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-red-200 bg-red-50/50 hover:bg-red-100 text-xs font-semibold text-red-600 transition-colors cursor-pointer"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                              <span>Remove</span>
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      <FieldError message={fileErrorMessage} />
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveRequiredFile('identityProof')}
+                          className="p-1.5 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-600 cursor-pointer"
+                          title="Remove"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
-              );
-            })}
 
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                {/* 2. Rental Agreement Slot */}
+                <div className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                      <FileCheck2 className="w-4 h-4 text-[#EA580C]" />
+                      2. Rental Agreement <span className="text-red-500">*</span>
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-red-50 text-red-600 border border-red-100">
+                      Required
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-500">
+                    Signed registered rent agreement or leave & license document.
+                  </p>
+
+                  {!requiredDocs.rentalAgreement.file ? (
+                    <div>
+                      <div
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          const f = e.dataTransfer?.files?.[0];
+                          if (f) handleRequiredFileSelection('rentalAgreement', f);
+                        }}
+                        className={`border-2 border-dashed rounded-xl p-4 transition-colors text-center ${
+                          errors.rentalAgreement || requiredDocs.rentalAgreement.fileError
+                            ? 'border-red-300 bg-red-50/40'
+                            : 'border-orange-200 bg-orange-50/20 hover:bg-orange-50/40'
+                        }`}
+                      >
+                        <input
+                          id="rental-agreement-upload"
+                          type="file"
+                          accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) handleRequiredFileSelection('rentalAgreement', f);
+                            e.target.value = '';
+                          }}
+                          className="hidden"
+                        />
+                        <label htmlFor="rental-agreement-upload" className="cursor-pointer block space-y-1">
+                          <UploadCloud className="w-7 h-7 mx-auto text-[#EA580C]" />
+                          <p className="text-xs font-semibold text-gray-800">
+                            <span className="text-[#EA580C]">Click to upload</span> or drag & drop
+                          </p>
+                          <p className="text-[10px] text-gray-400">PDF, JPG, PNG up to 15 MB</p>
+                        </label>
+                      </div>
+                      <FieldError message={requiredDocs.rentalAgreement.fileError || errors.rentalAgreement} />
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-gray-200 bg-gray-50/60 p-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {requiredDocs.rentalAgreement.isImage && requiredDocs.rentalAgreement.previewUrl ? (
+                          <img
+                            src={requiredDocs.rentalAgreement.previewUrl}
+                            alt="Rental Agreement"
+                            className="w-10 h-10 rounded-lg object-cover border border-gray-200 shrink-0"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-red-50 border border-red-100 text-red-600 flex flex-col items-center justify-center shrink-0">
+                            <FileText className="w-4 h-4" />
+                            <span className="text-[8px] font-bold uppercase leading-none mt-0.5">
+                              {requiredDocs.rentalAgreement.extension || 'PDF'}
+                            </span>
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p title={requiredDocs.rentalAgreement.fileName} className="text-xs font-semibold text-gray-800 truncate">
+                            {requiredDocs.rentalAgreement.fileName}
+                          </p>
+                          <p className="text-[10px] text-gray-500 mt-0.5">
+                            {formatDocumentFileSize(requiredDocs.rentalAgreement.fileSize)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {requiredDocs.rentalAgreement.previewUrl && (
+                          <button
+                            type="button"
+                            onClick={() => setPreviewDoc(requiredDocs.rentalAgreement)}
+                            className="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-orange-50 text-gray-700 hover:text-[#EA580C] cursor-pointer"
+                            title="Preview"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveRequiredFile('rentalAgreement')}
+                          className="p-1.5 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-600 cursor-pointer"
+                          title="Remove"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* --- ZONE B: OPTIONAL DOCUMENTS --- */}
+            <div className="pt-2 border-t border-gray-100">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-gray-400"></span>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700">
+                    Additional Documents (Optional)
+                  </h3>
+                </div>
+                <span className="text-xs text-gray-500">
+                  {optionalDocs.length} of 5 added
+                </span>
+              </div>
+
+              {optionalDocs.length > 0 && (
+                <div className="space-y-4 mb-4">
+                  {optionalDocs.map((doc, idx) => {
+                    const rowErrors = errors.optionalDocs?.[doc.id] || {};
+                    return (
+                      <div
+                        key={doc.id}
+                        className="rounded-xl border border-gray-200/90 bg-gray-50/50 p-4 space-y-4"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-gray-700">
+                            Optional Document {idx + 1}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveOptionalDoc(doc.id)}
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-red-600 hover:text-red-700 cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Remove
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+                          <div className="md:col-span-5 space-y-3">
+                            <div>
+                              <FieldLabel htmlFor={`opt-type-${doc.id}`} label="Document Type" required />
+                              <select
+                                id={`opt-type-${doc.id}`}
+                                value={doc.documentType}
+                                onChange={(e) => handleOptionalDocTypeChange(doc.id, e.target.value)}
+                                className={getControlClass(Boolean(rowErrors.documentType))}
+                              >
+                                <option value="">Select Document Type</option>
+                                {OPTIONAL_DOC_TYPES.map((type) => (
+                                  <option key={type} value={type}>
+                                    {type}
+                                  </option>
+                                ))}
+                              </select>
+                              <FieldError message={rowErrors.documentType} />
+                            </div>
+
+                            {doc.documentType === 'Other Document' && (
+                              <div>
+                                <FieldLabel htmlFor={`opt-name-${doc.id}`} label="Document Name" required />
+                                <input
+                                  id={`opt-name-${doc.id}`}
+                                  type="text"
+                                  placeholder="e.g. Police Verification, Electricity Bill"
+                                  value={doc.otherDocumentName}
+                                  onChange={(e) => handleOptionalDocNameChange(doc.id, e.target.value)}
+                                  className={getControlClass(Boolean(rowErrors.otherDocumentName))}
+                                />
+                                <FieldError message={rowErrors.otherDocumentName} />
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="md:col-span-7">
+                            <span className="block text-xs font-bold text-gray-700 mb-1.5">
+                              Upload File <span className="font-normal text-gray-400">(Max 15 MB)</span>
+                            </span>
+
+                            {!doc.file ? (
+                              <div
+                                onDragOver={(e) => e.preventDefault()}
+                                onDrop={(e) => {
+                                  e.preventDefault();
+                                  const f = e.dataTransfer?.files?.[0];
+                                  if (f) handleOptionalFileSelection(doc.id, f);
+                                }}
+                                className={`border-2 border-dashed rounded-xl p-4 transition-colors text-center ${
+                                  rowErrors.file || doc.fileError
+                                    ? 'border-red-300 bg-red-50/40'
+                                    : 'border-orange-200 bg-white hover:bg-orange-50/30'
+                                }`}
+                              >
+                                <input
+                                  id={`opt-file-${doc.id}`}
+                                  type="file"
+                                  accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
+                                  onChange={(e) => {
+                                    const f = e.target.files?.[0];
+                                    if (f) handleOptionalFileSelection(doc.id, f);
+                                    e.target.value = '';
+                                  }}
+                                  className="hidden"
+                                />
+                                <label htmlFor={`opt-file-${doc.id}`} className="cursor-pointer block space-y-1">
+                                  <UploadCloud className="w-6 h-6 mx-auto text-[#EA580C]" />
+                                  <p className="text-xs font-semibold text-gray-800">
+                                    <span className="text-[#EA580C]">Click to upload</span> or drag & drop
+                                  </p>
+                                  <p className="text-[10px] text-gray-400">PDF, JPG, PNG</p>
+                                </label>
+                              </div>
+                            ) : (
+                              <div className="rounded-xl border border-gray-200 bg-white p-3 flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  {doc.isImage && doc.previewUrl ? (
+                                    <img
+                                      src={doc.previewUrl}
+                                      alt={doc.fileName}
+                                      className="w-10 h-10 rounded-lg object-cover border border-gray-200 shrink-0"
+                                    />
+                                  ) : (
+                                    <div className="w-10 h-10 rounded-lg bg-red-50 border border-red-100 text-red-600 flex flex-col items-center justify-center shrink-0">
+                                      <FileText className="w-4 h-4" />
+                                      <span className="text-[8px] font-bold uppercase leading-none mt-0.5">
+                                        {doc.extension || 'PDF'}
+                                      </span>
+                                    </div>
+                                  )}
+                                  <div className="min-w-0">
+                                    <p title={doc.fileName} className="text-xs font-semibold text-gray-800 truncate">
+                                      {doc.fileName}
+                                    </p>
+                                    <p className="text-[10px] text-gray-500 mt-0.5">
+                                      {formatDocumentFileSize(doc.fileSize)}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  {doc.previewUrl && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setPreviewDoc(doc)}
+                                      className="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-orange-50 text-gray-700 hover:text-[#EA580C] cursor-pointer"
+                                      title="Preview"
+                                    >
+                                      <Eye className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveOptionalFile(doc.id)}
+                                    className="p-1.5 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-600 cursor-pointer"
+                                    title="Remove"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            <FieldError message={rowErrors.file || doc.fileError} />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               <button
                 type="button"
-                id="add-another-document-btn"
-                onClick={handleAddDocumentRow}
-                disabled={documents.length >= TENANT_FORM_OPTIONS.documentTypes.length}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-orange-300 bg-orange-50/50 hover:bg-orange-50 text-xs sm:text-sm font-semibold text-[#EA580C] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                onClick={handleAddOptionalDoc}
+                disabled={optionalDocs.length >= 5}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-dashed border-orange-300 bg-orange-50/50 hover:bg-orange-50 text-xs sm:text-sm font-semibold text-[#EA580C] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
-                <span>Add Another Document</span>
+                <span>Add Optional Document</span>
               </button>
-
-              <span className="text-xs text-gray-500">
-                {documents.length} of {TENANT_FORM_OPTIONS.documentTypes.length} document slots
-              </span>
             </div>
           </div>
         </SectionCard>
@@ -1035,22 +1436,33 @@ const TenantRegistrationPage = () => {
           <button
             type="button"
             onClick={() => navigate(listingPath)}
-            className="px-5 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-sm font-semibold text-gray-700 transition-colors cursor-pointer"
+            disabled={submitting}
+            className="px-5 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-sm font-semibold text-gray-700 transition-colors cursor-pointer disabled:opacity-50"
           >
             Cancel
           </button>
 
           <button
             type="submit"
-            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#EA580C] hover:bg-[#DC4E07] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer"
+            disabled={submitting}
+            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#EA580C] hover:bg-[#DC4E07] text-white text-sm font-semibold shadow-xs transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <UserPlus className="w-4 h-4" />
-            <span>Register Tenant</span>
+            {submitting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Registering Tenant...</span>
+              </>
+            ) : (
+              <>
+                <UserPlus className="w-4 h-4" />
+                <span>Register Tenant</span>
+              </>
+            )}
           </button>
         </div>
       </form>
 
-      {/* Lightweight Document Preview Modal */}
+      {/* Document Preview Modal */}
       {previewDoc && previewDoc.previewUrl && (
         <div
           role="dialog"
@@ -1065,10 +1477,8 @@ const TenantRegistrationPage = () => {
                   {previewDoc.fileName}
                 </h3>
                 <p className="text-xs text-gray-500">
-                  {previewDoc.documentType === 'Other Document' && previewDoc.otherDocumentName
-                    ? `Other Document (${previewDoc.otherDocumentName})`
-                    : previewDoc.documentType || 'Selected Document'}{' '}
-                  &bull; {formatDocumentFileSize(previewDoc.fileSize)}
+                  {previewDoc.label || previewDoc.documentType || 'Document'} &bull;{' '}
+                  {formatDocumentFileSize(previewDoc.fileSize)}
                 </p>
               </div>
               <button
