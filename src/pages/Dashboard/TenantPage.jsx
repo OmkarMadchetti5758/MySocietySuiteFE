@@ -992,4 +992,5 @@ const TenantPage = () => {
   );
 };
 
+export { TenantActionModal };
 export default TenantPage;
