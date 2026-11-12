@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
@@ -6,21 +6,48 @@ import {
   ArrowLeft,
   Briefcase,
   Building2,
+  Eye,
+  FileText,
+  Plus,
+  Trash2,
+  UploadCloud,
   User,
   UserCheck,
   UserPlus,
   Users,
+  X,
 } from 'lucide-react';
 import {
   INITIAL_REGISTRATION_FORM,
   TENANT_FORM_OPTIONS,
   buildTenantSubmissionPayload,
+  formatDocumentFileSize,
   getEligibleFlatsForUser,
   getMockFlats,
   registerMockTenant,
   resolveTenantViewContext,
+  validateTenantDocumentFile,
   validateTenantRegistration,
 } from './tenantMockData';
+
+const createEmptyDocumentRow = (id) => ({
+  id,
+  documentType: '',
+  otherDocumentName: '',
+  file: null,
+  fileName: '',
+  fileSize: 0,
+  isImage: false,
+  extension: '',
+  previewUrl: '',
+  fileError: '',
+});
+
+const revokePreviewUrl = (url) => {
+  if (url && typeof URL !== 'undefined' && typeof URL.revokeObjectURL === 'function') {
+    URL.revokeObjectURL(url);
+  }
+};
 
 const getControlClass = (hasError) =>
   `w-full px-3.5 py-2.5 bg-white border rounded-xl text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-colors ${
@@ -71,7 +98,7 @@ const SectionCard = ({ stepNumber, title, subtitle, optional = false, icon: Icon
 );
 
 /**
- * Complete 4-section Tenant Registration Form UI (mock-data backed, frontend only).
+ * Complete 5-section Tenant Registration Form UI (mock-data backed, frontend only).
  */
 const TenantRegistrationPage = () => {
   const navigate = useNavigate();
@@ -84,7 +111,20 @@ const TenantRegistrationPage = () => {
   );
 
   const [formData, setFormData] = useState(INITIAL_REGISTRATION_FORM);
+  const [documents, setDocuments] = useState(() => [createEmptyDocumentRow('doc-1')]);
+  const [previewDoc, setPreviewDoc] = useState(null);
   const [errors, setErrors] = useState({});
+
+  const nextDocIdRef = useRef(2);
+  const previewUrlsRef = useRef(new Set());
+
+  useEffect(() => {
+    const trackedUrls = previewUrlsRef.current;
+    return () => {
+      trackedUrls.forEach(revokePreviewUrl);
+      trackedUrls.clear();
+    };
+  }, []);
 
   const targetSocietyId = societyId || localStorage.getItem('societyDatabase');
   const listingPath = targetSocietyId
@@ -108,6 +148,202 @@ const TenantRegistrationPage = () => {
     }
   };
 
+  const clearDocumentRowErrors = (rowId, fieldsToClear) => {
+    setErrors((prev) => {
+      if (!prev.documents?.[rowId]) return prev;
+      const nextRowErrors = { ...prev.documents[rowId] };
+      if (fieldsToClear === '*') {
+        // Drop the entire row error entry below
+      } else {
+        fieldsToClear.forEach((field) => {
+          delete nextRowErrors[field];
+        });
+      }
+
+      const nextDocErrors = { ...prev.documents };
+      if (fieldsToClear === '*' || Object.keys(nextRowErrors).length === 0) {
+        delete nextDocErrors[rowId];
+      } else {
+        nextDocErrors[rowId] = nextRowErrors;
+      }
+
+      const nextErrors = { ...prev };
+      if (Object.keys(nextDocErrors).length === 0) {
+        delete nextErrors.documents;
+      } else {
+        nextErrors.documents = nextDocErrors;
+      }
+      return nextErrors;
+    });
+  };
+
+  const handleAddDocumentRow = () => {
+    if (documents.length >= TENANT_FORM_OPTIONS.documentTypes.length) {
+      return;
+    }
+    const nextId = `doc-${nextDocIdRef.current++}`;
+    setDocuments((prev) => [...prev, createEmptyDocumentRow(nextId)]);
+  };
+
+  const handleRemoveDocumentRow = (rowId) => {
+    if (documents.length <= 1) return;
+    const targetRow = documents.find((row) => row.id === rowId);
+    if (targetRow?.previewUrl) {
+      revokePreviewUrl(targetRow.previewUrl);
+      previewUrlsRef.current.delete(targetRow.previewUrl);
+    }
+    if (previewDoc?.id === rowId) {
+      setPreviewDoc(null);
+    }
+    setDocuments((prev) => prev.filter((row) => row.id !== rowId));
+    clearDocumentRowErrors(rowId, '*');
+  };
+
+  const handleClearDocumentRow = (rowId) => {
+    const targetRow = documents.find((row) => row.id === rowId);
+    if (targetRow?.previewUrl) {
+      revokePreviewUrl(targetRow.previewUrl);
+      previewUrlsRef.current.delete(targetRow.previewUrl);
+    }
+    if (previewDoc?.id === rowId) {
+      setPreviewDoc(null);
+    }
+    setDocuments((prev) =>
+      prev.map((row) => (row.id === rowId ? createEmptyDocumentRow(row.id) : row))
+    );
+    clearDocumentRowErrors(rowId, '*');
+  };
+
+  const handleDocumentTypeChange = (rowId, nextType) => {
+    if (
+      nextType &&
+      documents.some((row) => row.id !== rowId && row.documentType === nextType)
+    ) {
+      setErrors((prev) => ({
+        ...prev,
+        documents: {
+          ...(prev.documents || {}),
+          [rowId]: {
+            ...(prev.documents?.[rowId] || {}),
+            documentType: 'This document type is already selected in another row',
+          },
+        },
+      }));
+      return;
+    }
+
+    setDocuments((prev) =>
+      prev.map((row) =>
+        row.id === rowId
+          ? {
+              ...row,
+              documentType: nextType,
+              otherDocumentName: nextType === 'Other Document' ? row.otherDocumentName : '',
+            }
+          : row
+      )
+    );
+    clearDocumentRowErrors(
+      rowId,
+      nextType === 'Other Document'
+        ? ['documentType']
+        : ['documentType', 'otherDocumentName']
+    );
+  };
+
+  const handleOtherDocumentNameChange = (rowId, value) => {
+    setDocuments((prev) =>
+      prev.map((row) => (row.id === rowId ? { ...row, otherDocumentName: value } : row))
+    );
+    clearDocumentRowErrors(rowId, ['otherDocumentName']);
+  };
+
+  const processRowFileSelection = (rowId, file) => {
+    if (!file) return;
+    const result = validateTenantDocumentFile(file);
+
+    if (!result.valid) {
+      setDocuments((prev) =>
+        prev.map((row) => {
+          if (row.id !== rowId) return row;
+          if (row.previewUrl) {
+            revokePreviewUrl(row.previewUrl);
+            previewUrlsRef.current.delete(row.previewUrl);
+          }
+          return {
+            ...row,
+            file: null,
+            fileName: '',
+            fileSize: 0,
+            isImage: false,
+            extension: '',
+            previewUrl: '',
+            fileError: result.error,
+          };
+        })
+      );
+      clearDocumentRowErrors(rowId, ['file']);
+      return;
+    }
+
+    const nextPreviewUrl =
+      typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function'
+        ? URL.createObjectURL(file)
+        : '';
+    if (nextPreviewUrl) {
+      previewUrlsRef.current.add(nextPreviewUrl);
+    }
+
+    setDocuments((prev) =>
+      prev.map((row) => {
+        if (row.id !== rowId) return row;
+        if (row.previewUrl) {
+          revokePreviewUrl(row.previewUrl);
+          previewUrlsRef.current.delete(row.previewUrl);
+        }
+        return {
+          ...row,
+          file,
+          fileName: file.name,
+          fileSize: file.size,
+          isImage: result.isImage,
+          extension: result.extension,
+          previewUrl: nextPreviewUrl,
+          fileError: '',
+        };
+      })
+    );
+    clearDocumentRowErrors(rowId, ['file']);
+  };
+
+  const handleRemoveDocumentFile = (rowId) => {
+    const targetRow = documents.find((row) => row.id === rowId);
+    if (targetRow?.previewUrl) {
+      revokePreviewUrl(targetRow.previewUrl);
+      previewUrlsRef.current.delete(targetRow.previewUrl);
+    }
+    if (previewDoc?.id === rowId) {
+      setPreviewDoc(null);
+    }
+    setDocuments((prev) =>
+      prev.map((row) =>
+        row.id === rowId
+          ? {
+              ...row,
+              file: null,
+              fileName: '',
+              fileSize: 0,
+              isImage: false,
+              extension: '',
+              previewUrl: '',
+              fileError: '',
+            }
+          : row
+      )
+    );
+    clearDocumentRowErrors(rowId, ['file']);
+  };
+
   const handleEmploymentTypeChange = (nextType) => {
     setFormData((prev) => ({
       ...prev,
@@ -123,7 +359,10 @@ const TenantRegistrationPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const validationErrors = validateTenantRegistration(formData, eligibleFlats);
+    const validationErrors = validateTenantRegistration(
+      { ...formData, documents },
+      eligibleFlats
+    );
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -203,7 +442,7 @@ const TenantRegistrationPage = () => {
               </div>
 
               <div>
-                <FieldLabel htmlFor="tenant-email" label="Email" />
+                <FieldLabel htmlFor="tenant-email" label="Email" required />
                 <input
                   id="tenant-email"
                   type="email"
@@ -539,6 +778,255 @@ const TenantRegistrationPage = () => {
           </div>
         </SectionCard>
 
+        {/* Section 5: Tenant Documents (Optional) */}
+        <SectionCard
+          stepNumber={5}
+          title="Tenant Documents"
+          subtitle="Upload KYC, rental agreement, or verification documents (JPG, JPEG, PNG, PDF up to 5 MB each)."
+          optional
+          icon={FileText}
+        >
+          <div className="space-y-4">
+            {documents.map((doc, index) => {
+              const rowErrors = errors.documents?.[doc.id] || {};
+              const fileErrorMessage = doc.fileError || rowErrors.file;
+              const selectedElsewhere = new Set(
+                documents
+                  .filter((other) => other.id !== doc.id && other.documentType)
+                  .map((other) => other.documentType)
+              );
+              const isRowDirty = Boolean(
+                doc.documentType || doc.otherDocumentName || doc.file || doc.fileError
+              );
+
+              return (
+                <div
+                  key={doc.id}
+                  data-doc-row={doc.id}
+                  className="rounded-xl border border-gray-200/90 bg-gray-50/40 p-4 sm:p-5 space-y-4"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-50 text-[#EA580C] border border-orange-100">
+                      Document {index + 1}
+                    </span>
+
+                    {documents.length > 1 ? (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveDocumentRow(doc.id)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Remove Row</span>
+                      </button>
+                    ) : (
+                      isRowDirty && (
+                        <button
+                          type="button"
+                          onClick={() => handleClearDocumentRow(doc.id)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                          <span>Clear</span>
+                        </button>
+                      )
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+                    <div className="lg:col-span-5 space-y-4">
+                      <div>
+                        <FieldLabel htmlFor={`tenant-doc-type-${doc.id}`} label="Document Type" />
+                        <select
+                          id={`tenant-doc-type-${doc.id}`}
+                          value={doc.documentType}
+                          onChange={(e) => handleDocumentTypeChange(doc.id, e.target.value)}
+                          className={getControlClass(Boolean(rowErrors.documentType))}
+                        >
+                          <option value="">Select Document Type</option>
+                          {TENANT_FORM_OPTIONS.documentTypes.map((type) => {
+                            const isDisabled = selectedElsewhere.has(type);
+                            return (
+                              <option key={type} value={type} disabled={isDisabled}>
+                                {isDisabled ? `${type} (Already selected)` : type}
+                              </option>
+                            );
+                          })}
+                        </select>
+                        <FieldError message={rowErrors.documentType} />
+                      </div>
+
+                      {doc.documentType === 'Other Document' && (
+                        <div>
+                          <FieldLabel
+                            htmlFor={`tenant-doc-other-name-${doc.id}`}
+                            label="Document Name"
+                            required
+                          />
+                          <input
+                            id={`tenant-doc-other-name-${doc.id}`}
+                            type="text"
+                            placeholder="e.g. Company ID Card, Salary Slip"
+                            value={doc.otherDocumentName}
+                            onChange={(e) => handleOtherDocumentNameChange(doc.id, e.target.value)}
+                            className={getControlClass(Boolean(rowErrors.otherDocumentName))}
+                          />
+                          <FieldError message={rowErrors.otherDocumentName} />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="lg:col-span-7">
+                      {!doc.file ? (
+                        <label
+                          htmlFor={`tenant-doc-file-${doc.id}`}
+                          className="block text-xs font-bold text-gray-700 mb-1.5"
+                        >
+                          Upload Document{' '}
+                          <span className="font-normal text-gray-400">
+                            (JPG, JPEG, PNG, PDF &bull; Max 5 MB)
+                          </span>
+                        </label>
+                      ) : (
+                        <span className="block text-xs font-bold text-gray-700 mb-1.5">
+                          Upload Document{' '}
+                          <span className="font-normal text-gray-400">
+                            (JPG, JPEG, PNG, PDF &bull; Max 5 MB)
+                          </span>
+                        </span>
+                      )}
+
+                      {!doc.file ? (
+                        <div
+                          onDragOver={(e) => e.preventDefault()}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            const droppedFile = e.dataTransfer?.files?.[0];
+                            if (droppedFile) {
+                              processRowFileSelection(doc.id, droppedFile);
+                            }
+                          }}
+                          className={`relative border-2 border-dashed rounded-xl px-4 py-4 transition-colors ${
+                            fileErrorMessage
+                              ? 'border-red-300 bg-red-50/40 hover:bg-red-50/60'
+                              : 'border-orange-200 bg-orange-50/20 hover:bg-orange-50/40'
+                          }`}
+                        >
+                          <input
+                            id={`tenant-doc-file-${doc.id}`}
+                            type="file"
+                            accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
+                            onChange={(e) => {
+                              const pickedFile = e.target.files?.[0];
+                              if (pickedFile) {
+                                processRowFileSelection(doc.id, pickedFile);
+                              }
+                              e.target.value = '';
+                            }}
+                            className="sr-only"
+                          />
+                          <label
+                            htmlFor={`tenant-doc-file-${doc.id}`}
+                            className="flex items-center gap-3.5 cursor-pointer"
+                          >
+                            <div className="w-10 h-10 rounded-full bg-[#FFF3E8] text-[#EA580C] flex items-center justify-center shrink-0">
+                              <UploadCloud className="w-5 h-5" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs sm:text-sm font-semibold text-gray-800">
+                                <span className="text-[#EA580C]">Click to upload</span> or drag and drop
+                              </p>
+                              <p className="text-[11px] text-gray-500 mt-0.5">
+                                Accepted formats: JPG, JPEG, PNG, PDF (up to 5 MB)
+                              </p>
+                            </div>
+                          </label>
+                        </div>
+                      ) : (
+                        <div className="rounded-xl border border-gray-200 bg-white p-3 flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            {doc.isImage && doc.previewUrl ? (
+                              <img
+                                src={doc.previewUrl}
+                                alt={doc.fileName}
+                                className="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded-lg bg-red-50 border border-red-100 text-red-600 flex flex-col items-center justify-center shrink-0">
+                                <FileText className="w-5 h-5" />
+                                <span className="text-[9px] font-bold uppercase leading-none mt-0.5">
+                                  {doc.extension || 'PDF'}
+                                </span>
+                              </div>
+                            )}
+
+                            <div className="min-w-0">
+                              <p
+                                title={doc.fileName}
+                                className="text-sm font-semibold text-gray-800 truncate"
+                              >
+                                {doc.fileName}
+                              </p>
+                              <div className="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-gray-500">
+                                <span>{formatDocumentFileSize(doc.fileSize)}</span>
+                                <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-semibold text-[10px] uppercase">
+                                  {doc.extension}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {doc.previewUrl && (
+                              <button
+                                type="button"
+                                onClick={() => setPreviewDoc(doc)}
+                                aria-label={`Preview ${doc.fileName}`}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-orange-50 hover:border-orange-200 hover:text-[#EA580C] text-xs font-semibold text-gray-700 transition-colors cursor-pointer"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">Preview</span>
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveDocumentFile(doc.id)}
+                              aria-label={`Remove ${doc.fileName}`}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-red-200 bg-red-50/50 hover:bg-red-100 text-xs font-semibold text-red-600 transition-colors cursor-pointer"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                              <span>Remove</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      <FieldError message={fileErrorMessage} />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+              <button
+                type="button"
+                id="add-another-document-btn"
+                onClick={handleAddDocumentRow}
+                disabled={documents.length >= TENANT_FORM_OPTIONS.documentTypes.length}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-orange-300 bg-orange-50/50 hover:bg-orange-50 text-xs sm:text-sm font-semibold text-[#EA580C] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Another Document</span>
+              </button>
+
+              <span className="text-xs text-gray-500">
+                {documents.length} of {TENANT_FORM_OPTIONS.documentTypes.length} document slots
+              </span>
+            </div>
+          </div>
+        </SectionCard>
+
         {/* Form Actions */}
         <div className="bg-white rounded-2xl border border-gray-200/80 px-5 sm:px-6 py-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-3">
           <button
@@ -558,6 +1046,56 @@ const TenantRegistrationPage = () => {
           </button>
         </div>
       </form>
+
+      {/* Lightweight Document Preview Modal */}
+      {previewDoc && previewDoc.previewUrl && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Preview ${previewDoc.fileName}`}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+        >
+          <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
+              <div className="min-w-0">
+                <h3 className="text-sm font-bold text-[#0F172A] truncate">
+                  {previewDoc.fileName}
+                </h3>
+                <p className="text-xs text-gray-500">
+                  {previewDoc.documentType === 'Other Document' && previewDoc.otherDocumentName
+                    ? `Other Document (${previewDoc.otherDocumentName})`
+                    : previewDoc.documentType || 'Selected Document'}{' '}
+                  &bull; {formatDocumentFileSize(previewDoc.fileSize)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewDoc(null)}
+                aria-label="Close document preview"
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-4 bg-gray-50 flex items-center justify-center max-h-[75vh] overflow-auto">
+              {previewDoc.isImage ? (
+                <img
+                  src={previewDoc.previewUrl}
+                  alt={previewDoc.fileName}
+                  className="max-w-full max-h-[68vh] rounded-lg object-contain"
+                />
+              ) : (
+                <iframe
+                  title={previewDoc.fileName}
+                  src={previewDoc.previewUrl}
+                  className="w-full h-[68vh] rounded-lg border border-gray-200 bg-white"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

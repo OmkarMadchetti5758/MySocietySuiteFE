@@ -564,7 +564,90 @@ export const TENANT_FORM_OPTIONS = {
     { value: 'Dec', label: 'December' },
   ],
   years: ['2024', '2025', '2026', '2027', '2028'],
+  documentTypes: [
+    'Aadhaar Card',
+    'PAN Card',
+    'Passport',
+    'Voter ID',
+    'Driving Licence',
+    'Address Proof',
+    'Rent Agreement',
+    'Police Verification Certificate',
+    'Owner NOC / Permission Letter',
+    'Tenant Photograph',
+    'Other Document',
+  ],
 };
+
+export const MAX_TENANT_DOCUMENT_SIZE_BYTES = 5 * 1024 * 1024;
+export const ALLOWED_TENANT_DOCUMENT_EXTENSIONS = ['jpg', 'jpeg', 'png', 'pdf'];
+export const ALLOWED_TENANT_DOCUMENT_MIME_TYPES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'application/pdf',
+];
+
+/**
+ * Formats a byte count into a human-readable KB or MB string.
+ */
+export function formatDocumentFileSize(bytes = 0) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 KB';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) {
+    const kb = bytes / 1024;
+    return `${kb >= 100 ? Math.round(kb) : kb.toFixed(1)} KB`;
+  }
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+/**
+ * Validates a selected tenant document against allowed types (JPG, JPEG, PNG, PDF)
+ * and maximum file size (5 MB).
+ */
+export function validateTenantDocumentFile(file) {
+  if (!file || typeof file.name !== 'string') {
+    return {
+      valid: false,
+      error: 'Please select a valid document file.',
+      isImage: false,
+      extension: '',
+    };
+  }
+
+  const parts = file.name.split('.');
+  const extension = parts.length > 1 ? parts.pop().toLowerCase() : '';
+  const mimeType = (file.type || '').toLowerCase();
+
+  const isAllowedExtension = ALLOWED_TENANT_DOCUMENT_EXTENSIONS.includes(extension);
+  const isAllowedMime = !mimeType || ALLOWED_TENANT_DOCUMENT_MIME_TYPES.includes(mimeType);
+
+  if (!isAllowedExtension || !isAllowedMime) {
+    return {
+      valid: false,
+      error: 'Unsupported file type. Only JPG, JPEG, PNG, and PDF files are allowed.',
+      isImage: false,
+      extension,
+    };
+  }
+
+  if (file.size > MAX_TENANT_DOCUMENT_SIZE_BYTES) {
+    return {
+      valid: false,
+      error: 'File size exceeds the maximum limit of 5 MB.',
+      isImage: false,
+      extension,
+    };
+  }
+
+  const isImage = extension !== 'pdf' && mimeType !== 'application/pdf';
+  return {
+    valid: true,
+    error: '',
+    isImage,
+    extension,
+  };
+}
 
 export const INITIAL_REGISTRATION_FORM = {
   // Section 1: Personal Details
@@ -618,7 +701,9 @@ export function validateTenantRegistration(formData, eligibleFlats = []) {
   }
 
   const trimmedEmail = (formData.email || '').trim();
-  if (trimmedEmail && !EMAIL_REGEX.test(trimmedEmail)) {
+  if (!trimmedEmail) {
+    errors.email = 'Email is required';
+  } else if (!EMAIL_REGEX.test(trimmedEmail)) {
     errors.email = 'Enter a valid email address';
   }
 
@@ -641,6 +726,50 @@ export function validateTenantRegistration(formData, eligibleFlats = []) {
   const compactReferenceMobile = normalizeIndianMobile(formData.referenceContactNumber);
   if (compactReferenceMobile && !INDIAN_MOBILE_REGEX.test(compactReferenceMobile)) {
     errors.referenceContactNumber = 'Enter a valid 10-digit Indian mobile number';
+  }
+
+  const documents = Array.isArray(formData.documents) ? formData.documents : [];
+  if (documents.length > 0) {
+    const seenDocTypes = new Set();
+    const documentErrors = {};
+
+    documents.forEach((doc) => {
+      if (!doc || !doc.id) return;
+      const docType = (doc.documentType || '').trim();
+      const otherName = (doc.otherDocumentName || '').trim();
+      const hasFile = Boolean(doc.file);
+
+      // Completely untouched rows do not block optional registration
+      if (!docType && !otherName && !hasFile) {
+        return;
+      }
+
+      const rowError = {};
+
+      if (!docType) {
+        rowError.documentType = 'Please select a document type';
+      } else if (seenDocTypes.has(docType)) {
+        rowError.documentType = 'This document type is already selected in another row';
+      } else {
+        seenDocTypes.add(docType);
+      }
+
+      if (docType === 'Other Document' && !otherName) {
+        rowError.otherDocumentName = 'Please enter the document name';
+      }
+
+      if (!hasFile) {
+        rowError.file = 'Please upload a file (JPG, JPEG, PNG, or PDF up to 5 MB)';
+      }
+
+      if (Object.keys(rowError).length > 0) {
+        documentErrors[doc.id] = rowError;
+      }
+    });
+
+    if (Object.keys(documentErrors).length > 0) {
+      errors.documents = documentErrors;
+    }
   }
 
   return errors;
