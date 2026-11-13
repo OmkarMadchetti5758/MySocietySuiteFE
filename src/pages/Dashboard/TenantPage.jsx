@@ -78,8 +78,8 @@ const SECTION_ICONS = {
 const hasAccessibleDocumentFile = (doc) =>
   Boolean(
     (typeof Blob !== 'undefined' && doc?.file instanceof Blob) ||
-      doc?.fileUrl ||
-      doc?.previewUrl
+    doc?.fileUrl ||
+    doc?.previewUrl
   );
 
 const resolveDocumentObjectUrl = (doc) => {
@@ -136,9 +136,48 @@ const normalizeTenantRecord = (item) => {
 /**
  * Shared modal shell for View Details and Edit Tenant interactions.
  */
-const TenantActionModal = ({ mode, tenant, onClose }) => {
+const TenantActionModal = ({ mode, tenant, onClose, onSuccess, onSwitchMode }) => {
   const [previewDoc, setPreviewDoc] = useState(null);
   const ownedPreviewUrlRef = useRef('');
+
+  const [formData, setFormData] = useState({
+    fullName: tenant?.fullName || tenant?.name || '',
+    mobileNumber: tenant?.mobileNumber || tenant?.contactNumber || '',
+    email: tenant?.email || '',
+    dateOfBirth: tenant?.dateOfBirth ? String(tenant.dateOfBirth).split('T')[0] : '',
+    gender: tenant?.gender || '',
+    numberOfOccupants: tenant?.numberOfOccupants || '',
+    completeAddress: tenant?.completeAddress || '',
+    emergencyContactNumber: tenant?.emergencyContactNumber || '',
+    moveInDate: tenant?.moveInDate ? String(tenant.moveInDate).split('T')[0] : '',
+    monthlyRent: tenant?.monthlyRent ?? '',
+    securityDeposit: tenant?.securityDeposit ?? '',
+    rentDueDay: tenant?.rentDueDay ?? '',
+    petAllowed: Boolean(tenant?.petAllowed),
+    employmentType: tenant?.employmentType || '',
+    companyName: tenant?.companyName || '',
+    companyDescription: tenant?.companyDescription || '',
+    organizationName: tenant?.organizationName || '',
+    organizationAddress: tenant?.organizationAddress || '',
+    yearOfIncorporation: tenant?.yearOfIncorporation || '',
+    referenceName: tenant?.referenceName || '',
+    referenceContactNumber: tenant?.referenceContactNumber || '',
+    referenceRelation: tenant?.referenceRelation || '',
+  });
+
+  const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
+
+  const updateField = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  };
 
   useEffect(() => {
     return () => {
@@ -210,6 +249,56 @@ const TenantActionModal = ({ mode, tenant, onClose }) => {
     }
   };
 
+  const handleSave = async (e) => {
+    if (e) e.preventDefault();
+    const newErrors = {};
+    if (!formData.fullName.trim()) newErrors.fullName = 'Full Name is required';
+    const cleanMobile = formData.mobileNumber.replace(/[\s-]/g, '').replace(/^\+91/, '');
+    if (!/^[6-9]\d{9}$/.test(cleanMobile)) {
+      newErrors.mobileNumber = 'Enter a valid 10-digit Indian mobile number';
+    }
+    const cleanEmail = formData.email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      newErrors.email = 'Enter a valid email address';
+    }
+    if (formData.rentDueDay) {
+      const d = Number(formData.rentDueDay);
+      if (isNaN(d) || d < 1 || d > 28) newErrors.rentDueDay = 'Must be between 1 and 28';
+    }
+    if (formData.emergencyContactNumber) {
+      const em = formData.emergencyContactNumber.replace(/[\s-]/g, '').replace(/^\+91/, '');
+      if (!/^[6-9]\d{9}$/.test(em)) newErrors.emergencyContactNumber = 'Enter a valid 10-digit number';
+    }
+    if (formData.referenceContactNumber) {
+      const ref = formData.referenceContactNumber.replace(/[\s-]/g, '').replace(/^\+91/, '');
+      if (!/^[6-9]\d{9}$/.test(ref)) newErrors.referenceContactNumber = 'Enter a valid 10-digit number';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      toast.error('Please fix the validation errors.');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      await tenantApi.updateTenantRegistration(tenant.id, {
+        ...formData,
+        fullName: formData.fullName.trim(),
+        mobileNumber: cleanMobile,
+        email: cleanEmail,
+      });
+      toast.success('Tenant details updated successfully!');
+      if (onSuccess) onSuccess();
+      onClose();
+    } catch (err) {
+      console.error('Failed to update tenant:', err);
+      toast.error(err?.response?.data?.message || 'Failed to update tenant details');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[1px] p-4"
@@ -219,15 +308,23 @@ const TenantActionModal = ({ mode, tenant, onClose }) => {
       aria-label={isView ? 'Tenant Details' : 'Edit Tenant'}
     >
       <div
-        className={`bg-white rounded-2xl border border-gray-200 shadow-xl w-full max-h-[90vh] flex flex-col overflow-hidden ${
-          isView ? 'max-w-2xl' : 'max-w-lg'
-        }`}
+        className="bg-white rounded-2xl border border-gray-200 shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
-          <h3 className="text-lg font-bold text-[#0F172A]">
-            {isView ? 'Tenant Details' : 'Edit Tenant'}
-          </h3>
+          <div className="flex items-center gap-2.5">
+            <span className="w-8 h-8 rounded-full bg-[#FFF3E8] text-[#EA580C] flex items-center justify-center shrink-0">
+              {isView ? <User className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
+            </span>
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-[#0F172A]">
+                {isView ? 'Tenant Details' : 'Edit Tenant Details'}
+              </h3>
+              <p className="text-xs text-gray-500">
+                {tenant.flatNumber ? `Flat ${tenant.flatNumber}` : ''} {tenant.wing ? `• ${tenant.wing}` : ''}
+              </p>
+            </div>
+          </div>
           <button
             type="button"
             onClick={onClose}
@@ -239,22 +336,23 @@ const TenantActionModal = ({ mode, tenant, onClose }) => {
         </div>
 
         <div className="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
-          <div className="flex items-center gap-3.5">
+          <div className="flex items-center gap-3.5 pb-2 border-b border-gray-100">
             <div
               className={`w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${getAvatarTone(tenant.id)}`}
             >
-              {getInitials(tenant.name || tenant.fullName)}
+              {getInitials(formData.fullName || tenant.name || tenant.fullName)}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-base font-bold text-gray-900 truncate">{tenant.name || tenant.fullName}</p>
+              <p className="text-base font-bold text-gray-900 truncate">
+                {isView ? (tenant.name || tenant.fullName) : formData.fullName || 'Tenant Name'}
+              </p>
               <p className="text-xs text-gray-500">
                 {tenant.wing} / {tenant.flatNumber}
               </p>
             </div>
             <span
-              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                STATUS_BADGE_CLASSES[tenant.status] || STATUS_BADGE_CLASSES.Vacated
-              }`}
+              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${STATUS_BADGE_CLASSES[tenant.status] || STATUS_BADGE_CLASSES.Vacated
+                }`}
             >
               {tenant.status}
             </span>
@@ -307,11 +405,10 @@ const TenantActionModal = ({ mode, tenant, onClose }) => {
                               >
                                 <div className="flex items-start sm:items-center gap-3 min-w-0">
                                   <div
-                                    className={`w-10 h-10 rounded-lg border flex flex-col items-center justify-center shrink-0 ${
-                                      fileTypeLabel === 'PDF'
-                                        ? 'bg-red-50 border-red-100 text-red-600'
-                                        : 'bg-[#FFF3E8] border-orange-100 text-[#EA580C]'
-                                    }`}
+                                    className={`w-10 h-10 rounded-lg border flex flex-col items-center justify-center shrink-0 ${fileTypeLabel === 'PDF'
+                                      ? 'bg-red-50 border-red-100 text-red-600'
+                                      : 'bg-[#FFF3E8] border-orange-100 text-[#EA580C]'
+                                      }`}
                                   >
                                     <FileText className="w-4 h-4" />
                                     <span className="text-[9px] font-bold uppercase leading-none mt-0.5">
@@ -389,9 +486,8 @@ const TenantActionModal = ({ mode, tenant, onClose }) => {
                             </p>
                             {item.isStatus ? (
                               <span
-                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold mt-1 ${
-                                  STATUS_BADGE_CLASSES[item.value] || STATUS_BADGE_CLASSES.Vacated
-                                }`}
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold mt-1 ${STATUS_BADGE_CLASSES[item.value] || STATUS_BADGE_CLASSES.Vacated
+                                  }`}
                               >
                                 {item.value}
                               </span>
@@ -413,25 +509,330 @@ const TenantActionModal = ({ mode, tenant, onClose }) => {
               })}
             </div>
           ) : (
-            <div className="bg-orange-50/50 border border-orange-100 rounded-xl p-5 text-center space-y-2">
-              <p className="text-sm font-semibold text-gray-800">
-                Edit Tenant Registration
-              </p>
-              <p className="text-xs text-gray-500">
-                Status changes are active via the action menu. Contact support or your administrator to edit legal tenancy documents.
-              </p>
-            </div>
+            /* --- EDIT FORM --- */
+            <form onSubmit={handleSave} className="space-y-4">
+              {/* Personal Details */}
+              <div className="bg-gray-50/75 rounded-xl p-4 border border-gray-100 space-y-3.5">
+                <div className="flex items-center gap-2 pb-2 border-b border-gray-200/70">
+                  <span className="w-6 h-6 rounded-full bg-[#FFF3E8] text-[#EA580C] flex items-center justify-center shrink-0">
+                    <User className="w-3.5 h-3.5" />
+                  </span>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700">
+                    Personal Details
+                  </h4>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      Full Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.fullName}
+                      onChange={(e) => updateField('fullName', e.target.value)}
+                      className={`w-full px-3 py-2 text-xs rounded-xl border bg-white focus:outline-none focus:ring-2 transition-all ${errors.fullName
+                        ? 'border-red-300 focus:ring-red-200 focus:border-red-500'
+                        : 'border-gray-200 focus:ring-orange-500/20 focus:border-[#EA580C]'
+                        }`}
+                    />
+                    {errors.fullName && <p className="text-[11px] text-red-500 mt-1">{errors.fullName}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      Mobile Number <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      maxLength={14}
+                      value={formData.mobileNumber}
+                      onChange={(e) => updateField('mobileNumber', e.target.value)}
+                      className={`w-full px-3 py-2 text-xs rounded-xl border bg-white focus:outline-none focus:ring-2 transition-all ${errors.mobileNumber
+                        ? 'border-red-300 focus:ring-red-200 focus:border-red-500'
+                        : 'border-gray-200 focus:ring-orange-500/20 focus:border-[#EA580C]'
+                        }`}
+                    />
+                    {errors.mobileNumber && <p className="text-[11px] text-red-500 mt-1">{errors.mobileNumber}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => updateField('email', e.target.value)}
+                      className={`w-full px-3 py-2 text-xs rounded-xl border bg-white focus:outline-none focus:ring-2 transition-all ${errors.email
+                        ? 'border-red-300 focus:ring-red-200 focus:border-red-500'
+                        : 'border-gray-200 focus:ring-orange-500/20 focus:border-[#EA580C]'
+                        }`}
+                    />
+                    {errors.email && <p className="text-[11px] text-red-500 mt-1">{errors.email}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Date of Birth</label>
+                    <input
+                      type="date"
+                      value={formData.dateOfBirth}
+                      onChange={(e) => updateField('dateOfBirth', e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-[#EA580C]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Gender</label>
+                    <select
+                      value={formData.gender}
+                      onChange={(e) => updateField('gender', e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-[#EA580C]"
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Emergency Contact</label>
+                    <input
+                      type="tel"
+                      placeholder="10-digit number"
+                      value={formData.emergencyContactNumber}
+                      onChange={(e) => updateField('emergencyContactNumber', e.target.value)}
+                      className={`w-full px-3 py-2 text-xs rounded-xl border bg-white focus:outline-none focus:ring-2 transition-all ${errors.emergencyContactNumber
+                        ? 'border-red-300 focus:ring-red-200 focus:border-red-500'
+                        : 'border-gray-200 focus:ring-orange-500/20 focus:border-[#EA580C]'
+                        }`}
+                    />
+                    {errors.emergencyContactNumber && (
+                      <p className="text-[11px] text-red-500 mt-1">{errors.emergencyContactNumber}</p>
+                    )}
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Permanent Address</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Flat 302, Green Park, Pune"
+                      value={formData.completeAddress}
+                      onChange={(e) => updateField('completeAddress', e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-[#EA580C]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Tenancy Details */}
+              <div className="bg-gray-50/75 rounded-xl p-4 border border-gray-100 space-y-3.5">
+                <div className="flex items-center gap-2 pb-2 border-b border-gray-200/70">
+                  <span className="w-6 h-6 rounded-full bg-[#FFF3E8] text-[#EA580C] flex items-center justify-center shrink-0">
+                    <Building2 className="w-3.5 h-3.5" />
+                  </span>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700">
+                    Tenancy Details
+                  </h4>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Move-in Date</label>
+                    <input
+                      type="date"
+                      value={formData.moveInDate}
+                      onChange={(e) => updateField('moveInDate', e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-[#EA580C]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Number of Occupants</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={formData.numberOfOccupants}
+                      onChange={(e) => updateField('numberOfOccupants', e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-[#EA580C]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Monthly Rent (₹)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.monthlyRent}
+                      onChange={(e) => updateField('monthlyRent', e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-[#EA580C]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Security Deposit (₹)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={formData.securityDeposit}
+                      onChange={(e) => updateField('securityDeposit', e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-[#EA580C]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Rent Due Day (1-28)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="28"
+                      value={formData.rentDueDay}
+                      onChange={(e) => updateField('rentDueDay', e.target.value)}
+                      className={`w-full px-3 py-2 text-xs rounded-xl border bg-white focus:outline-none focus:ring-2 transition-all ${errors.rentDueDay
+                        ? 'border-red-300 focus:ring-red-200 focus:border-red-500'
+                        : 'border-gray-200 focus:ring-orange-500/20 focus:border-[#EA580C]'
+                        }`}
+                    />
+                    {errors.rentDueDay && <p className="text-[11px] text-red-500 mt-1">{errors.rentDueDay}</p>}
+                  </div>
+
+                  <div className="flex items-center gap-2.5 pt-6">
+                    <input
+                      id="edit-pet-allowed"
+                      type="checkbox"
+                      checked={formData.petAllowed}
+                      onChange={(e) => updateField('petAllowed', e.target.checked)}
+                      className="w-4 h-4 text-[#EA580C] border-gray-300 rounded focus:ring-orange-500 cursor-pointer"
+                    />
+                    <label htmlFor="edit-pet-allowed" className="text-xs font-semibold text-gray-700 cursor-pointer">
+                      Pet Allowed
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Professional & Reference Details */}
+              <div className="bg-gray-50/75 rounded-xl p-4 border border-gray-100 space-y-3.5">
+                <div className="flex items-center gap-2 pb-2 border-b border-gray-200/70">
+                  <span className="w-6 h-6 rounded-full bg-[#FFF3E8] text-[#EA580C] flex items-center justify-center shrink-0">
+                    <Briefcase className="w-3.5 h-3.5" />
+                  </span>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700">
+                    Employment & Reference Details
+                  </h4>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Employment Type</label>
+                    <select
+                      value={formData.employmentType}
+                      onChange={(e) => updateField('employmentType', e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-[#EA580C]"
+                    >
+                      <option value="">Select Employment Type</option>
+                      <option value="Salaried">Salaried</option>
+                      <option value="Self Employed">Self Employed</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Company / Organization</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Infosys, TCS, etc."
+                      value={formData.companyName || formData.organizationName}
+                      onChange={(e) => {
+                        updateField('companyName', e.target.value);
+                        updateField('organizationName', e.target.value);
+                      }}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-[#EA580C]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Reference Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Ramesh Kulkarni"
+                      value={formData.referenceName}
+                      onChange={(e) => updateField('referenceName', e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-[#EA580C]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Reference Contact</label>
+                    <input
+                      type="tel"
+                      placeholder="10-digit number"
+                      value={formData.referenceContactNumber}
+                      onChange={(e) => updateField('referenceContactNumber', e.target.value)}
+                      className={`w-full px-3 py-2 text-xs rounded-xl border bg-white focus:outline-none focus:ring-2 transition-all ${errors.referenceContactNumber
+                        ? 'border-red-300 focus:ring-red-200 focus:border-red-500'
+                        : 'border-gray-200 focus:ring-orange-500/20 focus:border-[#EA580C]'
+                        }`}
+                    />
+                    {errors.referenceContactNumber && (
+                      <p className="text-[11px] text-red-500 mt-1">{errors.referenceContactNumber}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </form>
           )}
         </div>
 
-        <div className="px-6 py-3.5 border-t border-gray-100 bg-gray-50/50 flex justify-end shrink-0">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
-          >
-            Close
-          </button>
+        <div className="px-6 py-3.5 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between shrink-0">
+          {isView ? (
+            <>
+              <button
+                type="button"
+                onClick={() => onSwitchMode && onSwitchMode('edit')}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-orange-50 border border-orange-200 text-xs sm:text-sm font-semibold text-[#EA580C] hover:bg-orange-100 transition-colors cursor-pointer"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                Edit Details
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 rounded-xl bg-white border border-gray-200 text-xs sm:text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => (onSwitchMode ? onSwitchMode('view') : onClose())}
+                className="px-4 py-2 rounded-xl bg-white border border-gray-200 text-xs sm:text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={saving}
+                onClick={handleSave}
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-[#EA580C] hover:bg-[#DC4E07] text-white text-xs sm:text-sm font-semibold shadow-xs transition-colors cursor-pointer disabled:opacity-60"
+              >
+                {saving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>Save Changes</span>
+                  </>
+                )}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -777,11 +1178,10 @@ const TenantPage = () => {
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 sm:px-5 py-2.5 text-xs sm:text-sm rounded-t-xl transition-colors flex items-center gap-2 cursor-pointer border ${
-                  isActive
-                    ? 'bg-[#EA580C] text-white border-[#EA580C] font-semibold shadow-xs'
-                    : 'bg-white text-gray-600 border-gray-200 border-b-0 font-medium hover:text-gray-900 hover:bg-gray-50'
-                }`}
+                className={`px-4 sm:px-5 py-2.5 text-xs sm:text-sm rounded-t-xl transition-colors flex items-center gap-2 cursor-pointer border ${isActive
+                  ? 'bg-[#EA580C] text-white border-[#EA580C] font-semibold shadow-xs'
+                  : 'bg-white text-gray-600 border-gray-200 border-b-0 font-medium hover:text-gray-900 hover:bg-gray-50'
+                  }`}
               >
                 <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-gray-500'}`} />
                 <span>{tab.label}</span>
@@ -792,9 +1192,8 @@ const TenantPage = () => {
 
         <div
           role="tabpanel"
-          className={`bg-white border border-gray-200/80 shadow-[0_1px_4px_rgba(15,23,42,0.04)] rounded-b-2xl rounded-tr-2xl ${
-            activeTab === 'registration' ? 'rounded-tl-none' : 'rounded-tl-2xl'
-          }`}
+          className={`bg-white border border-gray-200/80 shadow-[0_1px_4px_rgba(15,23,42,0.04)] rounded-b-2xl rounded-tr-2xl ${activeTab === 'registration' ? 'rounded-tl-none' : 'rounded-tl-2xl'
+            }`}
         >
           {activeTab === 'registration' ? (
             <>
@@ -864,7 +1263,7 @@ const TenantPage = () => {
               </div>
 
               {/* Tenant Listing Table */}
-              <div className="overflow-x-auto min-h-[260px]" ref={menuContainerRef}>
+              <div className="overflow-x-auto min-h-[360px] pb-16" ref={menuContainerRef}>
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-gray-50/80 border-y border-gray-100 text-xs font-semibold text-gray-800">
@@ -898,8 +1297,7 @@ const TenantPage = () => {
                       filteredTenants.map((tenant, index) => {
                         const rowNumber = (currentPage - 1) * PAGE_SIZE + index + 1;
                         const isMenuOpen = openMenuId === tenant.id;
-                        const openUpwards =
-                          filteredTenants.length > 2 && index >= filteredTenants.length - 2;
+                        const openUpwards = index >= Math.max(1, filteredTenants.length - 2);
 
                         return (
                           <tr
@@ -926,7 +1324,11 @@ const TenantPage = () => {
                               {tenant.email || '-'}
                             </td>
                             <td className="px-4 py-3.5 text-gray-700 whitespace-nowrap font-medium">
-                              {tenant.wing} / {tenant.flatNumber}
+                              {tenant.flatNumber ? (
+                                tenant.wing && !tenant.flatNumber.toLowerCase().includes(tenant.wing.toLowerCase())
+                                  ? `${tenant.wing} / ${tenant.flatNumber}`
+                                  : tenant.flatNumber
+                              ) : '-'}
                             </td>
                             <td className="px-4 py-3.5 text-gray-700 whitespace-nowrap">
                               {tenant.ownerName || '-'}
@@ -936,9 +1338,8 @@ const TenantPage = () => {
                             </td>
                             <td className="px-4 py-3.5 whitespace-nowrap">
                               <span
-                                className={`inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold ${
-                                  STATUS_BADGE_CLASSES[tenant.status] || STATUS_BADGE_CLASSES.Vacated
-                                }`}
+                                className={`inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold ${STATUS_BADGE_CLASSES[tenant.status] || STATUS_BADGE_CLASSES.Vacated
+                                  }`}
                               >
                                 {tenant.status}
                               </span>
@@ -960,6 +1361,19 @@ const TenantPage = () => {
 
                                 <button
                                   type="button"
+                                  title="Edit Tenant Details"
+                                  aria-label={`Edit details for ${tenant.name}`}
+                                  onClick={() => {
+                                    setOpenMenuId(null);
+                                    setModalState({ mode: 'edit', tenant });
+                                  }}
+                                  className="p-1.5 rounded-lg text-gray-500 hover:text-[#EA580C] hover:bg-orange-50 transition-colors cursor-pointer"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+
+                                <button
+                                  type="button"
                                   title="More Actions"
                                   aria-label={`More actions for ${tenant.name}`}
                                   aria-expanded={isMenuOpen}
@@ -973,12 +1387,11 @@ const TenantPage = () => {
 
                                 {isMenuOpen && (
                                   <div
-                                    className={`absolute right-0 z-30 w-44 bg-white rounded-xl border border-gray-200 shadow-lg py-1.5 ${
-                                      openUpwards ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
-                                    }`}
+                                    className={`absolute right-0 z-40 w-48 bg-white rounded-2xl border border-gray-200/90 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] py-2 ${openUpwards ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
+                                      }`}
                                     role="menu"
                                   >
-                                    <div className="px-3 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                    <div className="px-3.5 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                                       Change Status
                                     </div>
                                     {STATUS_OPTIONS.map((statusOption) => {
@@ -989,7 +1402,7 @@ const TenantPage = () => {
                                           type="button"
                                           role="menuitem"
                                           onClick={() => handleStatusChange(tenant.id, statusOption)}
-                                          className="w-full px-3 py-1.5 text-left text-xs font-medium text-gray-700 hover:bg-orange-50 hover:text-[#EA580C] flex items-center justify-between transition-colors cursor-pointer"
+                                          className="w-full px-3.5 py-1.5 text-left text-xs font-medium text-gray-700 hover:bg-orange-50 hover:text-[#EA580C] flex items-center justify-between transition-colors cursor-pointer"
                                         >
                                           <span className="flex items-center gap-2">
                                             <span
@@ -1001,7 +1414,19 @@ const TenantPage = () => {
                                         </button>
                                       );
                                     })}
-                                    <div className="my-1 border-t border-gray-100" />
+                                    <div className="border-gray-100" />
+                                    {/* <button
+                                      type="button"
+                                      role="menuitem"
+                                      onClick={() => {
+                                        setOpenMenuId(null);
+                                        setModalState({ mode: 'edit', tenant });
+                                      }}
+                                      className="w-full px-3.5 py-1.5 text-left text-xs font-medium text-gray-700 hover:bg-orange-50 hover:text-[#EA580C] flex items-center gap-2.5 transition-colors cursor-pointer"
+                                    >
+                                      <Pencil className="w-3.5 h-3.5 text-gray-400" />
+                                      Edit Details
+                                    </button>
                                     <button
                                       type="button"
                                       role="menuitem"
@@ -1009,19 +1434,19 @@ const TenantPage = () => {
                                         setOpenMenuId(null);
                                         setModalState({ mode: 'view', tenant });
                                       }}
-                                      className="w-full px-3 py-1.5 text-left text-xs font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors cursor-pointer"
+                                      className="w-full px-3.5 py-1.5 text-left text-xs font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2.5 transition-colors cursor-pointer"
                                     >
                                       <Eye className="w-3.5 h-3.5 text-gray-400" />
                                       View Details
-                                    </button>
-                                    {tenant.status !== 'Vacated' && (
+                                    </button> */}
+                                    {tenant.status !== 'Active' && tenant.status !== 'Vacated' && (
                                       <button
                                         type="button"
                                         role="menuitem"
                                         onClick={() => handleResendInvite(tenant.id)}
-                                        className="w-full px-3 py-1.5 text-left text-xs font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center gap-2 transition-colors cursor-pointer"
+                                        className="w-full px-3.5 py-1.5 text-left text-xs font-medium text-blue-600 hover:bg-blue-50 flex items-center gap-2.5 transition-colors cursor-pointer"
                                       >
-                                        <Mail className="w-3.5 h-3.5 text-gray-400" />
+                                        <Mail className="w-3.5 h-3.5 text-blue-500" />
                                         Resend Invite
                                       </button>
                                     )}
@@ -1158,9 +1583,8 @@ const TenantPage = () => {
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
                             <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                                STATUS_BADGE_CLASSES[item.status] || STATUS_BADGE_CLASSES.Vacated
-                              }`}
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${STATUS_BADGE_CLASSES[item.status] || STATUS_BADGE_CLASSES.Vacated
+                                }`}
                             >
                               {item.status}
                             </span>
@@ -1192,6 +1616,8 @@ const TenantPage = () => {
         mode={modalState.mode}
         tenant={modalState.tenant}
         onClose={() => setModalState({ mode: null, tenant: null })}
+        onSwitchMode={(newMode) => setModalState((prev) => ({ ...prev, mode: newMode }))}
+        onSuccess={() => fetchTenants()}
       />
     </div>
   );
