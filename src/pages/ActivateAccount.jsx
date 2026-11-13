@@ -90,7 +90,7 @@ export default function ActivateAccount() {
 
                 if (data.purpose === 'manager' && !data.otpEmailVerified && !data.otpPhoneVerified) {
                     setPhase('otp_verify');
-                } else if (data.purpose === 'resident' || data.purpose === 'staff' || data.purpose === 'vendor') {
+                } else if (data.purpose === 'resident' || data.purpose === 'tenant' || data.purpose === 'staff' || data.purpose === 'vendor') {
                     setPhase('otp_verify');
                 } else {
                     setPhase('valid');

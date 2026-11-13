@@ -9,6 +9,7 @@ const ExistingResidentModal = ({ flat, onClose, onSuccess }) => {
   const [searching, setSearching] = useState(false);
   const [selected, setSelected] = useState(null);
   const [residentType, setResidentType] = useState('owner');
+  const [occupancyStatus, setOccupancyStatus] = useState('Owner Occupied');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const debounceRef = useRef(null);
@@ -55,6 +56,7 @@ const ExistingResidentModal = ({ flat, onClose, onSuccess }) => {
       await flatApi.allocateResident(flat._id, {
         userId: selected._id,
         residentType,
+        occupancyStatus: residentType === 'owner' ? occupancyStatus : 'Tenant Occupied',
       });
       onSuccess();
     } catch (err) {
@@ -203,6 +205,51 @@ const ExistingResidentModal = ({ flat, onClose, onSuccess }) => {
               ))}
             </div>
           </div>
+
+          {/* Flat Occupancy Option (only when Resident Type is Owner) */}
+          {residentType === 'owner' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Flat Occupancy *
+              </label>
+              <div className="flex gap-3">
+                {[
+                  {
+                    value: 'Owner Occupied',
+                    label: 'Occupied by Owner',
+                    desc: 'Owner is currently living in this flat',
+                  },
+                  {
+                    value: 'Vacant',
+                    label: 'Vacant',
+                    desc: 'Owner will add a tenant later',
+                  },
+                ].map((opt) => (
+                  <label
+                    key={opt.value}
+                    className={`flex-1 flex flex-col items-center p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                      occupancyStatus === opt.value
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="occupancyStatus"
+                      value={opt.value}
+                      checked={occupancyStatus === opt.value}
+                      onChange={() => setOccupancyStatus(opt.value)}
+                      className="sr-only"
+                    />
+                    <span className="font-semibold text-gray-900 text-sm">{opt.label}</span>
+                    <span className="text-xs text-gray-500 mt-0.5 text-center leading-tight">
+                      {opt.desc}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-3 pt-2">

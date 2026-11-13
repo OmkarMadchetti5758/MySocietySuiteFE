@@ -8,6 +8,7 @@ const AllocateResidentModal = ({ flat, mode, onClose, onSuccess }) => {
     email: '',
     phone: '',
     residentType: 'owner',
+    occupancyStatus: 'Owner Occupied',
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -29,7 +30,11 @@ const AllocateResidentModal = ({ flat, mode, onClose, onSuccess }) => {
     setError('');
 
     try {
-      const response = await flatApi.allocateResident(flat._id, formData);
+      const payload = {
+        ...formData,
+        occupancyStatus: formData.residentType === 'owner' ? formData.occupancyStatus : 'Tenant Occupied',
+      };
+      const response = await flatApi.allocateResident(flat._id, payload);
       const data = response.data?.data;
       if (data?.devInviteLink) {
         setDevLink(data.devInviteLink);
@@ -134,6 +139,48 @@ const AllocateResidentModal = ({ flat, mode, onClose, onSuccess }) => {
                 ))}
               </div>
             </div>
+
+            {formData.residentType === 'owner' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Flat Occupancy *</label>
+                <div className="flex gap-3">
+                  {[
+                    {
+                      value: 'Owner Occupied',
+                      label: 'Occupied by Owner',
+                      desc: 'Owner is currently living in this flat',
+                    },
+                    {
+                      value: 'Vacant',
+                      label: 'Vacant',
+                      desc: 'Owner will add a tenant later',
+                    },
+                  ].map((opt) => (
+                    <label
+                      key={opt.value}
+                      className={`flex-1 flex flex-col items-center p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                        formData.occupancyStatus === opt.value
+                          ? 'border-orange-500 bg-orange-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="occupancyStatus"
+                        value={opt.value}
+                        checked={formData.occupancyStatus === opt.value}
+                        onChange={handleChange}
+                        className="sr-only"
+                      />
+                      <span className="font-semibold text-gray-900 text-sm">{opt.label}</span>
+                      <span className="text-xs text-gray-500 mt-0.5 text-center leading-tight">
+                        {opt.desc}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
